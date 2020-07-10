@@ -3,6 +3,11 @@
 #import pandas as pd
 #import matplotlib.pyplot as plt
 import os
+import github
+
+
+help(github)
+
 print(os.listdir())
 print('awesome this works with git integration for desktop')
 
