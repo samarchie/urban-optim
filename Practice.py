@@ -3,9 +3,8 @@
 #import pandas as pd
 #import matplotlib.pyplot as plt
 import os
-
-os.chdir("C:\Users\samwa\OneDrive - University of Canterbury\ENCN493 - Project")
-print(os.litsir())
+print(os.listdir())
+print('awesome this works with git integration for desktop')
 
 #print(os.listdir())
 #data = gpd.read_file("city.shp")
