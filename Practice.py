@@ -1,16 +1,17 @@
-import numpy as np
-import geopandas as gpd
-import pandas as pd
-import matplotlib.pyplot as plt
+#import numpy as np
+#import geopandas as gpd
+#import pandas as pd
+#import matplotlib.pyplot as plt
 import os
 
-os.chdir(r"C:\Users\samwa\OneDrive - University of Canterbury\ENCN493 - Project")
-print(["Directory List:"] + os.listdir())
-os.chdir("Data")
-print(os.listdir())
-data = gpd.read_file("city.shp")
+os.chdir("C:\Users\samwa\OneDrive - University of Canterbury\ENCN493 - Project")
+print(os.litsir())
 
-%matplotlib qt
-data.plot()
+#print(os.listdir())
+#data = gpd.read_file("city.shp")
 
-import my name is sam 
+#%matplotlib qt
+#data.plot()
+
+#plt.plot(data=[1, 2, 3, 4, 5])
+#plt.show()
