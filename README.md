@@ -9,3 +9,9 @@ harry is a sediment
 
 rice is love
 rice is life <3
+
+## Modules required:
+* [x] geopandas
+* [x] matplotlib
+* [x] osmnx
+* [x] networkx
