@@ -6,3 +6,9 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan
 ### However, there are some things we cannot choose. Natural hazards are going to impact us under any of these scenarios. What will the effect of these hazards be on the other scenarios? Similarly, what are the vehicle emissions resulting from each scenario proposed?
 ### Can we find an optimal, or a series of optimal, scenarios that are better than these ones for a range of attributes?
 harry is a sediment
+<<<<<<< HEAD
+=======
+
+rice is love
+rice is life <3
+>>>>>>> e75355ac652f02b47840f86635ac100e9fbca162
