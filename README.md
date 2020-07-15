@@ -11,4 +11,13 @@ harry is a sediment
 
 rice is love
 rice is life <3
+<<<<<<< HEAD
 >>>>>>> e75355ac652f02b47840f86635ac100e9fbca162
+=======
+
+## Modules required:
+* [x] geopandas
+* [x] matplotlib
+* [x] osmnx
+* [x] networkx
+>>>>>>> 900f05ff8e5bb9a1d918e7718b7596b3ee543f39
