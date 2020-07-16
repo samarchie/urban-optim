@@ -17,3 +17,4 @@ rice is life <3
 * [x] osmnx
 * [x] networkx
 * [x] gdal
+* [x] rasterIO
