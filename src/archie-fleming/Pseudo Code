@@ -1,10 +1,10 @@
 """
 
-"phhhhh, ok, here we go, focus. Code. I am Code."
+"phhhhh, ok, here we go, focus. Code. I will Code."
 vrooooom, vroom vroom vroom vroom
 "One success, 42 errors. I eat errors for breakfast"
 ngngngngng
-"breakfast, maybe I should have had breakfast? Oh brekky could be good for me- no no no no stay focussed! Speed."
+"breakfast, maybe I should have had breakfast? Oh brekky could be good for me- no no no no stay focussed! Code."
 vroomvroomvroomvroomvroomvroomvroomvroom
 "I'm faster than fast, Quicker than quick. I am Lightning!"
 
@@ -71,3 +71,27 @@ To determine which D in the next N will be used to fill parents_g+1, a crowding 
 ### Step 6: Outputs ###
 
 "Once there have been G generations, we break out of the loop and take the final set of parents_g+1 as the output. this is then used to determine the Pareto-optimal sets between pairs of objectives"
+
+
+
+### Pseudo f functions ###
+
+f_tsu:
+if in, add 1
+
+f_liq:
+if TC [1 2 3], add [0.1, 1, 10]
+if liq unlikely, add 0.1
+if assessment needed, add 0.1?
+
+f_cflood:
+if in a coastal flood zone, add x depending on slr scenario (exponential decay from slr0 to slr300)
+
+f_rflood:
+if in a river flood zone, add 1
+
+f_dist:
+normalised distance from cbd, linear function.
+
+f_dev:
+if greenfield, add 1
