@@ -67,27 +67,21 @@ def clip_to_boundary(boundary_polygon, road_data, census_data, hazard_list, coas
     clipped_hazards : GeoDataFrame
         Hazard data clipped to the extents of the city boundary.
     """
-
     clipped_census = gpd.clip(census_data, boundary_polygon)
-
     clipped_hazards = []
     for hazard in hazard_list:
         if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
-            print('Its a tif!')
+            # We are not worried about clipping tif files, as we will assume they are a reasonable size
+            clipped_hazards.append(hazard)
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
-            print("WE WORKED")
             #Its a shapefile we're dealing with so geopandas is allgood.
-            clipped_data = gpd.clip(hazard, boundary_polygon)
-            clipped_hazards.append(clipped_data)
-        else:
-            print("We haven't coded that yet lmao")
+            clipped_hazards.append(gpd.clip(hazard.buffer(0), boundary_polygon))
 
     clipped_roads = gpd.clip(road_data, boundary_polygon)
     clipped_coastal = []
     for coastal_flooding in coastal_flood_list:
         clipped_data = gpd.clip(coastal_flooding, boundary_polygon)
         clipped_coastal.append(clipped_data)
-
     save_clipped_to_file(clipped_census, clipped_roads, clipped_hazards, clipped_coastal)
     return clipped_census, clipped_roads, clipped_hazards, clipped_coastal
 
@@ -102,8 +96,15 @@ def save_clipped_to_file(clipped_census, clipped_roads, clipped_hazards, clipped
     clipped_census.to_file("data/clipped/census-2018.shp")
     clipped_roads.to_file("data/clipped/roads.shp")
 
-    #for hazard in clipped_hazards:
-            ##NEED TO CODE THIS WHEN NEEDED
+### ASSUME HAZARDS ARE ALREADY CLIPPED TO THE BOUNDARY
+    # for hazard in clipped_hazards:
+    #     if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
+    #         ### NEED TO CODE THIS PART IN ORDER TO SAVE A TIF FILE
+    #
+    #
+    #     elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
+    #         #Its a shapefile we're dealing with so geopandas is allgood.
+    #         hazard.to_file("data/clipped/liq.shp")
 
     counter = 0
     for hazard in clipped_coastal:
@@ -115,14 +116,15 @@ def open_clipped_data(hazard_list):
     """If the clipped funcation has already run before, then this module will
     reopen thepast files that have been saved.
     """
-
     clipped_census = gpd.read_file("data/clipped/census-2018.shp")
     clipped_roads = gpd.read_file("data/clipped/roads.shp")
     clipped_hazards = []
     clipped_coastal = []
     for slr in range(0, 310, 10):
         clipped_coastal.append(gpd.read_file("data/clipped/{}cm SLR.shp".format(slr)))
-    #for hazard in hazard_list:
-        #clipped_hazards.append(gpd.read_file("data/clipped/{}.shp"))
-        ### CODE THIS WHEN HAZARDS ARE ADDED!!!!
+    for hazard in hazard_list:
+        if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
+            clipped_hazards.append(rio.open("data/clipped/tsunami.tif"))
+        elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
+            clipped_hazards.append(gpd.read_file("data/clipped/lique_red.shp"))
     return clipped_census, clipped_roads, clipped_hazards, clipped_coastal
