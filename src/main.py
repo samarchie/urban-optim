@@ -10,6 +10,8 @@ upon any other functions it needs to do the genetic algorthm!
 Good luck
 """
 
+import os
+import matplotlib.pyplot as plt
 #Import our home-made modules
 import src.initialise as init
 
@@ -17,10 +19,13 @@ import src.initialise as init
 def main():
     """Now this is where the magic happens!"""
     #Phase 1: initialisation
-    boundary_polygon, road_data, census_data, hazards_list = init.get_data()
-    clipped_census, clipped_roads, clipped_hazards = init.clip_to_boundary(boundary_polygon, road_data, census_data, hazards_list)
-    clipped_census.plot()
-    clipped_hazards[0].plot()
+    #Get data from the user
+    boundary, roads, census, hazards, coastal_flood = init.get_data()
+    #Clip the data if it has not already been clipped
+    if not os.path.exists("data/clipped"):
+        clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.clip_to_boundary(boundary, roads, census, hazards, coastal_flood)
+    else:
+        clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.open_clipped_data(hazards)
 
 
 if __name__ == "__main__":
