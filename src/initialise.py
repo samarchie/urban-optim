@@ -42,13 +42,13 @@ def get_data():
     for slr in range(0, 310, 10):
         coastal_flood.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
-    hazards = []
     ### Enter hazards here that are not SLR coastal flood projections
+    hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/lique_red.shp", crs="EPSG:2193")]
 
     return boundary, roads, census, hazards, coastal_flood
 
 
-def clip_to_boundary(boundary_polygon, road_data, census_data, hazards_list, coastal_flood_list):
+def clip_to_boundary(boundary_polygon, road_data, census_data, hazard_list, coastal_flood_list):
     """This defination module clips all the data to the city boundary.
 
     Parameters
@@ -69,10 +69,19 @@ def clip_to_boundary(boundary_polygon, road_data, census_data, hazards_list, coa
     """
 
     clipped_census = gpd.clip(census_data, boundary_polygon)
+
     clipped_hazards = []
-    for hazard in hazards_list:
-        clipped_data = gpd.clip(hazard, boundary_polygon)
-        clipped_hazards.append(clipped_data)
+    for hazard in hazard_list:
+        if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
+            print('Its a tif!')
+        elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
+            print("WE WORKED")
+            #Its a shapefile we're dealing with so geopandas is allgood.
+            clipped_data = gpd.clip(hazard, boundary_polygon)
+            clipped_hazards.append(clipped_data)
+        else:
+            print("We haven't coded that yet lmao")
+
     clipped_roads = gpd.clip(road_data, boundary_polygon)
     clipped_coastal = []
     for coastal_flooding in coastal_flood_list:
@@ -80,7 +89,6 @@ def clip_to_boundary(boundary_polygon, road_data, census_data, hazards_list, coa
         clipped_coastal.append(clipped_data)
 
     save_clipped_to_file(clipped_census, clipped_roads, clipped_hazards, clipped_coastal)
-
     return clipped_census, clipped_roads, clipped_hazards, clipped_coastal
 
 

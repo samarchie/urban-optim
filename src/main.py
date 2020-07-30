@@ -9,6 +9,7 @@ upon any other functions it needs to do the genetic algorthm!
 
 Good luck
 """
+
 import os
 #Import our home-made modules
 import src.initialise as init
@@ -21,7 +22,7 @@ def main():
     boundary, roads, census, hazards, coastal_flood = init.get_data()
     #Clip the data if it has not already been clipped
     ####ONCE DONE, MAKE SURE TO PUT A NOT IN THE LINE BELOW!!!!!!
-    if not os.path.exists("data/clipped"):
+    if os.path.exists("data/clipped"):
         clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.clip_to_boundary(boundary, roads, census, hazards, coastal_flood)
     else:
         clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.open_clipped_data(hazards)
