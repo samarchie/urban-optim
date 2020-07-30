@@ -11,7 +11,6 @@ Good luck
 """
 
 import os
-import matplotlib.pyplot as plt
 #Import our home-made modules
 import src.initialise as init
 
@@ -26,7 +25,8 @@ def main():
         clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.clip_to_boundary(boundary, roads, census, hazards, coastal_flood)
     else:
         clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.open_clipped_data(hazards)
-
+    #Now want to pre-process everything!
+    processed_census = init.add_f_scores(clipped_census, census, clipped_roads, clipped_hazards, clipped_coastal)
 
 if __name__ == "__main__":
     main()
