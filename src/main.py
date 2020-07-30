@@ -18,15 +18,19 @@ import src.initialise as init
 def main():
     """Now this is where the magic happens!"""
     #Phase 1: initialisation
+
     #Get data from the user
-    boundary, roads, census, hazards, coastal_flood = init.get_data()
+    boundary, census, infra, hazards, coastal_flood =  init.get_data()
+
     #Clip the data if it has not already been clipped
+    ### MAKE SURE TO ADD A NOT IN THE IF STATEMENT BELOW WHEN DONE!!!
     if not os.path.exists("data/clipped"):
-        clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.clip_to_boundary(boundary, roads, census, hazards, coastal_flood)
+        clipped_census, clipped_infra, clipped_hazards, clipped_coastal = init.clip_to_boundary(boundary, census, infra, hazards, coastal_flood)
     else:
-        clipped_census, clipped_roads, clipped_hazards, clipped_coastal = init.open_clipped_data(hazards)
+        clipped_census, clipped_infra, clipped_hazards, clipped_coastal = init.open_clipped_data(hazards)
+
     #Now want to pre-process everything!
-    processed_census = init.add_f_scores(clipped_census, census, clipped_roads, clipped_hazards, clipped_coastal)
+    processed_census = init.add_f_scores(clipped_census, census, clipped_infra, clipped_hazards, clipped_coastal)
 
 if __name__ == "__main__":
     main()
