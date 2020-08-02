@@ -22,8 +22,10 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point, Polygon
 
+boundary = gpd.read_file('data/boundary/city_boundary.shp')
 tsu_data = rio.open('data/raw/hazards/tsunami.tif')
 census_data_raw = gpd.read_file('data/raw/socioeconomic/2018-census-christchurch.shp')
+census_data = gpd.clip(census_data_raw, boundary)
 ###
 
 #Working yay :)
@@ -72,14 +74,12 @@ def f_tsu(tsu_data, census_data):
 
     return norm_inundation
 
-#f_tsu(tsu_data, census_data)
+f_tsu(tsu_data, census_data)
 
 ### Not in end code, just for testing ###
 coastal_flood_data_raw = []
 for slr in range(0, 310, 10):
-    coastal_flood_data_raw.append(gpd.read_file('zJamie/Assignment 1/data/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
-
-boundary = gpd.read_file('data/boundary/city_boundary.shp')
+    coastal_flood_data_raw.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
 coastal_flood_data = []
 for slr in coastal_flood_data_raw:
@@ -94,7 +94,7 @@ import sys
 
 ###
 
-def f_cflood(coastal_flood_data, census_data):
+def f_cflood(coastal_flood_data, census_data_raw):
     """Calculates the coastal flooding inundation each census parcel is prone to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in 10 cm intervals
 
     Parameters
@@ -103,6 +103,7 @@ def f_cflood(coastal_flood_data, census_data):
         Contains shape files of coastal inundation due to a 1% AEP storm surge with incremental sea level rise.
     census_data : GeoDataFrame
         contains all the potential parcels (ds) to be evaluated as shapely polygons.
+        You gotta put it in RAWWWwww "We likes it raww, and wrigglingggg"
 
     Returns
     -------
@@ -114,15 +115,16 @@ def f_cflood(coastal_flood_data, census_data):
     #Find what parcels are affected by the coastal surge with each incremental sea level rise
     clipped_census = []
     for flood in coastal_flood_data:
-        clipped_census.append(gpd.clip(census_data, flood['geometry'], keep_geom_type=True))
+        clipped_census.append(gpd.clip(census_data_raw, flood['geometry'], keep_geom_type=True))
 
     #Create a numpy array containing the sea level rise value which causes each parcel to first be flooded from the coastal surge
-    inundated_slr = np.full(len(census_data), None)
+    inundated_slr = np.full(len(census_data_raw), None)
     for i in range(len(clipped_census)):
-        flooded = clipped_census[len(clipped_census) -1 - i]['geometry'].contains(census_data['geometry'].centroid)
+        flooded = clipped_census[len(clipped_census) -1 - i]['geometry'].contains(census_data_raw['geometry'].centroid)
         for n in range(len(flooded)):
             if flooded[n]:
                 inundated_slr[n] = (30 - i)*10
+
 
     #Assign each parcel an f value based on what sea level rise causes it to first be flooded from the storm surge. Use RCP2 and RCP8 as guides for boundaries.
     #f values for each range can be changed as desired
@@ -144,7 +146,8 @@ def f_cflood(coastal_flood_data, census_data):
     return f
 
 #Ignore warnings, f list at bottom of output
-f_cflood(coastal_flood_data, census_data)
+fcflood = f_cflood(coastal_flood_data, census_data_raw)
+fcflood
 
 def f_rflood(pluvial_flood_data, census_data):
     """Calculates river flooding inundation
@@ -165,17 +168,24 @@ def f_rflood(pluvial_flood_data, census_data):
 
 
 ### Not in final code
-pd.set_option("display.max_rows", 10000)
+pd.set_option("display.max_rows", 10)
 #np.set_printoptions(threshold=sys.maxsize)
-#np.set_printoptions(threshold=10)
+np.set_printoptions(threshold=10000)
 
 
 liquefaction_data_raw = gpd.read_file('data/raw/hazards/lique_red.shp')
 liquefaction_data = liquefaction_data_raw.explode()
 liq_data = gpd.clip(liquefaction_data.buffer(0), boundary)
 liq_data
-census_data = gpd.clip(census_data_raw, boundary)
 census_data.plot()
+
+ax = census_data['geometry'].plot(zorder=0)
+liq_data[0].plot(ax=ax, color='red', zorder=1)
+liq_data[1].plot(ax=ax, color='green', zorder=1)
+liq_data[2].plot(ax=ax, color='yellow', zorder=1)
+liq_data[3].plot(ax=ax, color='orange', zorder=1)
+boundary['geometry'].plot(ax=ax, color='black', alpha=0.2, zorder=2)
+
 
 def f_liq(liq_data, census_data):
     """Short summary.
@@ -196,30 +206,54 @@ def f_liq(liq_data, census_data):
 
     liq_type = np.full(len(census_data), None)
 
-
-liq_data[0].plot(ax=ax, color='red', zorder=1)
-liq_data[1].plot(ax=ax, color='green', zorder=1)
-liq_data[2].plot(ax=ax, color='yellow', zorder=1)
-liq_data[3].plot(ax=ax, color='orange', zorder=1)
-boundary['geometry'].plot(ax=ax, color='black', alpha=0.2, zorder=2)
-
-
     rz_parcels = gpd.clip(census_data, liq_data[0], keep_geom_type=True)
-ax = census_data['geometry'].plot(zorder=0)
-rz_parcels.plot(ax=ax, color='red', zorder=1)
+    TC1_parcels = gpd.clip(census_data, liq_data[1], keep_geom_type=True)
+    TC2_parcels = gpd.clip(census_data, liq_data[2], keep_geom_type=True)
+    TC3_parcels = gpd.clip(census_data, liq_data[3], keep_geom_type=True)
+
+    zones = np.zeros(len(census_data))
+
+    for index, row in census_data.iterrows():
+        in_rz = rz_parcels['geometry'].contains(row['geometry'].centroid)
+        in_TC1 = rz_parcels['geometry'].contains(row['geometry'].centroid)
+        in_TC2 = rz_parcels['geometry'].contains(row['geometry'].centroid)
+        in_TC3 = rz_parcels['geometry'].contains(row['geometry'].centroid)
+
+        if len(in_rz.unique()) > 1:
+            zones[index] = 2
+        elif len(in_TC1.unique()) > 1:
+            zones[index] = 0.1
+        elif len(in_TC2.unique()) > 1:
+            zones[index] = 1
+        elif len(in_TC3.unique()) > 1:
+            zones[index] = 10
+
+    zones
+    #for i in in_rz:
+    #    if i:
+    #        print(i)
 
 
 
 
-    #for i in range(4):
-    #    helpme = liquefaction_data['geometry'][i]. contains(census_data['geometry'].centroid)
-    #    for n in range(len(helpme)):
-    #        if helpme[n]:
-    #            liq_type[n] = i
+    type(rz_parcels['geometry'])
 
 
-liq_data
+    for index, row in census_data.iterrows():
+        if row['geometry'].centroid.within(rz_parcels):
+            liq_type[index] = 1
+        elif row['geometry'].centroid.within(TC1_parcels):
+            liq_type[index] = 1
+        elif row['geometry'].centroid.within(TC2_parcels):
+            liq_type[index] = 1
+        elif row['geometry'].centroid.within(TC3_parcels):
+            liq_type[index] = 1
 
+        #if parcel in rz_parcels:
+        #    print(parcel)
+
+
+    census_data
     #for poly in liquefaction_data['geometry']:
     #    type(poly)
     #    helpme = poly.contains(census_data['geometry'].centroid)
@@ -230,7 +264,6 @@ liq_data
     #
     #    index += 1
 
-    #helpme = liquefaction_data['geometry'].contains(census_data['geometry'].centroid)
 
 
 
