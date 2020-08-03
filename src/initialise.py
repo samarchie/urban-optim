@@ -60,7 +60,7 @@ def get_data():
         coastal_flood.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
     ### Enter hazards here that are not SLR coastal flood projections
-    hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/lique_red.shp", crs="EPSG:2193")]
+    hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp")]
 
     return boundary, census, infra, hazards, coastal_flood
 
@@ -107,11 +107,10 @@ def clip_to_boundary(boundary, census, infra, hazards, coastal_flood):
             clipped_hazards.append(hazard)
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
             #Its a shapefile we're dealing with so geopandas is allgood.
-            clipped_hazards.append(gpd.clip(hazard.buffer(0), boundary))
+            clipped_hazards.append(gpd.clip(hazard, boundary))
 
     clipped_infra = []
     for infrastructure in infra:
-        print("me")
         clipped_infra.append(gpd.clip(infrastructure, boundary))
 
     clipped_coastal = []
@@ -151,14 +150,12 @@ def save_clipped_to_file(clipped_census, clipped_infra, clipped_hazards, clipped
     clipped_census.to_file("data/clipped/census-2018.shp")
 
     ### ASSUME HAZARDS ARE ALREADY CLIPPED TO THE BOUNDARY. IF THEY ARE TOO LARGE THEN THE FOLLOWING CODE NEEDS TO BE UPDATED IN THE TIF SECTION AND UNCOMMENTED
-    # for hazard in clipped_hazards:
-    #     if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
-    #         ### NEED TO CODE THIS PART IN ORDER TO SAVE A TIF FILE
-    #
-    #
-    #     elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
-    #         #Its a shapefile we're dealing with so geopandas is allgood.
-    #         hazard.to_file("data/clipped/liq.shp")
+    for hazard in clipped_hazards:
+        if str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
+            #Its a shapefile we're dealing with so geopandas is allgood.
+            hazard.to_file("data/clipped/liq.shp")
+        #elif str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
+            ### NEED TO CODE THIS PART IN ORDER TO SAVE A TIF FILE
 
     counter = 0
     for hazard in clipped_coastal:
@@ -207,7 +204,7 @@ def open_clipped_data(hazard_list):
         if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
             clipped_hazards.append(rio.open("data/clipped/tsunami.tif"))
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
-            clipped_hazards.append(gpd.read_file("data/clipped/lique_red.shp"))
+            clipped_hazards.append(gpd.read_file("data/clipped/liq.shp"))
 
     return clipped_census, clipped_infra, clipped_hazards, clipped_coastal
 
@@ -226,16 +223,30 @@ def add_f_scores(clipped_census, raw_census, clipped_infra, clipped_hazards, cli
 
     """
 
-    census = clipped_census.copy()
-
+    census = clipped_census[['SA12018_V1', 'C06_CURPop', 'C13_CURPop', 'C18_CURPop', 'C06_CNPop', 'C13_CNPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    census = gpd.read_file("data/raw/ss/censusnew.shp")
     tsu_inundation = func.f_tsu(clipped_hazards[0], census)
     coastal_inundation = func.f_cflood(clipped_coastal, raw_census)
     ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
 
-    for index, row in census.iterrows():
-        row["f_tsu"] = tsu_inundation[index - 1]
-        row["f_cflood"] = coastal_inundation[index - 1]
-        print(row)
-        ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
+    census_array = census.to_numpy()
+    census_list = np.ndarray.tolist(census_array)
+    index = 0
 
-    print(census.head())
+    for row in census_list:
+        row.append(tsu_inundation[index])
+        row.append(coastal_inundation[index])
+
+    census_array = np.array(census_list,dtype=object)
+    census_frame = gpd.GeoDataFrame(census_array)
+    census_frame.columns = census.keys().append(pd.Index(['f_tsu', 'f_cflood']))
+    print(census_frame.head())
+
+
+    #proc_census_array[index] = np.append(census_array, coastal_inundation[index])
+
+    # proc_census = gpd.GeoDataFrame(proc_census_array)
+    # proc_census.columns = census.keys()
+    # print(census_array[0])
+    # print(proc_census.head())
+    # print(proc_census.keys())
