@@ -43,6 +43,10 @@ def get_data():
     """
 
     boundary = gpd.read_file("data/boundary/city_boundary.shp")
+    planning_zones = gpd.read_file("data/boundary/District_Plan_Zones.shp")
+
+    boundaries = [boundary, planning_zones]
+
     census_pop = gpd.read_file("data/raw/socioeconomic/2018-census-christchurch.shp")
     census_houses = gpd.read_file("data/raw/socioeconomic/census-dwellings.shp")
 
@@ -63,10 +67,10 @@ def get_data():
     ### Enter hazards here that are not SLR coastal flood projections
     hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp")]
 
-    return boundary, census_pop, census_houses, infra, hazards, coastal_flood
+    return boundaries, census_pop, census_houses, infra, hazards, coastal_flood
 
 
-def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
+def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood, planning_zones):
     """This defination module clips all the data to the city boundary.
 
     Parameters
@@ -81,8 +85,8 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
         List of all hazards to be examined.
     coastal_flood_list : List of GeoDataFrames
         List of GeoDataFrames of the coastal flooding ahzrads, where each new entry in the list is a 10cm increment of SLR
-    town_centes : GeoDataFrame
-        Layer of points that define the suburb/city centres
+    planning_zones : GeoDataFrame
+        Layer of the District Plan Zones
 
     Returns
     -------
@@ -96,7 +100,8 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
         List of coastal flooding with SLR clipped to the extents of the city boundary
     clipped_centres : GeoDataFrame
         Layer of points that define the suburb/city centres which has been clipped to the extent of the city boundary
-
+    clipped_zones : GeoDataFrame
+        Layer of the Distrcit Plan Zones, clipped to the city boundary
     """
 
     clipped_census = gpd.clip(census, boundary)
@@ -119,14 +124,16 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
     for coastal_flooding in coastal_flood:
         clipped_coastal.append(gpd.clip(coastal_flooding, boundary))
 
+    clipped_zones = gpd.clip(planning_zones, boundary)
+    clipped_zones
 
     #Save all to the file structure now!
-    save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal)
+    save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones)
 
-    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal
+    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones
 
 
-def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal):
+def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones):
     """Saves the clipped data to the file structure.
 
     Parameters
@@ -139,6 +146,8 @@ def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_
         List of rasterIO Datasets and GeoDataFrames of the hazards to analyse.
     clipped_coastal : List
         List of the GeoDataFrames of the hazard from coastal inundation where each new entry in the list is a 10.
+    clipped_zones : GeoDataFrame
+        Layer of the Distrcit Plan Zones, clipped to the city boundary
 
     Returns
     -------
@@ -169,6 +178,8 @@ def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_
     clipped_infra[1].to_file("data/clipped/town_centres.shp")
     clipped_infra[2].to_file("data/clipped/parks.shp")
 
+    clipped_zones.to_file("data/clipped/zones.shp")
+
 
 def open_clipped_data(hazards):
     """If the clipped module has already run, then we need to open the data files. This will save computational time as we only need to clip the data once!
@@ -188,6 +199,8 @@ def open_clipped_data(hazards):
         List of hazard data clipped to the extents of the city boundary.
     clipped_coastal : List
         List of coastal flooding with SLR clipped to the extents of the city boundary
+    clipped_zones : GeoDataFrame
+        Layer of the Distrcit Plan Zones, clipped to the city boundary
 
     """
 
@@ -210,26 +223,42 @@ def open_clipped_data(hazards):
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
             clipped_hazards.append(hazard)
 
-    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal
+    clipped_zones = gpd.read_file("data/clipped/zones.shp")
+
+    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones
 
 
-def merge_census_shapefiles(pop, houses):
+def merge_census_data(clipped_census_pop, clipped_houses):
+    """Short summary.
+
+    Parameters
+    ----------
+    clipped_census_pop : GeoDataFrame
+        Census (2018) of population numbers, clipped to the city boundary.
+    clipped_houses : GeoDataFrame
+        Census (2018) of dwelling numbers, clipped to the city boundary.
+
+    Returns
+    -------
+    merged_census : GeoDataFrame
+        Census (2018) of dwelling and population numbers, clipped to the city boundary.
+
     """
-    """
+
     #Extract only the relevant columns of both Datasets
-    pop = pop[['SA12018_V1', 'C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    clipped_census_pop = clipped_census_pop[['SA12018_V1', 'C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
     #Census_2018_usually_resident_population_count (C18_CURPop)
     #Census_2018_census_night_population_count (18_CNPop)
 
-    houses = houses[['SA12018_V1', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    clipped_houses = clipped_houses[['SA12018_V1', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
     #Census_2018_Occupied_private_dwelling_type_Total (C18_OccP_4)
     #Census_2018_Dwelling_record_type_Total_occupied_dwellings (C18_OccD_2)
     #Census_2018_Occupied_non_private_dwelling_type_Total (C18_OccD_6)
 
     #Convert the DataSets to dictionaries, via array and lists
-    pop_array = pop.to_numpy()
+    pop_array = clipped_census_pop.to_numpy()
     census_list = np.ndarray.tolist(pop_array)
-    house_array = houses.to_numpy()
+    house_array = clipped_houses.to_numpy()
     houses_list = np.ndarray.tolist(house_array)
 
     pop_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
@@ -251,6 +280,58 @@ def merge_census_shapefiles(pop, houses):
 
     return merged_census
 
+
+def add_density(census):
+    """Calculated and adds the density (in dwellings per kilometre squared to the GeoDataFrame).
+
+    Parameters
+    ----------
+    census : GeoDataFrame
+        Census (2018) data of population and dweelings (eg merged_census).
+
+    Returns
+    -------
+    census : GeoDataFrame
+        The original inputted GeoDataFrame, with an extra column dedicated to the denisty calculation.
+
+    """
+
+    #Change the columns from strings to floating point numbers
+    census["C18_OccP_4"] = census["C18_OccP_4"].astype(float)
+    census["AREA_SQ_KM"] = census["AREA_SQ_KM"].astype(float)
+
+    #Add the density column
+    census["density (dw/km2)"] = census["C18_OccP_4"] / census["AREA_SQ_KM"]
+
+    return census
+
+
+def add_planning_zones(census, planning_zones):
+    """
+    """
+
+    census = gpd.read_file("data/processed/merged_census.shp")
+    census = census.set_crs("EPSG:2193")
+    planning_zones = gpd.read_file("data/boundary/District_Plan_Zones.shp")
+
+    chch_zones = planning_zones.loc[planning_zones['PLAN_NAME'] == 'Christchurch District Plan'].copy()
+
+    res_zone = chch_zones.loc[chch_zones["ZONE_TYPE"] == 'Residential Zone']
+    res_zone
+
+    census
+    res_props = census.within(res_zone)
+    len(res_props)
+    for index in len(res_props)
+
+
+
+    'Special Purpose Zone', 'Mixed Use Zone', 'Commercial Zone',
+           'Industrial Zone', 'Residential Zone', 'Open Space Zone',
+           'Rural Zone', 'Transport Zone'
+
+
+    return census_updated
 
 def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clipped_coastal):
     """ Takes the clipped data, and amends the clipped_census data to include the f_scores for each of the objective functions in a column of the processed_census data file
@@ -291,7 +372,7 @@ def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clip
     proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'f_tsu', 'f_cflood'])
 
     #Save the processed file fo ease of computational time later on
-    proc_census.to_file("data/processed/census-final.shp")
-    proc_census = gpd.read_file("data/processed/census-final.shp")
+    proc_census.to_file("data/processed/census.shp")
+    proc_census = gpd.read_file("data/processed/census.shp")
 
     return proc_census

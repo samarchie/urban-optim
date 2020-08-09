@@ -2,7 +2,8 @@
 29th of July 2020
 Author: Jamie Fleming and Sam Archie
 
-f functions for the Christchurch optimisation study. defines the following functions:
+f functions for the Christchurch optimisation study. defines the following
+functions:
 
 1. f_tsu
 2. f_cflood
@@ -11,7 +12,8 @@ f functions for the Christchurch optimisation study. defines the following funct
 5. f_dist
 6. f_dev
 
-Data_Folder imported into each function is a string of the relative filepath to the folder where the data (hazards, amenities, etc.) is located
+Data_Folder imported into each function is a string of the relative filepath to
+the folder where the data (hazards, amenities, etc.) is located
 """
 
 
@@ -31,19 +33,23 @@ census_data = gpd.clip(census_data_raw, boundary)
 #Working yay :)
 def f_tsu(tsu_data, census_data):
     """
-    Calculates the tsunami inundation each census parcel is prone to for a tsunami caused by a 1/2500 year earthquake in Western South America.   #Also accounts for 0-3 m of sea level rise, in 10 cm intervals?
+    Calculates the tsunami inundation each census parcel is prone to for a
+    tsunami caused by a 1/2500 year earthquake in Western South America.
+    #Also accounts for 0-3 m of sea level rise, in 10 cm intervals?
 
     Parameters
     ----------
     tsu_data : rasterIO Dataset
         Description of parameter `tsu_data`.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely polygons.
+        contains all the potential parcels (ds) to be evaluated as shapely
+        polygons.
 
     Returns
     -------
     list
-        A list containing the normalised values of tsunami inundation at each census parcel centroid, in the same order as the census_data list
+        A list containing the normalised values of tsunami inundation at each
+        census parcel centroid, in the same order as the census_data list
 
     """
 
@@ -60,7 +66,8 @@ def f_tsu(tsu_data, census_data):
     #Put the tsunami inundation data in a readable format
     band1 = tsu_data.read(1)
 
-    #Find the inundation for each parcel centroid using the coordinates assigned above
+    #Find the inundation for each parcel centroid using the coordinates
+    #assigned above
     inundation = []
     for i in range(len(xs)):
         row, col = tsu_data.index(xs[i], ys[i])
@@ -95,29 +102,36 @@ import sys
 ###
 
 def f_cflood(coastal_flood_data, census_data_raw):
-    """Calculates the coastal flooding inundation each census parcel is prone to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in 10 cm intervals
+    """Calculates the coastal flooding inundation each census parcel is prone
+    to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in
+    10 cm intervals
 
     Parameters
     ----------
     coastal_flood_data : List of GeoDataFrames
-        Contains shape files of coastal inundation due to a 1% AEP storm surge with incremental sea level rise.
+        Contains shape files of coastal inundation due to a 1% AEP storm surge
+        with incremental sea level rise.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely polygons.
+        contains all the potential parcels (ds) to be evaluated as shapely
+        polygons.
         You gotta put it in RAWWWwww "We likes it raww, and wrigglingggg"
 
     Returns
     -------
     Numpy Array
-        An array containing f values for each parcel in the order they are given in the census data.
+        An array containing f values for each parcel in the order they are
+        given in the census data.
 
     """
 
-    #Find what parcels are affected by the coastal surge with each incremental sea level rise
+    #Find what parcels are affected by the coastal surge with each incremental
+    #sea level rise
     clipped_census = []
     for flood in coastal_flood_data:
         clipped_census.append(gpd.clip(census_data_raw, flood['geometry'], keep_geom_type=True))
 
-    #Create a numpy array containing the sea level rise value which causes each parcel to first be flooded from the coastal surge
+    #Create a numpy array containing the sea level rise value which causes each
+    #parcel to first be flooded from the coastal surge
     inundated_slr = np.full(len(census_data_raw), None)
     for i in range(len(clipped_census)):
         flooded = clipped_census[len(clipped_census) -1 - i]['geometry'].contains(census_data_raw['geometry'].centroid)
@@ -126,7 +140,9 @@ def f_cflood(coastal_flood_data, census_data_raw):
                 inundated_slr[n] = (30 - i)*10
 
 
-    #Assign each parcel an f value based on what sea level rise causes it to first be flooded from the storm surge. Use RCP2 and RCP8 as guides for boundaries.
+    #Assign each parcel an f value based on what sea level rise causes it to
+    #first be flooded from the storm surge. Use RCP2 and RCP8 as guides for
+    #boundaries.
     #f values for each range can be changed as desired
     f = np.zeros(len(inundated_slr))
     for i in range(len(inundated_slr)):
@@ -146,8 +162,8 @@ def f_cflood(coastal_flood_data, census_data_raw):
     return f
 
 #Ignore warnings, f list at bottom of output
-fcflood = f_cflood(coastal_flood_data, census_data_raw)
-fcflood
+#fcflood = f_cflood(coastal_flood_data, census_data_raw)
+#fcflood
 
 def f_rflood(pluvial_flood_data, census_data):
     """Calculates river flooding inundation
@@ -157,7 +173,8 @@ def f_rflood(pluvial_flood_data, census_data):
     pluvial_flood_data : type
         Description of parameter `pluvial_flood_data`.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely polygons.
+        contains all the potential parcels (ds) to be evaluated as shapely
+        polygons.
 
     Returns
     -------
@@ -169,22 +186,15 @@ def f_rflood(pluvial_flood_data, census_data):
 
 ### Not in final code
 pd.set_option("display.max_rows", 10)
-#np.set_printoptions(threshold=sys.maxsize)
-np.set_printoptions(threshold=10000)
+np.set_printoptions(threshold=sys.maxsize)
+np.set_printoptions(threshold=10)
 
 
-liquefaction_data_raw = gpd.read_file('data/raw/hazards/lique_red.shp')
-liquefaction_data = liquefaction_data_raw.explode()
-liq_data = gpd.clip(liquefaction_data.buffer(0), boundary)
+liq_data = gpd.read_file('data/raw/hazards/liquefaction_vulnerability.shp')
 liq_data
-census_data.plot()
+liq_data.plot()
 
-ax = census_data['geometry'].plot(zorder=0)
-liq_data[0].plot(ax=ax, color='red', zorder=1)
-liq_data[1].plot(ax=ax, color='green', zorder=1)
-liq_data[2].plot(ax=ax, color='yellow', zorder=1)
-liq_data[3].plot(ax=ax, color='orange', zorder=1)
-boundary['geometry'].plot(ax=ax, color='black', alpha=0.2, zorder=2)
+
 
 
 def f_liq(liq_data, census_data):
@@ -195,7 +205,8 @@ def f_liq(liq_data, census_data):
     liquefaction_data : type
         Description of parameter `liquefaction_data`.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely polygons.
+        contains all the potential parcels (ds) to be evaluated as shapely
+        polygons.
 
     Returns
     -------
@@ -204,71 +215,95 @@ def f_liq(liq_data, census_data):
 
     """
 
-    liq_type = np.full(len(census_data), None)
+    #Define the categories we want to extract
+    lick_cats = ['Liquefaction Damage is Unlikely', 'Very Low Liquefaction Vulnerability', 'Low Liquefaction Vulnerability', 'Liquefaction Damage is Possible', 'Medium Liquefaction Vulnerability', 'High Liquefaction Vulnerability']
 
-    rz_parcels = gpd.clip(census_data, liq_data[0], keep_geom_type=True)
-    TC1_parcels = gpd.clip(census_data, liq_data[1], keep_geom_type=True)
-    TC2_parcels = gpd.clip(census_data, liq_data[2], keep_geom_type=True)
-    TC3_parcels = gpd.clip(census_data, liq_data[3], keep_geom_type=True)
+    #Create an empty GeoDataFrame of each liquefaction category, then fill with
+    #polygons that make up that category from the input data
+    lick0 = gpd.GeoDataFrame(columns=['geometry'])
+    lick1 = gpd.GeoDataFrame(columns=['geometry'])
+    lick2 = gpd.GeoDataFrame(columns=['geometry'])
+    lick3 = gpd.GeoDataFrame(columns=['geometry'])
+    lick4 = gpd.GeoDataFrame(columns=['geometry'])
+    lick5 = gpd.GeoDataFrame(columns=['geometry'])
+    for index, row in liq_data.iterrows():
+        if row['Liq_Cat'] == lick_cats[0]:
+            lick0 = lick0.append({'geometry': row['geometry']}, ignore_index=True)
+        elif row['Liq_Cat'] == lick_cats[1]:
+            lick1 = lick1.append({'geometry': row['geometry']}, ignore_index=True)
+        elif row['Liq_Cat'] == lick_cats[2]:
+            lick2 = lick2.append({'geometry': row['geometry']}, ignore_index=True)
+        elif row['Liq_Cat'] == lick_cats[3]:
+            lick3 = lick3.append({'geometry': row['geometry']}, ignore_index=True)
+        elif row['Liq_Cat'] == lick_cats[4]:
+            lick4 = lick4.append({'geometry': row['geometry']}, ignore_index=True)
+        elif row['Liq_Cat'] == lick_cats[5]:
+            lick5 = lick5.append({'geometry': row['geometry']}, ignore_index=True)
 
-    zones = np.zeros(len(census_data))
-
+    #Create and fill arrays of sets of boolean values. Each set will be either
+    #all False or have one True, in which case the census parcel is in one of
+    #the polygons defining the liquefaction zone
+    in_lick0 = []
+    in_lick1 = []
+    in_lick2 = []
+    in_lick3 = []
+    in_lick4 = []
+    in_lick5 = []
     for index, row in census_data.iterrows():
-        in_rz = rz_parcels['geometry'].contains(row['geometry'].centroid)
-        in_TC1 = rz_parcels['geometry'].contains(row['geometry'].centroid)
-        in_TC2 = rz_parcels['geometry'].contains(row['geometry'].centroid)
-        in_TC3 = rz_parcels['geometry'].contains(row['geometry'].centroid)
+        in_lick0.append(lick0['geometry'].contains(row['geometry'].centroid))
+        in_lick1.append(lick1['geometry'].contains(row['geometry'].centroid))
+        in_lick2.append(lick2['geometry'].contains(row['geometry'].centroid))
+        in_lick3.append(lick3['geometry'].contains(row['geometry'].centroid))
+        in_lick4.append(lick4['geometry'].contains(row['geometry'].centroid))
+        in_lick5.append(lick5['geometry'].contains(row['geometry'].centroid))
 
-        if len(in_rz.unique()) > 1:
-            zones[index] = 2
-        elif len(in_TC1.unique()) > 1:
-            zones[index] = 0.1
-        elif len(in_TC2.unique()) > 1:
-            zones[index] = 1
-        elif len(in_TC3.unique()) > 1:
-            zones[index] = 10
+    #Create the f output array. Give a valeu based on what category each parcel
+    #falls into. These values are adjustable
+    f = np.zeros(len(census_data))
+    index = 0 #reset to zero at each for loop
+    for cp in in_lick0:
+        for loc in cp:
+            if loc:
+                f[index] = -9 #damage unlikely
+        index += 1
 
-    zones
-    #for i in in_rz:
-    #    if i:
-    #        print(i)
+    index = 0
+    for cp in in_lick1:
+        for loc in cp:
+            if loc:
+                f[index] = .01 #very low vulnerability
+        index += 1
 
+    index = 0
+    for cp in in_lick2:
+        for loc in cp:
+            if loc:
+                f[index] = .1 #low vulnerability
+        index += 1
 
+    index = 0
+    for cp in in_lick3:
+        for loc in cp:
+            if loc:
+                f[index] = 9 #damage possible
+        index += 1
 
+    index = 0
+    for cp in in_lick4:
+        for loc in cp:
+            if loc:
+                f[index] = .5 #medium vulnerability
+        index += 1
 
-    type(rz_parcels['geometry'])
-
-
-    for index, row in census_data.iterrows():
-        if row['geometry'].centroid.within(rz_parcels):
-            liq_type[index] = 1
-        elif row['geometry'].centroid.within(TC1_parcels):
-            liq_type[index] = 1
-        elif row['geometry'].centroid.within(TC2_parcels):
-            liq_type[index] = 1
-        elif row['geometry'].centroid.within(TC3_parcels):
-            liq_type[index] = 1
-
-        #if parcel in rz_parcels:
-        #    print(parcel)
-
-
-    census_data
-    #for poly in liquefaction_data['geometry']:
-    #    type(poly)
-    #    helpme = poly.contains(census_data['geometry'].centroid)
-    #
-    #    for n in range(len(helpme)):
-    #        if helpme[n]:
-    #            liq_type[n] = index
-    #
-    #    index += 1
-
-
-
-
+    index = 0
+    for cp in in_lick5:
+        for loc in cp:
+            if loc:
+                f[index] = 1 #high vulnerability
+        index += 1
 
 
+    return f
 
 
 
@@ -281,3 +316,4 @@ def f_dist(distance_data, census_data):
 
 
 def f_dev(development_data, census_data):
+    """ no data """
