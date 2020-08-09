@@ -43,7 +43,8 @@ def get_data():
     """
 
     boundary = gpd.read_file("data/boundary/city_boundary.shp")
-    census = gpd.read_file("data/raw/socioeconomic/2018-census-christchurch.shp")
+    census_pop = gpd.read_file("data/raw/socioeconomic/2018-census-christchurch.shp")
+    census_houses = gpd.read_file("data/raw/socioeconomic/census-dwellings.shp")
 
     roads = gpd.read_file("data/raw/infrastructure/street_centre_line.shp")
     parks = gpd.read_file("data/raw/infrastructure/parks.shp")
@@ -62,10 +63,10 @@ def get_data():
     ### Enter hazards here that are not SLR coastal flood projections
     hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp")]
 
-    return boundary, census, infra, hazards, coastal_flood
+    return boundary, census_pop, census_houses, infra, hazards, coastal_flood
 
 
-def clip_to_boundary(boundary, census, infra, hazards, coastal_flood):
+def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
     """This defination module clips all the data to the city boundary.
 
     Parameters
@@ -99,6 +100,7 @@ def clip_to_boundary(boundary, census, infra, hazards, coastal_flood):
     """
 
     clipped_census = gpd.clip(census, boundary)
+    clipped_houses = gpd.clip(houses, boundary)
 
     clipped_hazards = []
     for hazard in hazards:
@@ -119,12 +121,12 @@ def clip_to_boundary(boundary, census, infra, hazards, coastal_flood):
 
 
     #Save all to the file structure now!
-    save_clipped_to_file(clipped_census, clipped_infra, clipped_hazards, clipped_coastal)
+    save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal)
 
-    return clipped_census, clipped_infra, clipped_hazards, clipped_coastal
+    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal
 
 
-def save_clipped_to_file(clipped_census, clipped_infra, clipped_hazards, clipped_coastal):
+def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal):
     """Saves the clipped data to the file structure.
 
     Parameters
@@ -148,6 +150,7 @@ def save_clipped_to_file(clipped_census, clipped_infra, clipped_hazards, clipped
         os.mkdir("data/clipped")
 
     clipped_census.to_file("data/clipped/census-2018.shp")
+    clipped_houses.to_file("data/clipped/census-house.shp")
 
     ### ASSUME HAZARDS ARE ALREADY CLIPPED TO THE BOUNDARY. IF THEY ARE TOO LARGE THEN THE FOLLOWING CODE NEEDS TO BE UPDATED IN THE TIF SECTION AND UNCOMMENTED
     for hazard in clipped_hazards:
@@ -167,7 +170,7 @@ def save_clipped_to_file(clipped_census, clipped_infra, clipped_hazards, clipped
     clipped_infra[2].to_file("data/clipped/parks.shp")
 
 
-def open_clipped_data(hazard_list):
+def open_clipped_data(hazards):
     """If the clipped module has already run, then we need to open the data files. This will save computational time as we only need to clip the data once!
 
     Parameters
@@ -189,6 +192,7 @@ def open_clipped_data(hazard_list):
     """
 
     clipped_census = gpd.read_file("data/clipped/census-2018.shp")
+    clipped_houses = gpd.read_file("data/clipped/census-house.shp")
 
     clipped_infra = []
     clipped_infra.append(gpd.read_file("data/clipped/roads.shp"))
@@ -200,16 +204,55 @@ def open_clipped_data(hazard_list):
         clipped_coastal.append(gpd.read_file("data/clipped/{}cm SLR.shp".format(slr)))
 
     clipped_hazards = []
-    for hazard in hazard_list:
+    for hazard in hazards:
         if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
-            clipped_hazards.append(rio.open("data/clipped/tsunami.tif"))
+            clipped_hazards.append(hazard)
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
-            clipped_hazards.append(gpd.read_file("data/clipped/liq.shp"))
+            clipped_hazards.append(hazard)
 
-    return clipped_census, clipped_infra, clipped_hazards, clipped_coastal
+    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal
 
 
-def add_f_scores(clipped_census, raw_census, clipped_infra, clipped_hazards, clipped_coastal):
+def merge_census_shapefiles(pop, houses):
+    """
+    """
+    #Extract only the relevant columns of both Datasets
+    pop = pop[['SA12018_V1', 'C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    #Census_2018_usually_resident_population_count (C18_CURPop)
+    #Census_2018_census_night_population_count (18_CNPop)
+
+    houses = houses[['SA12018_V1', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    #Census_2018_Occupied_private_dwelling_type_Total (C18_OccP_4)
+    #Census_2018_Dwelling_record_type_Total_occupied_dwellings (C18_OccD_2)
+    #Census_2018_Occupied_non_private_dwelling_type_Total (C18_OccD_6)
+
+    #Convert the DataSets to dictionaries, via array and lists
+    pop_array = pop.to_numpy()
+    census_list = np.ndarray.tolist(pop_array)
+    house_array = houses.to_numpy()
+    houses_list = np.ndarray.tolist(house_array)
+
+    pop_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
+    house_dict = { houses_list[i][0] : houses_list[i][1:] for i in range(0, len(houses_list)) }
+
+    #Append both list of values for each parcel into one dictionary
+    merged_dict = {}
+    for key, value in pop_dict.items():
+        if key in house_dict.keys():
+            merged_dict.update( {key : value[:2] + house_dict[key][:5] + value[4:]})
+
+    #Convert the merged dictionry to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(merged_dict, orient='index', dtype=object)
+    merged_census = gpd.GeoDataFrame(df)
+    merged_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry'])
+    merged_census.to_file("data/processed/merged_census.shp")
+    merged_census = gpd.read_file("data/processed/merged_census.shp")
+    merged_census.rename(columns={'index': 'SA1 Number'})
+
+    return merged_census
+
+
+def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clipped_coastal):
     """ Takes the clipped data, and amends the clipped_census data to include the f_scores for each of the objective functions in a column of the processed_census data file
 
     f functions for the Christchurch optimisation study. defines the following functions:
@@ -222,31 +265,33 @@ def add_f_scores(clipped_census, raw_census, clipped_infra, clipped_hazards, cli
     6. f_dev
 
     """
+    # merged_census = gpd.read_file("data/processed/merged_census.shp")
+    merged_census = merged_census.set_crs("EPSG:2193")
 
-    census = clipped_census[['SA12018_V1', 'C06_CURPop', 'C13_CURPop', 'C18_CURPop', 'C06_CNPop', 'C13_CNPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
-    census = gpd.read_file("data/raw/ss/censusnew.shp")
-    tsu_inundation = func.f_tsu(clipped_hazards[0], census)
+    tsu_inundation = func.f_tsu(clipped_hazards[0], merged_census)
     coastal_inundation = func.f_cflood(clipped_coastal, raw_census)
     ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
 
-    census_array = census.to_numpy()
+    #Convert the census array to a dictionary so that we can add values
+    census_array = merged_census.to_numpy()
     census_list = np.ndarray.tolist(census_array)
+    census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
+
+    #Add the f-function values to the dictionary of the parcels
     index = 0
+    for key, value in census_dict.items():
+        value.append(tsu_inundation[index])
+        value.append(coastal_inundation[index])
+        ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
+        index += 1
 
-    for row in census_list:
-        row.append(tsu_inundation[index])
-        row.append(coastal_inundation[index])
+    #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
+    proc_census = gpd.GeoDataFrame(df)
+    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'f_tsu', 'f_cflood'])
 
-    census_array = np.array(census_list,dtype=object)
-    census_frame = gpd.GeoDataFrame(census_array)
-    census_frame.columns = census.keys().append(pd.Index(['f_tsu', 'f_cflood']))
-    print(census_frame.head())
+    #Save the processed file fo ease of computational time later on
+    proc_census.to_file("data/processed/census-final.shp")
+    proc_census = gpd.read_file("data/processed/census-final.shp")
 
-
-    #proc_census_array[index] = np.append(census_array, coastal_inundation[index])
-
-    # proc_census = gpd.GeoDataFrame(proc_census_array)
-    # proc_census.columns = census.keys()
-    # print(census_array[0])
-    # print(proc_census.head())
-    # print(proc_census.keys())
+    return proc_census
