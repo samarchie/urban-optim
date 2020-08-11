@@ -70,7 +70,7 @@ def get_data():
     return boundaries, census_pop, census_houses, infra, hazards, coastal_flood
 
 
-def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood, planning_zones):
+def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
     """This defination module clips all the data to the city boundary.
 
     Parameters
@@ -100,8 +100,6 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood, pl
         List of coastal flooding with SLR clipped to the extents of the city boundary
     clipped_centres : GeoDataFrame
         Layer of points that define the suburb/city centres which has been clipped to the extent of the city boundary
-    clipped_zones : GeoDataFrame
-        Layer of the Distrcit Plan Zones, clipped to the city boundary
     """
 
     clipped_census = gpd.clip(census, boundary)
@@ -124,16 +122,13 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood, pl
     for coastal_flooding in coastal_flood:
         clipped_coastal.append(gpd.clip(coastal_flooding, boundary))
 
-    clipped_zones = gpd.clip(planning_zones, boundary)
-    clipped_zones
-
     #Save all to the file structure now!
-    save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones)
+    save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal)
 
-    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones
+    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal
 
 
-def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones):
+def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal):
     """Saves the clipped data to the file structure.
 
     Parameters
@@ -146,8 +141,6 @@ def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_
         List of rasterIO Datasets and GeoDataFrames of the hazards to analyse.
     clipped_coastal : List
         List of the GeoDataFrames of the hazard from coastal inundation where each new entry in the list is a 10.
-    clipped_zones : GeoDataFrame
-        Layer of the Distrcit Plan Zones, clipped to the city boundary
 
     Returns
     -------
@@ -178,8 +171,6 @@ def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_
     clipped_infra[1].to_file("data/clipped/town_centres.shp")
     clipped_infra[2].to_file("data/clipped/parks.shp")
 
-    clipped_zones.to_file("data/clipped/zones.shp")
-
 
 def open_clipped_data(hazards):
     """If the clipped module has already run, then we need to open the data files. This will save computational time as we only need to clip the data once!
@@ -199,8 +190,6 @@ def open_clipped_data(hazards):
         List of hazard data clipped to the extents of the city boundary.
     clipped_coastal : List
         List of coastal flooding with SLR clipped to the extents of the city boundary
-    clipped_zones : GeoDataFrame
-        Layer of the Distrcit Plan Zones, clipped to the city boundary
 
     """
 
@@ -223,9 +212,7 @@ def open_clipped_data(hazards):
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
             clipped_hazards.append(hazard)
 
-    clipped_zones = gpd.read_file("data/clipped/zones.shp")
-
-    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal, clipped_zones
+    return clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal,
 
 
 def merge_census_data(clipped_census_pop, clipped_houses):
@@ -241,7 +228,9 @@ def merge_census_data(clipped_census_pop, clipped_houses):
     Returns
     -------
     merged_census : GeoDataFrame
-        Census (2018) of dwelling and population numbers, clipped to the city boundary.
+        Census (2018) of dwelling and population numbers, clipped to the city boundary
+    merged_census_dict : Dictionary
+        Census (2018) of dwelling and population numbers, clipped to the city boundary, where the parcel numbers of the statistical areas are the keys to the dictionary.
 
     """
 
@@ -265,20 +254,65 @@ def merge_census_data(clipped_census_pop, clipped_houses):
     house_dict = { houses_list[i][0] : houses_list[i][1:] for i in range(0, len(houses_list)) }
 
     #Append both list of values for each parcel into one dictionary
-    merged_dict = {}
+    merged_census_dict = {}
     for key, value in pop_dict.items():
         if key in house_dict.keys():
-            merged_dict.update( {key : value[:2] + house_dict[key][:5] + value[4:]})
+            merged_census_dict.update( {key : value[:2] + house_dict[key][:5] + value[4:]})
 
-    #Convert the merged dictionry to a GeoDataFrame, via a Pandas DataFrame
-    df = pd.DataFrame.from_dict(merged_dict, orient='index', dtype=object)
+    #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(merged_census_dict, orient='index', dtype=object)
     merged_census = gpd.GeoDataFrame(df)
     merged_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry'])
     merged_census.to_file("data/processed/merged_census.shp")
     merged_census = gpd.read_file("data/processed/merged_census.shp")
     merged_census.rename(columns={'index': 'SA1 Number'})
 
-    return merged_census
+    return merged_census, merged_census_dict
+
+
+def add_planning_zones(census, census_dict, planning_zones):
+    """
+    """
+    census = census.set_crs('EPSG:2193')
+
+    #Clip the data to only that run by the CCC
+    chch_zones = planning_zones.loc[planning_zones["PLAN_NAME"] == 'Christchurch District Plan']
+
+    #List the possible District Plan Zones to be used
+    possible_zones = []
+    for type in chch_zones["ZONE_TYPE"].unique():
+        possible_zones.append(type)
+
+    for zone in possible_zones:
+        #Find the area of which is zoned by the District PLan to be residential, for example:
+        res_zone = chch_zones.loc[chch_zones["ZONE_TYPE"] == zone]
+
+        #Find the locations that overlap the residential zone with the census data
+        res_props = gpd.overlay(census, res_zone, how='intersection', keep_geom_type=False)
+
+        #Keep a dictionary of properties that have been labelled already for this zoning type
+        properties_added = {}
+        for index, prop in res_props.iterrows():
+            prop_number = prop[0]
+            if not properties_added.get(prop_number, False):
+                #Add the zoning information to the Census Dictionary
+                if len(census_dict[prop_number]) <= 11:
+                    census_dict[prop_number].insert(11, zone)
+                else:
+                    census_dict[prop_number][11] += ", " + zone
+
+                #Add key to dictionary so doesnt we dont write the zoning info more than once
+                properties_added[prop_number] = True
+
+    #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
+    zoned_census = gpd.GeoDataFrame(df)
+    zoned_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'Planning Zones'])
+    zoned_census.to_file("data/processed/census_with_zones.shp")
+    zoned_census = gpd.read_file("data/processed/census_with_zones.shp")
+    zoned_census.rename(columns={'index': 'SA1 Number'})
+
+    return zoned_census
 
 
 def add_density(census):
@@ -301,37 +335,10 @@ def add_density(census):
     census["AREA_SQ_KM"] = census["AREA_SQ_KM"].astype(float)
 
     #Add the density column
-    census["density (dw/km2)"] = census["C18_OccP_4"] / census["AREA_SQ_KM"]
+    census["Density (dw/km2)"] = census["C18_OccP_4"] / census["AREA_SQ_KM"]
 
     return census
 
-
-def add_planning_zones(census, planning_zones):
-    """
-    """
-
-    census = gpd.read_file("data/processed/merged_census.shp")
-    census = census.set_crs("EPSG:2193")
-    planning_zones = gpd.read_file("data/boundary/District_Plan_Zones.shp")
-
-    chch_zones = planning_zones.loc[planning_zones['PLAN_NAME'] == 'Christchurch District Plan'].copy()
-
-    res_zone = chch_zones.loc[chch_zones["ZONE_TYPE"] == 'Residential Zone']
-    res_zone
-
-    census
-    res_props = census.within(res_zone)
-    len(res_props)
-    for index in len(res_props)
-
-
-
-    'Special Purpose Zone', 'Mixed Use Zone', 'Commercial Zone',
-           'Industrial Zone', 'Residential Zone', 'Open Space Zone',
-           'Rural Zone', 'Transport Zone'
-
-
-    return census_updated
 
 def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clipped_coastal):
     """ Takes the clipped data, and amends the clipped_census data to include the f_scores for each of the objective functions in a column of the processed_census data file
@@ -369,7 +376,8 @@ def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clip
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
-    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'f_tsu', 'f_cflood'])
+    print(proc_census.crs())
+    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'Planning Zones', "Density (dw/km2)", 'f_tsu', 'f_cflood'])
 
     #Save the processed file fo ease of computational time later on
     proc_census.to_file("data/processed/census.shp")
