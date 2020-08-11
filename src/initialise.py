@@ -271,8 +271,24 @@ def merge_census_data(clipped_census_pop, clipped_houses):
 
 
 def add_planning_zones(census, census_dict, planning_zones):
+    """Short summary.
+
+    Parameters
+    ----------
+    census : GeoDataFrame
+        Census (2018) of dwelling and population numbers, clipped to the city boundary
+    census_dict : Dictionary
+        Census (2018) of dwelling and population numbers, clipped to the city boundary, where the parcel numbers of the statistical areas are the keys to the dictionary.
+    planning_zones : GeoDataFrame
+        Geospatial layer of the District Plan Zoning Maps.
+
+    Returns
+    -------
+    zoned_census : GeoDataFrame
+        Census (2018) of dwelling, population numbers and a list of what District Planning Zones the census parcel lie within, clipped to the city boundary.
+
     """
-    """
+
     census = census.set_crs('EPSG:2193')
 
     #Clip the data to only that run by the CCC
@@ -331,11 +347,11 @@ def add_density(census):
     """
 
     #Change the columns from strings to floating point numbers
-    census["C18_OccP_4"] = census["C18_OccP_4"].astype(float)
-    census["AREA_SQ_KM"] = census["AREA_SQ_KM"].astype(float)
+    census["C18_OccD_2"] = census["C18_OccD_2"].astype(float)
+    census["LAND_AREA_"] = census["LAND_AREA_"].astype(float)
 
     #Add the density column
-    census["Density (dw/km2)"] = census["C18_OccP_4"] / census["AREA_SQ_KM"]
+    census["Density (dw/ha)"] = census["C18_OccD_2"] / 100*census["LAND_AREA_"]
 
     return census
 
@@ -375,9 +391,9 @@ def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clip
 
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
-    proc_census = gpd.GeoDataFrame(df)
-    print(proc_census.crs())
-    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'Planning Zones', "Density (dw/km2)", 'f_tsu', 'f_cflood'])
+    proc_census = gpd.GeoDataFrame(df, dtype=object)
+    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'Planning Zones', 'geometry', "Density (dw/ha)", 'f_tsu', 'f_cflood'])
+    proc_census.set_geometry(col='geometry', inplace=True)
 
     #Save the processed file fo ease of computational time later on
     proc_census.to_file("data/processed/census.shp")
