@@ -25,10 +25,9 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 boundary = gpd.read_file('data/boundary/city_boundary.shp')
-tsu_data = rio.open('data/raw/hazards/tsunami.tif')
-census_data_raw = gpd.read_file('data/raw/socioeconomic/2018-census-christchurch.shp')
-census_data = gpd.clip(census_data_raw, boundary)
-###
+#tsu_data = rio.open('data/raw/hazards/tsunami.tif')
+census_data = gpd.read_file('data/clipped/census-2018.shp')
+
 
 #Working yay :)
 def f_tsu(tsu_data, census_data):
@@ -81,27 +80,15 @@ def f_tsu(tsu_data, census_data):
 
     return norm_inundation
 
-f_tsu(tsu_data, census_data)
+#f_tsu(tsu_data, census_data)
 
 ### Not in end code, just for testing ###
-coastal_flood_data_raw = []
-for slr in range(0, 310, 10):
-    coastal_flood_data_raw.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
-
 coastal_flood_data = []
-for slr in coastal_flood_data_raw:
-    a = gpd.clip(slr, boundary)
-    coastal_flood_data.append(a)
-
-#pd.set_option("display.max_rows", 10)
-
-import sys
-#np.set_printoptions(threshold=sys.maxsize)
-#np.set_printoptions(threshold=10)
-
+for slr in range(0, 310, 10):
+    coastal_flood_data.append(gpd.read_file('data/clipped/{}cm SLR.shp'.format(slr)))
 ###
 
-def f_cflood(coastal_flood_data, census_data_raw):
+def f_cflood(coastal_flood_data, census_data):
     """Calculates the coastal flooding inundation each census parcel is prone
     to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in
     10 cm intervals
@@ -114,7 +101,7 @@ def f_cflood(coastal_flood_data, census_data_raw):
     census_data : GeoDataFrame
         contains all the potential parcels (ds) to be evaluated as shapely
         polygons.
-        You gotta put it in RAWWWwww "We likes it raww, and wrigglingggg"
+        Must have continuous indexing in GDF, no skipping
 
     Returns
     -------
@@ -128,11 +115,11 @@ def f_cflood(coastal_flood_data, census_data_raw):
     #sea level rise
     clipped_census = []
     for flood in coastal_flood_data:
-        clipped_census.append(gpd.clip(census_data_raw, flood['geometry'], keep_geom_type=True))
+        clipped_census.append(gpd.clip(census_data, flood['geometry'], keep_geom_type=True))
 
     #Create a numpy array containing the sea level rise value which causes each
     #parcel to first be flooded from the coastal surge
-    inundated_slr = np.full(len(census_data_raw), None)
+    inundated_slr = np.full(len(census_data), None)
     for i in range(len(clipped_census)):
         flooded = clipped_census[len(clipped_census) -1 - i]['geometry'].contains(census_data_raw['geometry'].centroid)
         for n in range(len(flooded)):
@@ -162,8 +149,18 @@ def f_cflood(coastal_flood_data, census_data_raw):
     return f
 
 #Ignore warnings, f list at bottom of output
-#fcflood = f_cflood(coastal_flood_data, census_data_raw)
-#fcflood
+fcflood = f_cflood(coastal_flood_data, census_data)
+fcflood
+
+pluvial_flood_data_raw = gpd.read_file('data/raw/hazards/flood_1_in_500.shp')
+pluvial_clipped = gpd.clip(pluvial_flood_data_raw, boundary)
+pluvial_clipped.to_file(r'data/clipped/pluvial.shp')
+pluvial_flood_data = gpd.read_file('data/clipped/pluvial.shp')
+pluvial_flood_data
+census_data
+
+pd.set_option("display.max_rows", 10)
+np.set_printoptions(threshold=10)
 
 def f_rflood(pluvial_flood_data, census_data):
     """Calculates river flooding inundation
@@ -183,18 +180,37 @@ def f_rflood(pluvial_flood_data, census_data):
 
     """
 
+    clipped_census = gpd.clip(census_data, pluvial_flood_data)
+    clipped_census
 
-### Not in final code
-pd.set_option("display.max_rows", 10)
-np.set_printoptions(threshold=sys.maxsize)
-np.set_printoptions(threshold=10)
+    f = np.zeros(len(census_data))
+
+    for index, row in census_data.iterrows():
+        if len(clipped_census.contains(row['geometry'].centroid).unique()) > 1:
+            f[index] = 1
+        elif len(clipped_census.intersects(row['geometry']).unique()) > 1:
+            f[index] = 1
+
+    a = 0
+    for bit in f:
+        if bit == 1:
+            a += 1
+    a
+
+    row['geometry'].centroid.within(clipped_census['geometry'])
+    len(clipped_census.contains(row['geometry'].centroid).unique())
+    clipped_census.intersects(row['geometry'])
 
 
-liq_data = gpd.read_file('data/raw/hazards/liquefaction_vulnerability.shp')
-liq_data
-liq_data.plot()
 
 
+
+
+
+
+
+
+#liq_data = gpd.read_file('data/raw/hazards/liquefaction_vulnerability.shp')
 
 
 def f_liq(liq_data, census_data):
@@ -308,12 +324,7 @@ def f_liq(liq_data, census_data):
 
 
 
+#def f_dist(distance_data, census_data):
 
 
-
-
-def f_dist(distance_data, census_data):
-
-
-def f_dev(development_data, census_data):
-    """ no data """
+#def f_dev(development_data, census_data):
