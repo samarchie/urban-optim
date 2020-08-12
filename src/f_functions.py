@@ -16,20 +16,15 @@ Data_Folder imported into each function is a string of the relative filepath to
 the folder where the data (hazards, amenities, etc.) is located
 """
 
-
-### Not in end code, just for testing ###
-import numpy as np
-import rasterio as rio
-import geopandas as gpd
-import pandas as pd
-from shapely.geometry import Point, Polygon
-
-boundary = gpd.read_file('data/boundary/city_boundary.shp')
-#tsu_data = rio.open('data/raw/hazards/tsunami.tif')
-census_data = gpd.read_file('data/clipped/census-2018.shp')
+### Needed modules so far ###
+#import numpy as np
+#import rasterio as rio
+#import geopandas as gpd
+#import pandas as pd
+#from shapely.geometry import Point, Polygon
 
 
-#Working yay :)
+
 def f_tsu(tsu_data, census_data):
     """
     Calculates the tsunami inundation each census parcel is prone to for a
@@ -80,13 +75,7 @@ def f_tsu(tsu_data, census_data):
 
     return norm_inundation
 
-#f_tsu(tsu_data, census_data)
 
-### Not in end code, just for testing ###
-coastal_flood_data = []
-for slr in range(0, 310, 10):
-    coastal_flood_data.append(gpd.read_file('data/clipped/{}cm SLR.shp'.format(slr)))
-###
 
 def f_cflood(coastal_flood_data, census_data):
     """Calculates the coastal flooding inundation each census parcel is prone
@@ -149,18 +138,7 @@ def f_cflood(coastal_flood_data, census_data):
     return f
 
 #Ignore warnings, f list at bottom of output
-fcflood = f_cflood(coastal_flood_data, census_data)
-fcflood
 
-pluvial_flood_data_raw = gpd.read_file('data/raw/hazards/flood_1_in_500.shp')
-pluvial_clipped = gpd.clip(pluvial_flood_data_raw, boundary)
-pluvial_clipped.to_file(r'data/clipped/pluvial.shp')
-pluvial_flood_data = gpd.read_file('data/clipped/pluvial.shp')
-pluvial_flood_data
-census_data
-
-pd.set_option("display.max_rows", 10)
-np.set_printoptions(threshold=10)
 
 def f_rflood(pluvial_flood_data, census_data):
     """Calculates river flooding inundation
@@ -191,26 +169,8 @@ def f_rflood(pluvial_flood_data, census_data):
         elif len(clipped_census.intersects(row['geometry']).unique()) > 1:
             f[index] = 1
 
-    a = 0
-    for bit in f:
-        if bit == 1:
-            a += 1
-    a
+    return f
 
-    row['geometry'].centroid.within(clipped_census['geometry'])
-    len(clipped_census.contains(row['geometry'].centroid).unique())
-    clipped_census.intersects(row['geometry'])
-
-
-
-
-
-
-
-
-
-
-#liq_data = gpd.read_file('data/raw/hazards/liquefaction_vulnerability.shp')
 
 
 def f_liq(liq_data, census_data):
