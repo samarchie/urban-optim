@@ -53,6 +53,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-processed_census = gpd.read_file("data/processed/census.shp")
-processed_census
