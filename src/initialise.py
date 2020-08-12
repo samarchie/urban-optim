@@ -21,7 +21,7 @@ import os
 import numpy as np
 
 #Import home-made modules
-import src.f_functions as func
+from src.f_functions import *
 
 
 def get_data():
@@ -30,7 +30,7 @@ def get_data():
     Returns
     -------
     boundary
-        A GeoDataFrame of the city boundary.
+        A GeoDataFrame of the city urban extent boundary.
     census
         A GeoDataFrame of the census statistical areas of the region
     infra
@@ -42,10 +42,13 @@ def get_data():
 
     """
 
-    boundary = gpd.read_file("data/boundary/city_boundary.shp")
+    boundary = gpd.read_file("data/boundary/urban_extent.shp")
     planning_zones = gpd.read_file("data/boundary/District_Plan_Zones.shp")
 
-    boundaries = [boundary, planning_zones]
+    tech_cats = gpd.read_file("data/raw/hazards/lique_red.shp")
+    red_zone_boundary = tech_cats.loc[tech_cats["DBH_TC"] == 'Red Zone']
+
+    boundaries = [boundary, planning_zones, red_zone_boundary]
 
     census_pop = gpd.read_file("data/raw/socioeconomic/2018-census-christchurch.shp")
     census_houses = gpd.read_file("data/raw/socioeconomic/census-dwellings.shp")
@@ -76,7 +79,7 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
     Parameters
     ----------
     boundary_polygon : GeoDataFrame
-        Polygon of the city boundary.
+        Polygon of the city urban extent boundary.
     road_data : GeoDataFrame
         Layer of lines of the centre-line of the road network
     census_data : GeoDataFrame
@@ -102,8 +105,9 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
         Layer of points that define the suburb/city centres which has been clipped to the extent of the city boundary
     """
 
-    clipped_census = gpd.clip(census, boundary)
-    clipped_houses = gpd.clip(houses, boundary)
+
+    clipped_census = gpd.overlay(census, boundary, how='union', keep_geom_type=False)
+    clipped_houses = gpd.gpd.overlay(houses, boundary, how='union', keep_geom_type=False)
 
     clipped_hazards = []
     for hazard in hazards:
@@ -331,6 +335,34 @@ def add_planning_zones(census, census_dict, planning_zones):
     return zoned_census
 
 
+def reduce_land_area(census, constraints):
+    """Module to remove constraints (such as red zone and parks) from the area count before calculating the density of each statistical area".
+
+    Parameters
+    ----------
+    census : GeoDataFrame
+        Census (2018) of dwelling, population numbers and a list of what District Planning Zones the census parcel lie within, clipped to the city boundary.
+    constraints : List of GeoDataFrames
+        List of unihabitable places, such as the Red Zone and public parks
+
+    Returns
+    -------
+    updated_census : GeoDataFrame
+        Census (2018) of dwelling, population numbers and a list of what District Planning Zones the census parcel lie within, clipped to the city boundary, red zones and public parks.
+
+    """
+    """
+    """
+
+    census.set_crs("EPSG:2193")
+
+    for constraint in constraints:
+            new_constraint = constraint.explode()
+            new_census = gpd.overlay(new_census, new_constraint, how='difference', keep_geom_type=False)
+
+    return new_census
+
+
 def add_density(census):
     """Calculated and adds the density (in dwellings per kilometre squared to the GeoDataFrame).
 
@@ -347,11 +379,11 @@ def add_density(census):
     """
 
     #Change the columns from strings to floating point numbers
-    census["C18_OccD_2"] = census["C18_OccD_2"].astype(float)
+    census["C18_OccP_4"] = census["C18_OccP_4"].astype(float)
     census["LAND_AREA_"] = census["LAND_AREA_"].astype(float)
 
     #Add the density column
-    census["Density (dw/ha)"] = census["C18_OccD_2"] / 100*census["LAND_AREA_"]
+    census["Density (dw/ha)"] = census["C18_OccP_4"] / 100*census["LAND_AREA_"]
 
     return census
 
@@ -372,8 +404,8 @@ def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clip
     # merged_census = gpd.read_file("data/processed/merged_census.shp")
     merged_census = merged_census.set_crs("EPSG:2193")
 
-    tsu_inundation = func.f_tsu(clipped_hazards[0], merged_census)
-    coastal_inundation = func.f_cflood(clipped_coastal, raw_census)
+    tsu_inundation = f_tsu(clipped_hazards[0], merged_census)
+    coastal_inundation = f_cflood(clipped_coastal, raw_census)
     ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
 
     #Convert the census array to a dictionary so that we can add values
