@@ -10,7 +10,7 @@ This module/script shall contain multiple definitions that will complete Phase 1
 #Import external modules
 import geopandas as gpd
 from geopandas import GeoDataFrame
-from shapely.geometry import Point
+from shapely.geometry import Point, Polygon
 import pandas as pd
 import matplotlib.pyplot as plt
 import osmnx as osm
@@ -58,8 +58,8 @@ def get_data():
     parks = parks.buffer(0)
 
     #Import the city/suburb centre locations from a csv file to a GeoDataFrame
-    df = pd.read_csv("sam\Population center and locality labels.csv", header=0)
-    town_centres = GeoDataFrame(df.drop(['x', 'y'], axis=1), crs='epsg:2193', geometry=[Point(xy) for xy in zip(df.x, df.y)])
+    df = pd.read_csv("sam/pop_labels.csv", header=0)
+    town_centres = GeoDataFrame(df.drop(['x', 'y'], axis=1), crs='EPSG:2193', geometry=[Point(xy) for xy in zip(df.x, df.y)])
 
     infra = [roads, town_centres, parks]
 
@@ -68,7 +68,7 @@ def get_data():
         coastal_flood.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
     ### Enter hazards here that are not SLR coastal flood projections
-    hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp")]
+    hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp"), gpd.read_file('data/raw/hazards/flood_1_in_500.shp')]
 
     return boundaries, census_pop, census_houses, infra, hazards, coastal_flood
 
