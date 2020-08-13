@@ -17,12 +17,17 @@ the folder where the data (hazards, amenities, etc.) is located
 """
 
 ### Needed modules so far ###
-#import numpy as np
-#import rasterio as rio
-#import geopandas as gpd
-#import pandas as pd
-#from shapely.geometry import Point, Polygon
+import numpy as np
+import rasterio as rio
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point, Polygon
 
+boundary = gpd.read_file('data/boundary/city_boundary.shp')
+extent = gpd.read_file('data/boundary/urban_extent.shp')
+
+#ax = boundary.plot()
+#extent.plot(ax=ax, color='red')
 
 
 def f_tsu(tsu_data, census_data):
@@ -36,8 +41,8 @@ def f_tsu(tsu_data, census_data):
     tsu_data : rasterIO Dataset
         Description of parameter `tsu_data`.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely
-        polygons.
+        contains all the potential statistical areas (ds) to be evaluated as
+        shapely polygons.
 
     Returns
     -------
@@ -88,8 +93,9 @@ def f_cflood(coastal_flood_data, census_data):
         Contains shape files of coastal inundation due to a 1% AEP storm surge
         with incremental sea level rise.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely
-        polygons.
+        contains all the potential statistical areas (ds) to be evaluated as
+        shapely polygons.
+
         Must have continuous indexing in GDF, no skipping
 
     Returns
@@ -148,8 +154,8 @@ def f_rflood(pluvial_flood_data, census_data):
     pluvial_flood_data : type
         Description of parameter `pluvial_flood_data`.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely
-        polygons.
+        contains all the potential statistical areas (ds) to be evaluated as
+        shapely polygons.
 
     Returns
     -------
@@ -181,8 +187,8 @@ def f_liq(liq_data, census_data):
     liquefaction_data : type
         Description of parameter `liquefaction_data`.
     census_data : GeoDataFrame
-        contains all the potential parcels (ds) to be evaluated as shapely
-        polygons.
+        contains all the potential statistical areas (ds) to be evaluated as
+        shapely polygons.
 
     Returns
     -------
@@ -283,8 +289,62 @@ def f_liq(liq_data, census_data):
 
 
 
+distance_data = pd.read_csv('data/raw/socioeconomic/distances_from_SA1.csv', header=0)
 
-#def f_dist(distance_data, census_data):
+def f_dist(distance_data, census_data):
+    """calculates the normalised distance between statistical areas and the
+    nearest key activity area.
+
+    Parameters
+    ----------
+    distance_data : Pandas DataFrame
+        A DataFrame containing the distance to each key activity area for all statistical areas
+    census_data : GeoPandas GeoDataFrame
+        contains all the potential statistical areas (ds) to be evaluated as
+        shapely polygons.
+
+    Returns
+    -------
+    numpy array
+        An array containing all f values in the same order as the statistical
+        areas are in
+
+    """
+
+    barrington = []
+    belfast = []
+    hornby = []
+    linwood = []
+    new_brighton = []
+    north_halswell = []
+    papanui_northlands = []
+    riccarton = []
+    shirley = []
+    for n in range(0, len(distance_data), 9):
+        barrington.append(distance_data['distance'][n])
+        belfast.append(distance_data['distance'][n+1])
+        hornby.append(distance_data['distance'][n+2])
+        linwood.append(distance_data['distance'][n+3])
+        new_brighton.append(distance_data['distance'][n+4])
+        north_halswell.append(distance_data['distance'][n+5])
+        papanui_northlands.append(distance_data['distance'][n+6])
+        riccarton.append(distance_data['distance'][n+7])
+        shirley.append(distance_data['distance'][n+8])
+
+    min_distances = []
+    for i in range(len(barrington)):
+        min_distances.append(np.min([barrington[i], belfast[i], hornby[i], linwood[i], new_brighton[i], north_halswell[i],  papanui_northlands[i], riccarton[i], shirley[i]]))
+
+    f = min_distances/(np.max(min_distances))
+
+    return f
 
 
-#def f_dev(development_data, census_data):
+#zones_raw = gpd.read_file('data/boundary/District_Plan_Zones.shp')
+#zones_clip = gpd.clip(zones_raw, extent)
+#zones_clip.to_file(r'data/clipped/zones.shp')
+#zones = gpd.read_file('data/clipped/zones.shp')
+#zones_raw
+
+#def f_dev(zones, census_data):
+    #Use zoning data
