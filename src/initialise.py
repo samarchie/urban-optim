@@ -43,7 +43,7 @@ def get_data():
     """
 
     boundary = gpd.read_file("data/boundary/urban_extent.shp")
-    planning_zones = gpd.read_file("data/boundary/District_Plan_Zones.shp")
+    planning_zones = gpd.read_file("data/boundary/planning_zones.shp")
 
     tech_cats = gpd.read_file("data/raw/hazards/lique_red.shp")
     red_zone_boundary = tech_cats.loc[tech_cats["DBH_TC"] == 'Red Zone']
@@ -58,7 +58,7 @@ def get_data():
     parks = parks.buffer(0)
 
     #Import the city/suburb centre locations from a csv file to a GeoDataFrame
-    df = pd.read_csv("sam/pop_labels.csv", header=0)
+    df = pd.read_csv("data/raw/socioeconomic/pop_labels.csv", header=0)
     town_centres = GeoDataFrame(df.drop(['x', 'y'], axis=1), crs='EPSG:2193', geometry=[Point(xy) for xy in zip(df.x, df.y)])
 
     infra = [roads, town_centres, parks]
@@ -104,10 +104,38 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
     clipped_centres : GeoDataFrame
         Layer of points that define the suburb/city centres which has been clipped to the extent of the city boundary
     """
+    #Extract only the relevant columns
+    census = census[['SA12018_V1', 'C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
 
+    #Generate a list of all properties that are within the boundary
+    props_in = gpd.clip(census, boundary)
+    props_array = props_in["SA12018_V1"].to_numpy()
+    props_list = props_array.tolist()
 
-    clipped_census = gpd.overlay(census, boundary, how='union', keep_geom_type=False)
-    clipped_houses = gpd.gpd.overlay(houses, boundary, how='union', keep_geom_type=False)
+    #Convert the census DataSet to a dictionary, via array and lists
+    census_array = census.to_numpy()
+    census_list = np.ndarray.tolist(census_array)
+    census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
+
+    #For each property number in props_list, copy the census geometry data row to a new list
+    new_list = []
+    for number in props_list:
+        values = census_dict.get(number)
+        new = [number] + values
+        new_list.append(new)
+
+    #Convert that new list of the whole parcels to to a dictionary
+    new_census_dict = { new_list[i][0] : new_list[i][1:] for i in range(0, len(new_list)) }
+
+    #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(new_census_dict, orient='index', dtype=object)
+    clipped_census = gpd.GeoDataFrame(df)
+    clipped_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry'])
+    clipped_census.set_geometry("geometry")
+    clipped_census = clipped_census.set_crs("EPSG:2193")
+
+    #Clip the dwelling census to the propserty census size
+    clipped_houses = gpd.clip(houses, clipped_census)
 
     clipped_hazards = []
     for hazard in hazards:
@@ -116,15 +144,15 @@ def clip_to_boundary(boundary, census, houses, infra, hazards, coastal_flood):
             clipped_hazards.append(hazard)
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
             #Its a shapefile we're dealing with so geopandas is allgood.
-            clipped_hazards.append(gpd.clip(hazard, boundary))
+            clipped_hazards.append(gpd.clip(hazard, clipped_census))
 
     clipped_infra = []
     for infrastructure in infra:
-        clipped_infra.append(gpd.clip(infrastructure, boundary))
+        clipped_infra.append(gpd.clip(infrastructure, clipped_census))
 
     clipped_coastal = []
     for coastal_flooding in coastal_flood:
-        clipped_coastal.append(gpd.clip(coastal_flooding, boundary))
+        clipped_coastal.append(gpd.clip(coastal_flooding, clipped_census))
 
     #Save all to the file structure now!
     save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_hazards, clipped_coastal)
@@ -155,7 +183,25 @@ def save_clipped_to_file(clipped_census, clipped_houses, clipped_infra, clipped_
     if not os.path.exists('data/clipped'):
         os.mkdir("data/clipped")
 
+    #Extract only the relevant columns of both Datasets to save
+    clipped_census = clipped_census[['C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    #Census_2018_usually_resident_population_count (C18_CURPop)
+    #Census_2018_census_night_population_count (18_CNPop)
     clipped_census.to_file("data/clipped/census-2018.shp")
+
+    clipped_houses = clipped_houses[['SA12018_V1', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
+    #Census_2018_Occupied_private_dwelling_type_Total (C18_OccP_4)
+    #Census_2018_Dwelling_record_type_Total_occupied_dwellings (C18_OccD_2)
+    #Census_2018_Occupied_non_private_dwelling_type_Total (C18_OccD_6)
+
+    #Drop the bad geometry types as cant save them :(
+    indexs = []
+    for index, row in clipped_houses.iterrows():
+        if 'GEOMETRYCOLLECTION' in str(row.geometry):
+            indexs.append(index)
+        elif 'MULTILINESTRING' in str(row.geometry):
+            indexs.append(index)
+    clipped_houses = clipped_houses.drop(indexs)
     clipped_houses.to_file("data/clipped/census-house.shp")
 
     ### ASSUME HAZARDS ARE ALREADY CLIPPED TO THE BOUNDARY. IF THEY ARE TOO LARGE THEN THE FOLLOWING CODE NEEDS TO BE UPDATED IN THE TIF SECTION AND UNCOMMENTED
@@ -189,7 +235,7 @@ def open_clipped_data(hazards):
     clipped_census : GeoDataFrame
         Census (2018) data clipped to the extents of the city boundary.
     clipped_roads : GeoDataFrame
-        ayer of lines of the centre-line of the road network clipped to the extents of the city boundary
+        Layer of lines of the centre-line of the road network clipped to the extents of the city boundary
     clipped_hazards : List
         List of hazard data clipped to the extents of the city boundary.
     clipped_coastal : List
@@ -238,16 +284,6 @@ def merge_census_data(clipped_census_pop, clipped_houses):
 
     """
 
-    #Extract only the relevant columns of both Datasets
-    clipped_census_pop = clipped_census_pop[['SA12018_V1', 'C18_CURPop', 'C18_CNPop', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
-    #Census_2018_usually_resident_population_count (C18_CURPop)
-    #Census_2018_census_night_population_count (18_CNPop)
-
-    clipped_houses = clipped_houses[['SA12018_V1', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry']]
-    #Census_2018_Occupied_private_dwelling_type_Total (C18_OccP_4)
-    #Census_2018_Dwelling_record_type_Total_occupied_dwellings (C18_OccD_2)
-    #Census_2018_Occupied_non_private_dwelling_type_Total (C18_OccD_6)
-
     #Convert the DataSets to dictionaries, via array and lists
     pop_array = clipped_census_pop.to_numpy()
     census_list = np.ndarray.tolist(pop_array)
@@ -269,12 +305,12 @@ def merge_census_data(clipped_census_pop, clipped_houses):
     merged_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry'])
     merged_census.to_file("data/processed/merged_census.shp")
     merged_census = gpd.read_file("data/processed/merged_census.shp")
-    merged_census.rename(columns={'index': 'SA1 Number'})
+    merged_census = merged_census.rename(columns={'index': 'SA12018_V1'})
 
     return merged_census, merged_census_dict
 
 
-def add_planning_zones(census, census_dict, planning_zones):
+def add_planning_zones(census, census_dict, planning_zones, boundary):
     """Short summary.
 
     Parameters
@@ -292,20 +328,16 @@ def add_planning_zones(census, census_dict, planning_zones):
         Census (2018) of dwelling, population numbers and a list of what District Planning Zones the census parcel lie within, clipped to the city boundary.
 
     """
-
-    census = census.set_crs('EPSG:2193')
-
-    #Clip the data to only that run by the CCC
-    chch_zones = planning_zones.loc[planning_zones["PLAN_NAME"] == 'Christchurch District Plan']
+    census = census.set_crs("EPSG:2193")
 
     #List the possible District Plan Zones to be used
     possible_zones = []
-    for type in chch_zones["ZONE_TYPE"].unique():
+    for type in planning_zones["ZoneGroup"].unique():
         possible_zones.append(type)
 
     for zone in possible_zones:
         #Find the area of which is zoned by the District PLan to be residential, for example:
-        res_zone = chch_zones.loc[chch_zones["ZONE_TYPE"] == zone]
+        res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
 
         #Find the locations that overlap the residential zone with the census data
         res_props = gpd.overlay(census, res_zone, how='intersection', keep_geom_type=False)
@@ -343,7 +375,7 @@ def reduce_land_area(census, constraints):
     census : GeoDataFrame
         Census (2018) of dwelling, population numbers and a list of what District Planning Zones the census parcel lie within, clipped to the city boundary.
     constraints : List of GeoDataFrames
-        List of unihabitable places, such as the Red Zone and public parks
+        List of uninhabitable places, such as the Red Zone and public parks
 
     Returns
     -------
@@ -351,14 +383,27 @@ def reduce_land_area(census, constraints):
         Census (2018) of dwelling, population numbers and a list of what District Planning Zones the census parcel lie within, clipped to the city boundary, red zones and public parks.
 
     """
-    """
-    """
-
-    census.set_crs("EPSG:2193")
+    #Take a copy of the GeoDataFrame and set its projection to NZGD2000
+    new_census = census.copy()
+    new_census = new_census.set_crs("EPSG:2193")
 
     for constraint in constraints:
-            new_constraint = constraint.explode()
-            new_census = gpd.overlay(new_census, new_constraint, how='difference', keep_geom_type=False)
+            #The overlay function only take GeoDataFrames, and hence the if statements convert the constraints to the right format for overlaying
+            if str(type(constraint)) == "<class 'geopandas.geoseries.GeoSeries'>":
+                constraint = gpd.GeoDataFrame(constraint)
+                constraint = constraint.rename(columns={0: 'geometry'})
+                constraint = constraint.set_geometry('geometry')
+                constraint = constraint.set_crs("EPSG:2193")
+
+            elif str(type(constraint)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
+                constraint = constraint.explode()
+                constraint.set_crs("EPSG:2193")
+
+            #Chop the parts of the statistical areas out that are touching the constraint
+            new_census = gpd.overlay(new_census, constraint, how='difference', keep_geom_type=False)
+
+    #Get rid of any unnecessary empty cells (which arise from the overlaying procedure)
+    new_census = new_census[~new_census.isna()['SA12018_V1']]
 
     return new_census
 
@@ -384,6 +429,8 @@ def add_density(census):
 
     #Add the density column
     census["Density (dw/ha)"] = census["C18_OccP_4"] / 100*census["LAND_AREA_"]
+
+    census.to_file("data/processed/census_with_density.shp")
 
     return census
 
