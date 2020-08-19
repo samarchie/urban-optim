@@ -13,15 +13,13 @@ from geopandas import GeoDataFrame
 from shapely.geometry import Point, Polygon
 import pandas as pd
 import matplotlib.pyplot as plt
-import osmnx as osm
-import networkx as nx
 import gdal
 import rasterio as rio
 import os
 import numpy as np
 
 #Import home-made modules
-from src.f_functions import *
+from src.objective_functions import *
 
 
 def get_data():
@@ -362,12 +360,12 @@ def add_planning_zones(census, census_dict, planning_zones, boundary):
     zoned_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'geometry', 'Planning Zones'])
     zoned_census.to_file("data/processed/census_with_zones.shp")
     zoned_census = gpd.read_file("data/processed/census_with_zones.shp")
-    zoned_census.rename(columns={'index': 'SA1 Number'})
+    zoned_census.rename(columns={'index': 'SA12018_V1'})
 
     return zoned_census
 
 
-def reduce_land_area(census, constraints):
+def apply_constraints(census, constraints):
     """Module to remove constraints (such as red zone and parks) from the area count before calculating the density of each statistical area".
 
     Parameters
@@ -403,7 +401,8 @@ def reduce_land_area(census, constraints):
             new_census = gpd.overlay(new_census, constraint, how='difference', keep_geom_type=False)
 
     #Get rid of any unnecessary empty cells (which arise from the overlaying procedure)
-    new_census = new_census[~new_census.isna()['SA12018_V1']]
+    new_census = new_census[~new_census.isna()['index']]
+    new_census.rename(columns={'index': 'SA12018_V1'})
 
     return new_census
 
@@ -448,11 +447,11 @@ def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clip
     6. f_dev
 
     """
-    # merged_census = gpd.read_file("data/processed/merged_census.shp")
+    merged_census = gpd.read_file("data/processed/census_with_density.shp")
     merged_census = merged_census.set_crs("EPSG:2193")
 
     tsu_inundation = f_tsu(clipped_hazards[0], merged_census)
-    coastal_inundation = f_cflood(clipped_coastal, raw_census)
+    coastal_inundation = f_cflood(clipped_coastal, merged_census)
     ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
 
     #Convert the census array to a dictionary so that we can add values
@@ -463,15 +462,15 @@ def add_f_scores(merged_census, raw_census, clipped_infra, clipped_hazards, clip
     #Add the f-function values to the dictionary of the parcels
     index = 0
     for key, value in census_dict.items():
-        value.append(tsu_inundation[index])
-        value.append(coastal_inundation[index])
+        value.append(float(tsu_inundation[index]))
+        value.append(float(coastal_inundation[index]))
         ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
         index += 1
 
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
-    proc_census = gpd.GeoDataFrame(df, dtype=object)
-    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'Planning Zones', 'geometry', "Density (dw/ha)", 'f_tsu', 'f_cflood'])
+    proc_census = gpd.GeoDataFrame(df)
+    proc_census.columns = pd.Index(['C18_CURPop', 'C18_CNPop', 'C18_OccP_4', 'C18_OccD_2', 'C18_OccD_6', 'LANDWATER', 'LANDWATER_', 'LAND_AREA_', 'AREA_SQ_KM', 'SHAPE_Leng', 'Planning Zones', 'Density (dw/ha)', "geometry", 'f_tsu', 'f_cflood'])
     proc_census.set_geometry(col='geometry', inplace=True)
 
     #Save the processed file fo ease of computational time later on

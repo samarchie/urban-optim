@@ -110,13 +110,13 @@ def f_cflood(coastal_flood_data, census_data):
     #sea level rise
     clipped_census = []
     for flood in coastal_flood_data:
-        clipped_census.append(gpd.clip(census_data, flood['geometry'], keep_geom_type=True))
+        clipped_census.append(gpd.clip(census_data, flood, keep_geom_type=True))
 
     #Create a numpy array containing the sea level rise value which causes each
     #parcel to first be flooded from the coastal surge
     inundated_slr = np.full(len(census_data), None)
     for i in range(len(clipped_census)):
-        flooded = clipped_census[len(clipped_census) -1 - i]['geometry'].contains(census_data_raw['geometry'].centroid)
+        flooded = clipped_census[len(clipped_census) -1 - i]['geometry'].contains(census_data['geometry'].centroid)
         for n in range(len(flooded)):
             if flooded[n]:
                 inundated_slr[n] = (30 - i)*10

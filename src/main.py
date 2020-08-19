@@ -14,7 +14,7 @@ import os
 import geopandas as gpd
 
 #Import our home-made modules
-from src.initialise import *
+from src.initialisation import *
 
 
 def main():
@@ -42,20 +42,23 @@ def main():
         census_zones = add_planning_zones(merged_census_geo, merged_census_dict, boundaries[1], boundaries[0])
 
         #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
+
+        ##TO FUTURE SAM: do we want to clip road widths as well?
+
         constraints = [boundaries[2], infra[2]] #red zone and parks respectively
-        updated_census = reduce_land_area(merged_census_geo, constraints)
+        updated_census = apply_constraints(census_zones, constraints)
 
         #Calulate current density in each parcel
         census_dens = add_density(updated_census)
 
         #Now want to pre-process everything!
         processed_census = add_f_scores(census_dens, census_pop, clipped_infra, clipped_hazards, clipped_coastal)
-        
+
     else:
         processed_census = gpd.read_file("data/processed/census_final.shp")
 
     print(processed_census)
-    #Want to apply constraints
+    print("we're all processed dude yayayayaya")
 
 if __name__ == "__main__":
     main()
