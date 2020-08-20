@@ -151,30 +151,31 @@ def add_planning_zones(clipped_census, boundaries):
     census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
 
     #List the possible District Plan Zones to be used
-    possible_zones = []
-    for zone_label in planning_zones["ZoneGroup"].unique():
-        possible_zones.append(zone_label)
+    possible_zones = ['Rural', 'Mixed Use', 'Residential']
+    # for zone_label in planning_zones["ZoneGroup"].unique():
+    #     possible_zones.append(zone_label)
+    zone = 'Residential'
+    # for zone in possible_zones:
 
-    for zone in possible_zones:
-        #Find the area of which is zoned by the District PLan to be residential, for example:
-        res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
+    #Find the area of which is zoned by the District PLan to be residential, for example:
+    counter = 3
+    res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
 
-        #Find the locations that overlap the residential zone with the census data
-        res_props = gpd.overlay(clipped_census, res_zone, how='intersection', keep_geom_type=False)
+    #Find the locations that overlap the residential zone with the census data
+    res_props = gpd.overlay(clipped_census, res_zone, how='intersection', keep_geom_type=False)
 
-        #Keep a dictionary of properties that have been labelled already for this zoning type
-        properties_added = {}
-        for index, prop in res_props.iterrows():
+    for index, prop in res_props.iterrows():
+        counter = 3
+        if index != 0:
             prop_number = prop[0]
-            if not properties_added.get(prop_number, False):
-                #Add the zoning information to the Census Dictionary
-                if len(census_dict[prop_number]) <= 3:
-                    census_dict[prop_number].insert(2, zone)
-                else:
-                    census_dict[prop_number][2] += ", " + zone
+            prop_number
+            if 1 == 1:
+                census_dict.get(prop_number)
+                census_dict[prop_number].insert(counter, float(prop['AREA_SQ_KM']))
+            else:
+                census_dict[prop_number] =+ float(prop['AREA_SQ_KM'])
+        counter =+ 1
 
-                #Add key to dictionary so doesnt we dont write the zoning info more than once
-                properties_added[prop_number] = True
 
     #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
@@ -193,7 +194,7 @@ def add_planning_zones(clipped_census, boundaries):
 def apply_constraints(census, constraints):
     #Take a copy of the GeoDataFrame and set its projection to NZGD2000
 
-    census.set_crs("EPSG:2193")
+    census.to_crs("EPSG:2193")
 
     for constraint in constraints:
             #The overlay function only take GeoDataFrames, and hence the if statements convert the constraints to the right format for overlaying
@@ -201,11 +202,11 @@ def apply_constraints(census, constraints):
                 constraint = gpd.GeoDataFrame(constraint)
                 constraint = constraint.rename(columns={0: 'geometry'})
                 constraint = constraint.set_geometry('geometry')
-                constraint = constraint.set_crs("EPSG:2193")
+                constraint = constraint.to_crs("EPSG:2193")
 
             elif str(type(constraint)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
                 constraint = constraint.explode()
-                constraint.set_crs("EPSG:2193")
+                constraint.to_crs("EPSG:2193")
 
             #Chop the parts of the statistical areas out that are touching the constraint
             new_census = gpd.overlay(census, constraint, how='difference', keep_geom_type=False)
@@ -256,7 +257,7 @@ def add_f_scores(merged_census, raw_census, clipped_hazards, clipped_coastal):
     6. f_dev
 
     """
-    merged_census.set_crs("EPSG:2193")
+    merged_census.to_crs("EPSG:2193")
 
     tsu_inundation = f_tsu(clipped_hazards[0], merged_census)
     coastal_inundation = f_cflood(clipped_coastal, merged_census)

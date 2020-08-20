@@ -23,11 +23,9 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point, Polygon
 
-# boundary = gpd.read_file('data/boundary/city_boundary.shp')
-# extent = gpd.read_file('data/boundary/urban_extent.shp')
 
-#ax = boundary.plot()
-#extent.plot(ax=ax, color='red')
+
+#boundary.plot()
 
 
 def f_tsu(tsu_data, census_data):
@@ -338,11 +336,27 @@ def f_dist(distance_data, census_data):
     return f
 
 
-#zones_raw = gpd.read_file('data/boundary/District_Plan_Zones.shp')
-#zones_clip = gpd.clip(zones_raw, extent)
-#zones_clip.to_file(r'data/clipped/zones.shp')
-#zones = gpd.read_file('data/clipped/zones.shp')
-#zones_raw
+def f_dev(census_with_zones):
+    """Calculates the percentage of each area which is not developable, and
+    returns as a decimal less than 1.
 
-#def f_dev(zones, census_data):
-    #Use zoning data
+    Parameters
+    ----------
+    census_with_zones : GeoDataFrame
+        contains all the census statistical areas with the amount of each zone
+        they fall in to.
+
+    Returns
+    -------
+    numpy array
+        An array containing all f values in the same order as the statistical
+        areas are in
+
+    """
+
+    # Zhu Li, do the thing!
+    for index, row in census_with_zones.iterrows():
+        developable_area = row['Residential'] + row['Mixed Use'] + row['Rural']
+        f[index] = 1-developable_area
+
+    return f
