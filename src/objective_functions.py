@@ -23,8 +23,8 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point, Polygon
 
-boundary = gpd.read_file('data/boundary/city_boundary.shp')
-extent = gpd.read_file('data/boundary/urban_extent.shp')
+# boundary = gpd.read_file('data/boundary/city_boundary.shp')
+# extent = gpd.read_file('data/boundary/urban_extent.shp')
 
 #ax = boundary.plot()
 #extent.plot(ax=ax, color='red')
@@ -288,8 +288,6 @@ def f_liq(liq_data, census_data):
     return f
 
 
-
-distance_data = pd.read_csv('data/raw/socioeconomic/distances_from_SA1.csv', header=0)
 
 def f_dist(distance_data, census_data):
     """calculates the normalised distance between statistical areas and the
