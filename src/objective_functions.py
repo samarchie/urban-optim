@@ -356,7 +356,7 @@ def f_dev(census_with_zones):
 
     # Zhu Li, do the thing!
     for index, row in census_with_zones.iterrows():
-        developable_area = row['Residential'] + row['Mixed Use'] + row['Rural']
+        developable_area = row['Residential %'] + row['Mixed Use %'] + row['Rural %']
         f[index] = 1-developable_area
 
     return f

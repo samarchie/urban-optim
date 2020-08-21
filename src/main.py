@@ -27,22 +27,23 @@ def main():
     #Clip the data if it has not already been clipped
     if not os.path.exists("data/clipped"):
         clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census, hazards, coastal_flood)
-    else:
-        clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
+
+    clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
     #Merge and process data is it has not already been done
     if not os.path.isfile("data/processed/census_final.shp"):
         if not os.path.exists("data/processed"):
             os.mkdir("data/processed")
 
-        #Add the District Planning Zone in the Census GeoDataFrame
-        census_zones = add_planning_zones(clipped_census, boundaries)
-
+        non_building_zones = ['Specific Purpose', 'Transport', 'Open Space']
         #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
-        updated_census = apply_constraints(census_zones, constraints)
+        constrained_census = apply_constraints(clipped_census, constraints, non_building_zones)
+
+        #Add the District Planning Zone in the Census GeoDataFrame
+        census_zones = add_planning_zones(constrained_census, boundaries)
 
         #Calulate current density in each parcel
-        census_dens = add_density(updated_census)
+        census_dens = add_density(census_zones)
 
         #Now want to pre-process everything!
         processed_census = add_f_scores(census_dens, census, clipped_hazards, clipped_coastal)
@@ -55,4 +56,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- 

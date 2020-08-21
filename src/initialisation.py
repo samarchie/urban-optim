@@ -141,60 +141,10 @@ def open_clipped_data(hazards):
     return clipped_census, clipped_hazards, clipped_coastal
 
 
-def add_planning_zones(clipped_census, boundaries):
-
-    boundary, planning_zones = boundaries
-
-    #Convert the census array to a dictionary so that we can add values
-    census_array = clipped_census.to_numpy()
-    census_list = np.ndarray.tolist(census_array)
-    census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
-
-    #List the possible District Plan Zones to be used
-    possible_zones = ['Rural', 'Mixed Use', 'Residential']
-    # for zone_label in planning_zones["ZoneGroup"].unique():
-    #     possible_zones.append(zone_label)
-    zone = 'Residential'
-    # for zone in possible_zones:
-
-    #Find the area of which is zoned by the District PLan to be residential, for example:
-    counter = 3
-    res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
-
-    #Find the locations that overlap the residential zone with the census data
-    res_props = gpd.overlay(clipped_census, res_zone, how='intersection', keep_geom_type=False)
-
-    for index, prop in res_props.iterrows():
-        counter = 3
-        if index != 0:
-            prop_number = prop[0]
-            prop_number
-            if 1 == 1:
-                census_dict.get(prop_number)
-                census_dict[prop_number].insert(counter, float(prop['AREA_SQ_KM']))
-            else:
-                census_dict[prop_number] =+ float(prop['AREA_SQ_KM'])
-        counter =+ 1
-
-
-    #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
-    df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
-    zoned_census = gpd.GeoDataFrame(df)
-    zoned_census.columns = pd.Index(["C18_OccP_4", 'AREA_SQ_KM', 'Planning Zones', 'geometry'])
-    zoned_census.set_geometry("geometry")
-    zoned_census = zoned_census.set_crs("EPSG:2193")
-
-    zoned_census.to_file("data/processed/census_with_zones.shp")
-    zoned_census = gpd.read_file("data/processed/census_with_zones.shp")
-    zoned_census.rename(columns={'index': 'SA12018_V1'})
-
-    return zoned_census
-
-
-def apply_constraints(census, constraints):
+def apply_constraints(clipped_census, constraints, non_building_zones):
     #Take a copy of the GeoDataFrame and set its projection to NZGD2000
 
-    census.to_crs("EPSG:2193")
+    clipped_census.to_crs("EPSG:2193")
 
     for constraint in constraints:
             #The overlay function only take GeoDataFrames, and hence the if statements convert the constraints to the right format for overlaying
@@ -209,12 +159,64 @@ def apply_constraints(census, constraints):
                 constraint.to_crs("EPSG:2193")
 
             #Chop the parts of the statistical areas out that are touching the constraint
-            new_census = gpd.overlay(census, constraint, how='difference', keep_geom_type=False)
+            new_census = gpd.overlay(clipped_census, constraint, how='difference', keep_geom_type=False)
 
     #Get rid of any unnecessary empty cells (which arise from the overlaying procedure)
     new_census = new_census[~new_census.isna()['index']]
 
     return new_census
+
+
+def add_planning_zones(clipped_census, boundaries):
+
+    boundary, planning_zones = boundaries
+    planning_zones["ZoneGroup"].unique()
+    #Convert the census array to a dictionary so that we can add values
+    census_array = clipped_census.to_numpy()
+    # census_list = np.ndarray.tolist(census_array)
+    census_dict = { census_array[i][0] : np.concatenate((census_array[i][1:], np.zeros(3))) for i in range(0, len(census_array)) }
+
+    #List the possible District Plan Zones to be used
+    possible_zones = ['Residential', 'Mixed Use', 'Rural']
+
+    for col_number in range(3, 6):
+        zone = possible_zones[col_number - 3]
+
+        #Find the area of which is zoned by the District PLan to be residential
+        res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
+
+        #Find the locations that overlap the residential zone with the census
+        res_props = gpd.overlay(clipped_census, res_zone, how='intersection', keep_geom_type=False)
+
+        #Extarct the areas of each locations
+        areas = res_props.area
+
+        for index, prop in res_props.iterrows():
+            prop_number = prop[0]
+            #Calculate how much area has already been allocated by previous zone
+            current_area_added = sum(census_dict[prop_number][3:])
+
+            #Extract new area to add (in km^2) and what the new updated area would be
+            area_to_add = float(areas[index])/float(10**6)
+            new_area = area_to_add + current_area_added
+
+            #Check if the area is less that the actual statistical area size, and adds the percentage to the right column
+            if new_area <= float(census_dict[prop_number][1]):
+                census_dict[prop_number][col_number] += new_area/float(census_dict[prop_number][1])
+
+    #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
+    zoned_census = gpd.GeoDataFrame(df)
+    zoned_census
+    zoned_census.columns = pd.Index(["C18_OccP_4", 'AREA_SQ_KM', 'geometry', 'Residential %', 'Mixed Use %', 'Rural %'])
+    zoned_census.set_geometry("geometry")
+    zoned_census = zoned_census.set_crs("EPSG:2193")
+
+    zoned_census.to_file("data/processed/census_with_zones.shp")
+    zoned_census = gpd.read_file("data/processed/census_with_zones.shp")
+    zoned_census.rename(columns={'index': 'SA12018_V1'})
+
+    return zoned_census
 
 
 def add_density(census):
