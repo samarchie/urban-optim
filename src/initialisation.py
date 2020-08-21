@@ -141,36 +141,51 @@ def open_clipped_data(hazards):
     return clipped_census, clipped_hazards, clipped_coastal
 
 
-def apply_constraints(clipped_census, constraints, non_building_zones):
+def update_constraints(non_building_zones, constraints, planning_zones):
+
+    non_building_zones_labels = ['Specific Purpose', 'Transport', 'Open Space']
+
+    non_building_zones = []
+    for zone in non_building_zones_labels:
+        constraints.append(planning_zones.loc[planning_zones["ZoneGroup"] == zone])
+
+    return constraints
+
+
+def apply_constraints(clipped_census, constraints):
     #Take a copy of the GeoDataFrame and set its projection to NZGD2000
 
     clipped_census.to_crs("EPSG:2193")
 
     for constraint in constraints:
-            #The overlay function only take GeoDataFrames, and hence the if statements convert the constraints to the right format for overlaying
-            if str(type(constraint)) == "<class 'geopandas.geoseries.GeoSeries'>":
-                constraint = gpd.GeoDataFrame(constraint)
-                constraint = constraint.rename(columns={0: 'geometry'})
-                constraint = constraint.set_geometry('geometry')
-                constraint = constraint.to_crs("EPSG:2193")
+        print(str(type(constraint)))
+        #The overlay function only take GeoDataFrames, and hence the if statements convert the constraints to the right format for overlaying
+        if str(type(constraint)) == "<class 'geopandas.geoseries.GeoSeries'>":
+            constraint = gpd.GeoDataFrame(constraint)
+            constraint = constraint.rename(columns={0: 'geometry'})
+            constraint = constraint.set_geometry('geometry')
+            constraint = constraint.to_crs("EPSG:2193")
 
-            elif str(type(constraint)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
-                constraint = constraint.explode()
-                constraint.to_crs("EPSG:2193")
+        elif str(type(constraint)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
+            constraint = constraint.explode()
+            constraint.to_crs("EPSG:2193")
 
-            #Chop the parts of the statistical areas out that are touching the constraint
-            new_census = gpd.overlay(clipped_census, constraint, how='difference', keep_geom_type=False)
+        #Chop the parts of the statistical areas out that are touching the constraint
+        clipped_census = gpd.overlay(clipped_census, constraint, how='difference', keep_geom_type=False)
 
     #Get rid of any unnecessary empty cells (which arise from the overlaying procedure)
-    new_census = new_census[~new_census.isna()['index']]
+    constrained_census = clipped_census[~clipped_census.isna()['index']]
+    constrained_census = constrained_census[constrained_census.geom_type != 'GeometryCollection']
+    constrained_census.to_file("data/processed/constrained_census.shp")
+    constrained_census = gpd.read_file("data/processed/constrained_census.shp")
 
-    return new_census
+    return constrained_census
 
 
 def add_planning_zones(clipped_census, boundaries):
 
     boundary, planning_zones = boundaries
-    planning_zones["ZoneGroup"].unique()
+
     #Convert the census array to a dictionary so that we can add values
     census_array = clipped_census.to_numpy()
     # census_list = np.ndarray.tolist(census_array)

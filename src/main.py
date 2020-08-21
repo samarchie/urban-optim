@@ -35,9 +35,11 @@ def main():
         if not os.path.exists("data/processed"):
             os.mkdir("data/processed")
 
-        non_building_zones = ['Specific Purpose', 'Transport', 'Open Space']
+        #Add the District Plan Zones that can be built on to the constraints list
+        constraints = update_constraints(non_building_zones, constraints, boundaries[1])
+
         #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
-        constrained_census = apply_constraints(clipped_census, constraints, non_building_zones)
+        constrained_census = apply_constraints(clipped_census, constraints)
 
         #Add the District Planning Zone in the Census GeoDataFrame
         census_zones = add_planning_zones(constrained_census, boundaries)
