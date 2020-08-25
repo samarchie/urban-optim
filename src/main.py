@@ -31,12 +31,12 @@ def main():
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
     #Merge and process data is it has not already been done
-    if not os.path.isfile("data/processed/census_final.shp"):
+    if not os.path.isfile("data/processed/census_fina;.shp"):
         if not os.path.exists("data/processed"):
             os.mkdir("data/processed")
 
-        #Add the District Plan Zones that can be built on to the constraints list
-        constraints = update_constraints(non_building_zones, constraints, boundaries[1])
+        #Add the District Plan Zones that cant be built on to the constraints list
+        constraints = update_constraints(constraints, boundaries[1])
 
         #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
         constrained_census = apply_constraints(clipped_census, constraints)
@@ -48,13 +48,15 @@ def main():
         census_dens = add_density(census_zones)
 
         #Now want to pre-process everything!
-        processed_census = add_f_scores(census_dens, census, clipped_hazards, clipped_coastal)
+        processed_census = add_f_scores(census_dens, census, clipped_hazards, clipped_coastal, distances)
+
+        processed_census.to_file("data/processed/census_final.shp")
 
     else:
         processed_census = gpd.read_file("data/processed/census_final.shp")
 
+
     print(processed_census)
-    print("we're all processed dude yayayayaya")
 
 if __name__ == "__main__":
     main()

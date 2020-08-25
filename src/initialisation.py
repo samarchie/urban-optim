@@ -78,7 +78,7 @@ def clip_to_boundary(boundary, census, hazards, coastal_flood):
     #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(new_census_dict, orient='index', dtype=object)
     clipped_census = gpd.GeoDataFrame(df)
-    clipped_census.columns = pd.Index(["C18_OccP_4", 'AREA_SQ_KM', 'geometry'])
+    clipped_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry'])
     clipped_census.set_geometry("geometry")
     clipped_census = clipped_census.set_crs("EPSG:2193")
 
@@ -141,7 +141,7 @@ def open_clipped_data(hazards):
     return clipped_census, clipped_hazards, clipped_coastal
 
 
-def update_constraints(non_building_zones, constraints, planning_zones):
+def update_constraints(constraints, planning_zones):
 
     non_building_zones_labels = ['Specific Purpose', 'Transport', 'Open Space']
 
@@ -158,7 +158,6 @@ def apply_constraints(clipped_census, constraints):
     clipped_census.to_crs("EPSG:2193")
 
     for constraint in constraints:
-        print(str(type(constraint)))
         #The overlay function only take GeoDataFrames, and hence the if statements convert the constraints to the right format for overlaying
         if str(type(constraint)) == "<class 'geopandas.geoseries.GeoSeries'>":
             constraint = gpd.GeoDataFrame(constraint)
@@ -201,7 +200,7 @@ def add_planning_zones(clipped_census, boundaries):
         res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
 
         #Find the locations that overlap the residential zone with the census
-        res_props = gpd.overlay(clipped_census, res_zone, how='intersection', keep_geom_type=False)
+        res_props = gpd.overlay(clipped_census, res_zone, how='intersection')
 
         #Extarct the areas of each locations
         areas = res_props.area
@@ -223,7 +222,7 @@ def add_planning_zones(clipped_census, boundaries):
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     zoned_census = gpd.GeoDataFrame(df)
     zoned_census
-    zoned_census.columns = pd.Index(["C18_OccP_4", 'AREA_SQ_KM', 'geometry', 'Residential %', 'Mixed Use %', 'Rural %'])
+    zoned_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry', 'Res %', 'Mixed %', 'Rural %'])
     zoned_census.set_geometry("geometry")
     zoned_census = zoned_census.set_crs("EPSG:2193")
 
@@ -250,18 +249,19 @@ def add_density(census):
     """
 
     #Change the columns from strings to floating point numbers
-    census["C18_OccP_4"] = census["C18_OccP_4"].astype(float)
+    census["Dwellings"] = census["Dwellings"].astype(float)
     census["AREA_SQ_KM"] = census["AREA_SQ_KM"].astype(float)
 
     #Add the density column
-    census["Density (dw/ha)"] = census["C18_OccP_4"] / 100*census["AREA_SQ_KM"]
+    census["Density"] = census["Dwellings"] / 100*census["AREA_SQ_KM"]
 
     census.to_file("data/processed/census_with_density.shp")
+    census = gpd.read_file("data/processed/census_with_density.shp")
 
     return census
 
 
-def add_f_scores(merged_census, raw_census, clipped_hazards, clipped_coastal):
+def add_f_scores(census, raw_census, clipped_hazards, clipped_coastal, distances):
     """ Takes the clipped data, and amends the clipped_census data to include the f_scores for each of the objective functions in a column of the processed_census data file
 
     f functions for the Christchurch optimisation study. defines the following functions:
@@ -274,30 +274,37 @@ def add_f_scores(merged_census, raw_census, clipped_hazards, clipped_coastal):
     6. f_dev
 
     """
-    merged_census.to_crs("EPSG:2193")
+    # census = gpd.read_file('data/processed/census_with_density.shp')
+    #Firstly, validate ad fix all geometries of the census DataSet
+    census["geometry"] = census.geometry.buffer(0)
 
-    tsu_inundation = f_tsu(clipped_hazards[0], merged_census)
-    coastal_inundation = f_cflood(clipped_coastal, merged_census)
-    ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
+    tsu_ratings = f_tsu(clipped_hazards[0], census)
+    coastal_ratings = f_cflood(clipped_coastal, census)
+    pluvial_ratings = f_rflood(clipped_hazards[2], census)
+    liq_ratings = f_liq(clipped_hazards[1], census)
+    distance_ratings = f_dist(distances, census)
+    dev_ratings = f_dev(census)
 
     #Convert the census array to a dictionary so that we can add values
-    census_array = merged_census.to_numpy()
+    census_array = census.to_numpy()
     census_list = np.ndarray.tolist(census_array)
     census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
 
     #Add the f-function values to the dictionary of the parcels
     index = 0
     for key, value in census_dict.items():
-        value.append(float(tsu_inundation[index]))
-        value.append(float(coastal_inundation[index]))
-        ### ENTER THE OTHER F-FUNCTIONS HERE ONCE THER'RE COMPLETED!
+        value.append(float(tsu_ratings[index]))
+        value.append(float(coastal_ratings[index]))
+        value.append(float(pluvial_ratings[index]))
+        value.append(float(liq_ratings[index]))
+        value.append(float(distance_ratings[index]))
+        value.append(float(dev_ratings[index]))
         index += 1
 
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
-    print(proc_census)
-    proc_census.columns = pd.Index(["C18_OccP_4", 'AREA_SQ_KM', 'Planning Zones', 'geometry', "Density (dw/ha)", 'f_tsu', 'f_cflood'])
+    proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
     proc_census.set_geometry(col='geometry', inplace=True)
 
     #Save the processed file fo ease of computational time later on
