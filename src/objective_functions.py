@@ -25,9 +25,6 @@ from shapely.geometry import Point, Polygon
 
 
 
-#boundary.plot()
-
-
 def f_tsu(tsu_data, census_data):
     """
     Calculates the tsunami inundation each census parcel is prone to for a
@@ -79,7 +76,6 @@ def f_tsu(tsu_data, census_data):
     return norm_inundation
 
 
-
 def f_cflood(coastal_flood_data, census_data):
     """Calculates the coastal flooding inundation each census parcel is prone
     to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in
@@ -108,7 +104,7 @@ def f_cflood(coastal_flood_data, census_data):
     #sea level rise
     clipped_census = []
     for flood in coastal_flood_data:
-        clipped_census.append(gpd.clip(census_data, flood, keep_geom_type=True))
+        clipped_census.append(gpd.clip(census_data, flood))
 
     #Create a numpy array containing the sea level rise value which causes each
     #parcel to first be flooded from the coastal surge
@@ -141,8 +137,6 @@ def f_cflood(coastal_flood_data, census_data):
 
     return f
 
-#Ignore warnings, f list at bottom of output
-
 
 def f_rflood(pluvial_flood_data, census_data):
     """Calculates river flooding inundation
@@ -163,7 +157,6 @@ def f_rflood(pluvial_flood_data, census_data):
     """
 
     clipped_census = gpd.clip(census_data, pluvial_flood_data)
-    clipped_census
 
     f = np.zeros(len(census_data))
 
@@ -174,7 +167,6 @@ def f_rflood(pluvial_flood_data, census_data):
             f[index] = 1
 
     return f
-
 
 
 def f_liq(liq_data, census_data):
@@ -251,28 +243,28 @@ def f_liq(liq_data, census_data):
     for cp in in_lick1:
         for loc in cp:
             if loc:
-                f[index] = .01 #very low vulnerability
+                f[index] = 0.01 #very low vulnerability
         index += 1
 
     index = 0
     for cp in in_lick2:
         for loc in cp:
             if loc:
-                f[index] = .1 #low vulnerability
+                f[index] = 0.1 #low vulnerability
         index += 1
 
     index = 0
     for cp in in_lick3:
         for loc in cp:
             if loc:
-                f[index] = 9 #damage possible
+                f[index] = 0.9 #damage possible
         index += 1
 
     index = 0
     for cp in in_lick4:
         for loc in cp:
             if loc:
-                f[index] = .5 #medium vulnerability
+                f[index] = 0.5 #medium vulnerability
         index += 1
 
     index = 0
@@ -282,9 +274,7 @@ def f_liq(liq_data, census_data):
                 f[index] = 1 #high vulnerability
         index += 1
 
-
     return f
-
 
 
 def f_dist(distance_data, census_data):
@@ -353,10 +343,16 @@ def f_dev(census_with_zones):
         areas are in
 
     """
+    f = np.zeros(len(census_with_zones))
+
+    #Change the columns from strings to floating point numbers
+    census_with_zones['Res %'] = census_with_zones['Res %'].astype(float)
+    census_with_zones['Mixed %'] = census_with_zones['Mixed %'].astype(float)
+    census_with_zones['Rural %'] = census_with_zones['Rural %'].astype(float)
 
     # Zhu Li, do the thing!
     for index, row in census_with_zones.iterrows():
-        developable_area = row['Residential %'] + row['Mixed Use %'] + row['Rural %']
-        f[index] = 1-developable_area
+        developable_area = row['Res %'] + row['Mixed %'] + row['Rural %']
+        f[index] = 1 - developable_area
 
     return f
