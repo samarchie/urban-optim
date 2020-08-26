@@ -23,8 +23,17 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point, Polygon
 
+<<<<<<< HEAD
 tsu_data = rio.open('data/raw/hazards/tsunami.tif')
 census_data = gpd.read_file('data/clipped/census.shp')
+=======
+<<<<<<< HEAD
+
+=======
+tsu_data = rio.open('data/raw/hazards/tsunami.tif')
+census_data = gpd.read_file('data/clipped/census.shp')
+>>>>>>> 6312f9f21ed8a39468f376a391ede3c03b8f2acd
+>>>>>>> 77cd27e8388b6a0b395b286bc5f2c05efb9d0197
 
 def f_tsu(tsu_data, census_data):
     """
@@ -86,6 +95,11 @@ band1[1344, -21]
 np.size(band1, 0) #Number of rows
 np.size(band1, 1) #Number of columns
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> 77cd27e8388b6a0b395b286bc5f2c05efb9d0197
 processed_census = gpd.read_file("data/processed/census_final.shp")
 np.set_printoptions(threshold=np.inf)
 pd.set_option('display.max_rows', None)
@@ -93,6 +107,10 @@ pd.set_option('display.max_rows', None)
 ax = processed_census.plot() #column='f_tsu', cmap='Blues'
 census_data['geometry'][2229:2230].plot(ax=ax, color='red')
 
+<<<<<<< HEAD
+=======
+>>>>>>> 6312f9f21ed8a39468f376a391ede3c03b8f2acd
+>>>>>>> 77cd27e8388b6a0b395b286bc5f2c05efb9d0197
 def f_cflood(coastal_flood_data, census_data):
     """Calculates the coastal flooding inundation each census parcel is prone
     to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in
