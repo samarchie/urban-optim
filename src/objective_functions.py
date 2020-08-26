@@ -23,7 +23,8 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point, Polygon
 
-
+tsu_data = rio.open('data/raw/hazards/tsunami.tif')
+census_data = gpd.read_file('data/clipped/census.shp')
 
 def f_tsu(tsu_data, census_data):
     """
@@ -65,7 +66,7 @@ def f_tsu(tsu_data, census_data):
     inundation = []
     for i in range(len(xs)):
         row, col = tsu_data.index(xs[i], ys[i])
-        if row < 2792 and col < 2792:
+        if row < 2792 and col < 2778:
             inundation.append(band1[row, col])
         else:
             inundation.append(0.0)
@@ -74,7 +75,23 @@ def f_tsu(tsu_data, census_data):
     norm_inundation = inundation/np.max(inundation)
 
     return norm_inundation
+len(norm_inundation)
+norm_inundation[2229]
+print(nzgd2000['geometry'][2229].centroid)
+np.array(xs)
+xs[2229]
+tsu_data.index(xs[2229], ys[2229])
+band1[1344, -21]
 
+np.size(band1, 0) #Number of rows
+np.size(band1, 1) #Number of columns
+
+processed_census = gpd.read_file("data/processed/census_final.shp")
+np.set_printoptions(threshold=np.inf)
+pd.set_option('display.max_rows', None)
+
+ax = processed_census.plot() #column='f_tsu', cmap='Blues'
+census_data['geometry'][2229:2230].plot(ax=ax, color='red')
 
 def f_cflood(coastal_flood_data, census_data):
     """Calculates the coastal flooding inundation each census parcel is prone

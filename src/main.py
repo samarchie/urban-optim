@@ -53,13 +53,13 @@ def main():
         processed_census.to_file("data/processed/census_final.shp")
 
     else:
-processed_census = gpd.read_file("data/processed/census_final.shp")
+        processed_census = gpd.read_file("data/processed/census_final.shp")
 
-import matplotlib.pyplot as plt
-fig, ax = plt.subplots(1, 1)
-processed_census.plot(ax=ax, column='Density', cmap='OrRd_r')
-plt.show()
-plt.savefig("sam/densityplot.png")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(1, 1)
+        processed_census.plot(ax=ax, column='Density', cmap='OrRd_r')
+        plt.show()
+        plt.savefig("sam/densityplot.png")
 
 
     print(processed_census)
