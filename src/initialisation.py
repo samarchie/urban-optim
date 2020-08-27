@@ -272,11 +272,11 @@ def apply_constraints(clipped_census, constraints):
         clipped_census = gpd.overlay(clipped_census, constraint, how='difference', keep_geom_type=False)
 
     #Get rid of any unnecessary empty cells (which arise from the overlaying procedure)
-    constrained_census = clipped_census[~clipped_census.isna()['index']]
-    constrained_census = constrained_census[constrained_census.geom_type != 'GeometryCollection']
+    clipped_census = clipped_census[~clipped_census.isna()['index']]
+    constrained_census = clipped_census[clipped_census.geom_type != 'GeometryCollection']
 
     #Save the file for computational time and to check valitidy of the module
-    clipped_census.to_file("data/processed/constrained_census2.shp")
+    constrained_census.to_file("data/processed/constrained_census.shp")
     constrained_census = gpd.read_file("data/processed/constrained_census.shp")
 
     return constrained_census
@@ -298,15 +298,19 @@ def add_planning_zones(constrained_census, planning_zones):
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone.
 
     """
+    planning_zones = gpd.read_file("data/boundary/planning_zones.shp")
+    constrained_census = gpd.read_file("data/processed/constrained_census.shp")
+    constrained_census
 
     #Convert the census array to a dictionary so that we can add values
     census_array = constrained_census.to_numpy()
-    census_dict = { census_array[i][0] : np.concatenate((census_array[i][1:], np.zeros(3))) for i in range(0, len(census_array)) }
+    census_dict = { census_array[i][0] : np.concatenate((census_array[i][1:], np.zeros(4))) for i in range(0, len(census_array)) }
 
     #List the possible District Plan Zones to be used
-    possible_zones = ['Residential', 'Mixed Use', 'Rural']
+    possible_zones = ['Residential', 'Mixed Use', 'Rural', 'Commercial']
 
-    for col_number in range(3, 6):
+    for col_number in range(3, 7):
+        # col_number = 4
         zone = possible_zones[col_number - 3]
 
         #Find the area of which is zoned by the District PLan to be residential
@@ -314,25 +318,41 @@ def add_planning_zones(constrained_census, planning_zones):
         #Find the locations that overlap the residential zone with the census, and determine the size (area) of those polygons
         res_props = gpd.overlay(constrained_census, res_zone, how='intersection')
         areas = res_props.area
+        # res_props.plot()
 
         for index, prop in res_props.iterrows():
             prop_number = prop[0]
+            # print(census_dict[prop_number])
+            property_area = 100 * float(census_dict[prop_number][1]) #in hectares
+            # print("the total property area of {} is {} hectares".format(prop_number, property_area))
+
             #Calculate how much area has already been allocated by previous zone
-            current_area_added = sum(census_dict[prop_number][3:])
+            current_percentage_added = sum(census_dict[prop_number][3:])
+            area_added_so_far = current_percentage_added * property_area/100
+            # print("area added so far: {}".format(area_added_so_far))
 
-            #Extract new area to add (in km^2) and what the new updated area would be in hextares
-            area_to_add = float(areas[index])/float(10**6)
-            new_area = area_to_add + current_area_added
+            #Extract new area to add (in m^2) and what the new updated area would be in hectares
+            area_to_add = float(areas[index])/10000 #in hectares
+            # print("area to add: {}".format(area_to_add))
 
+            new_area = area_to_add + area_added_so_far
             #Check if the area is less that the actual statistical area size, and adds the percentage to the right column
-            if new_area <= float(census_dict[prop_number][1]):
-                census_dict[prop_number][col_number] += new_area/float(census_dict[prop_number][1])
+            if new_area <= property_area:
+                census_dict[prop_number][col_number] += 100 * area_to_add/property_area
+            else:
+                print("DID NOT ADD NUMBER!")
+                print(census_dict[prop_number])
+                print("the total property area of {} is {} hectares".format(prop_number, property_area))
+                print("area added so far: {}".format(area_added_so_far))
+                print("area to add: {} for zone {}".format(area_to_add, zone))
+                print(" ")
+
 
     #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     zoned_census = gpd.GeoDataFrame(df)
     #Set some properties of the GeoDataFrame that are necessary
-    zoned_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry', 'Res %', 'Mixed %', 'Rural %'])
+    zoned_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry', 'Res %', 'Mixed %', 'Rural %', 'Commercial %'])
     zoned_census.set_geometry("geometry")
     zoned_census = zoned_census.set_crs("EPSG:2193")
 
@@ -436,7 +456,7 @@ def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, dis
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
-    proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
+    proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Commercial %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
     proc_census.set_geometry(col='geometry', inplace=True)
 
     #Save the census file to the file structure so we can validify the module works as expected

@@ -30,7 +30,7 @@ def main():
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
     #Merge and process data is it has not already been done
-    if not os.path.isfile("data/processed/census_final.shp"):
+    if os.path.isfile("data/processed/census_final.shp"):
         if not os.path.exists("data/processed"):
             os.mkdir("data/processed")
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     main()
 
 
-processed_census = gpd.read_file('data/processed/census.shp')
+processed_census = gpd.read_file('data/processed/census_final.shp')
 centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
 processed_census['f_dev'].unique()
 centres

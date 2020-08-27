@@ -24,9 +24,6 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 
 
-#tsu_data = rio.open('data/raw/hazards/tsunami.tif')
-#census_data = gpd.read_file('data/clipped/census.shp')
-
 def f_tsu(tsu_data, census_data):
     """
     Calculates the tsunami inundation each census parcel is prone to for a
@@ -288,7 +285,7 @@ def f_liq(liq_data, census_data):
 
     return f
 
-distance_data
+
 def f_dist(distance_data, census_data):
     """calculates the normalised distance between statistical areas and the
     nearest key activity area.
