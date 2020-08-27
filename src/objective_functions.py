@@ -23,17 +23,9 @@ import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point, Polygon
 
-<<<<<<< HEAD
-tsu_data = rio.open('data/raw/hazards/tsunami.tif')
-census_data = gpd.read_file('data/clipped/census.shp')
-=======
-<<<<<<< HEAD
 
-=======
-tsu_data = rio.open('data/raw/hazards/tsunami.tif')
-census_data = gpd.read_file('data/clipped/census.shp')
->>>>>>> 6312f9f21ed8a39468f376a391ede3c03b8f2acd
->>>>>>> 77cd27e8388b6a0b395b286bc5f2c05efb9d0197
+#tsu_data = rio.open('data/raw/hazards/tsunami.tif')
+#census_data = gpd.read_file('data/clipped/census.shp')
 
 def f_tsu(tsu_data, census_data):
     """
@@ -70,13 +62,20 @@ def f_tsu(tsu_data, census_data):
     #Put the tsunami inundation data in a readable format
     band1 = tsu_data.read(1)
 
+    #things break if coordinates are outside the tif, so we can use this to
+    #make sure coordinates are in the tsu_data before retrieving their values
+    tif_boundary = Polygon([(172.540500,-43.356800), (172.868300,-43.356800), (172.868300,-43.686300), (172.540500,-43.686300), (172.540500,-43.356800)])
+
     #Find the inundation for each parcel centroid using the coordinates
     #assigned above
     inundation = []
     for i in range(len(xs)):
-        row, col = tsu_data.index(xs[i], ys[i])
-        if row < 2792 and col < 2778:
-            inundation.append(band1[row, col])
+        if tif_boundary.contains(nzgd2000['geometry'][i].centroid):
+            row, col = tsu_data.index(xs[i], ys[i])
+            if row < 2792 and col < 2778:
+                inundation.append(band1[row, col])
+            else:
+                inundation.append(0.0)
         else:
             inundation.append(0.0)
 
@@ -84,33 +83,8 @@ def f_tsu(tsu_data, census_data):
     norm_inundation = inundation/np.max(inundation)
 
     return norm_inundation
-len(norm_inundation)
-norm_inundation[2229]
-print(nzgd2000['geometry'][2229].centroid)
-np.array(xs)
-xs[2229]
-tsu_data.index(xs[2229], ys[2229])
-band1[1344, -21]
 
-np.size(band1, 0) #Number of rows
-np.size(band1, 1) #Number of columns
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 77cd27e8388b6a0b395b286bc5f2c05efb9d0197
-processed_census = gpd.read_file("data/processed/census_final.shp")
-np.set_printoptions(threshold=np.inf)
-pd.set_option('display.max_rows', None)
-
-ax = processed_census.plot() #column='f_tsu', cmap='Blues'
-census_data['geometry'][2229:2230].plot(ax=ax, color='red')
-
-<<<<<<< HEAD
-=======
->>>>>>> 6312f9f21ed8a39468f376a391ede3c03b8f2acd
->>>>>>> 77cd27e8388b6a0b395b286bc5f2c05efb9d0197
 def f_cflood(coastal_flood_data, census_data):
     """Calculates the coastal flooding inundation each census parcel is prone
     to for a 1% AEP storm surge. Also accounts for 0-3 m of sea level rise, in
@@ -191,14 +165,17 @@ def f_rflood(pluvial_flood_data, census_data):
 
     """
 
+    #Clip the census to be only SAs affected by the flood
     clipped_census = gpd.clip(census_data, pluvial_flood_data)
 
     f = np.zeros(len(census_data))
 
     for index, row in census_data.iterrows():
         if len(clipped_census.contains(row['geometry'].centroid).unique()) > 1:
+            #this checks if an SA is completely covered by the flood
             f[index] = 1
         elif len(clipped_census.intersects(row['geometry']).unique()) > 1:
+            #this checks if any part of the SA is flooded. This will fail for any SA that is entirely within the flood which is why the above condition is necessary
             f[index] = 1
 
     return f
@@ -234,17 +211,17 @@ def f_liq(liq_data, census_data):
     lick4 = gpd.GeoDataFrame(columns=['geometry'])
     lick5 = gpd.GeoDataFrame(columns=['geometry'])
     for index, row in liq_data.iterrows():
-        if row['Liq_Cat'] == lick_cats[0]:
+        if row['Liq_Cat'] == lick_cats[0]:#Liquefaction Damage is Unlikely
             lick0 = lick0.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[1]:
+        elif row['Liq_Cat'] == lick_cats[1]:#Very Low Liquefaction Vulnerability
             lick1 = lick1.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[2]:
+        elif row['Liq_Cat'] == lick_cats[2]:#Low Liquefaction Vulnerability
             lick2 = lick2.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[3]:
+        elif row['Liq_Cat'] == lick_cats[3]:#Liquefaction Damage is Possible
             lick3 = lick3.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[4]:
+        elif row['Liq_Cat'] == lick_cats[4]:#Medium Liquefaction Vulnerability
             lick4 = lick4.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[5]:
+        elif row['Liq_Cat'] == lick_cats[5]:#High Liquefaction Vulnerability
             lick5 = lick5.append({'geometry': row['geometry']}, ignore_index=True)
 
     #Create and fill arrays of sets of boolean values. Each set will be either
@@ -271,7 +248,7 @@ def f_liq(liq_data, census_data):
     for cp in in_lick0:
         for loc in cp:
             if loc:
-                f[index] = -9 #damage unlikely
+                f[index] = 0.08 #damage unlikely
         index += 1
 
     index = 0
@@ -311,7 +288,7 @@ def f_liq(liq_data, census_data):
 
     return f
 
-
+distance_data
 def f_dist(distance_data, census_data):
     """calculates the normalised distance between statistical areas and the
     nearest key activity area.
