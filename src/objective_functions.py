@@ -284,7 +284,7 @@ def f_liq(liq_data, census_data):
     return f
 
 
-def f_dist(distance_data, census_data):
+def f_dist(distance_data, census_dens):
     """calculates the normalised distance between statistical areas and the
     nearest key activity area.
 
@@ -292,8 +292,8 @@ def f_dist(distance_data, census_data):
     ----------
     distance_data : Pandas DataFrame
         A DataFrame containing the distance to each key activity area for all statistical areas
-    census_data : GeoPandas GeoDataFrame
-        contains all the potential statistical areas (ds) to be evaluated as
+    census_dens : GeoPandas GeoDataFrame
+        Contains all the potential statistical areas (ds) to be evaluated as
         shapely polygons.
 
     Returns
@@ -303,32 +303,38 @@ def f_dist(distance_data, census_data):
         areas are in
 
     """
+    # import pandas as pd
+    # import geopandas as gpd
+    # import numpy as np
+    # distances = pd.read_csv('data/raw/socioeconomic/distances_from_SA1.csv', header=0)
+    # census_dens = gpd.read_file("data/processed/census_with_density.shp")
+    # census_dens["geometry"] = census_dens.geometry.buffer(0)
 
-    barrington = []
-    belfast = []
-    hornby = []
-    linwood = []
-    new_brighton = []
-    north_halswell = []
-    papanui_northlands = []
-    riccarton = []
-    shirley = []
-    for n in range(0, len(distance_data), 9):
-        barrington.append(distance_data['distance'][n])
-        belfast.append(distance_data['distance'][n+1])
-        hornby.append(distance_data['distance'][n+2])
-        linwood.append(distance_data['distance'][n+3])
-        new_brighton.append(distance_data['distance'][n+4])
-        north_halswell.append(distance_data['distance'][n+5])
-        papanui_northlands.append(distance_data['distance'][n+6])
-        riccarton.append(distance_data['distance'][n+7])
-        shirley.append(distance_data['distance'][n+8])
+    #Collect distance to all key activity area, and store them in a dictionary
+    distances_dict = {}
+    for row in range(0, len(distance_data)):
+        prop_number = str(distance_data['id_orig'][row])
+        prev_distances_added = distances_dict.get(prop_number, [])
+        updated_values = prev_distances_added + [distance_data['distance'][row]]
+        distances_dict.update({prop_number : updated_values})
 
-    min_distances = []
-    for i in range(len(barrington)):
-        min_distances.append(np.min([barrington[i], belfast[i], hornby[i], linwood[i], new_brighton[i], north_halswell[i],  papanui_northlands[i], riccarton[i], shirley[i]]))
+    #For each "good" statistical area (passed into function as census_dens), find the min and max distances to the key activity areas
+    min_distances = {}
+    max_distances = []
+    for prop_number in list(census_dens['index'].unique()):
+        #Get all 8 distances found previously
+        all_distances = distances_dict.get(prop_number)
 
-    f = min_distances/(np.max(min_distances))
+        #Add accordingly to the right data structure
+        min_distances.update({prop_number : min(all_distances)})
+        max_distances.append(max(all_distances))
+
+    #Convert from a dictionary to to a numpy array of distances
+    min_distances = np.array(list(min_distances.values()))
+
+    #Calculate the largest distance from one statistcial area to a key activity area and noralise by it!
+    max_distance_observed = max(max_distances)
+    f = min_distances/max_distance_observed
 
     return f
 

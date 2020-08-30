@@ -47,9 +47,7 @@ def main():
         census_dens = add_density(census_zones)
 
         #Now want to pre-process everything!
-        processed_census = add_f_scores(census_dens, census, clipped_hazards, clipped_coastal, distances)
-
-        processed_census.to_file("data/processed/census_final.shp")
+        processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
 
     else:
         processed_census = gpd.read_file("data/processed/census_final.shp")
