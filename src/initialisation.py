@@ -383,7 +383,7 @@ def add_density(zoned_census):
     return census_dens
 
 
-def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, distances):
+def add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances):
     """Takes the clipped data, and amends the clipped_census data to include the f_scores for each of the objective functions in a column of the processed_census data file.
 
     f functions for the Christchurch optimisation study. defines the following functions:
@@ -397,10 +397,8 @@ def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, dis
 
     Parameters
     ----------
-    zoned_census : GeoDataFrame
-        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone.
-    raw_census : GeoDataFrame
-        A GeoDataFrame of the dwelling/housing 2018 census for dwellings in the Christchurch City Council region
+    census_dens : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone, and another column indicating density of dwellings in each statistical area.
     clipped_hazards : List of GeoDataFrames
         A list of clipped hazards imposed upon the urban extent bounary, such as tsunami inundation, liquefaction vulnerability and river flooding.
     clipped_coastal : List of GeoDataFrames
@@ -416,18 +414,18 @@ def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, dis
     """
 
     #Firstly, validate and fix all geometries of the census data set
-    zoned_census["geometry"] = zoned_census.geometry.buffer(0)
+    census_dens["geometry"] = census_dens.geometry.buffer(0)
 
     #Calculate how well each statistical area does against eahc objective function
-    tsu_ratings = f_tsu(clipped_hazards[0], zoned_census)
-    coastal_ratings = f_cflood(clipped_coastal, zoned_census)
-    pluvial_ratings = f_rflood(clipped_hazards[2], zoned_census)
-    liq_ratings = f_liq(clipped_hazards[1], zoned_census)
-    distance_ratings = f_dist(distances, zoned_census)
-    dev_ratings = f_dev(zoned_census)
+    tsu_ratings = f_tsu(clipped_hazards[0], census_dens)
+    coastal_ratings = f_cflood(clipped_coastal, census_dens)
+    pluvial_ratings = f_rflood(clipped_hazards[2], census_dens)
+    liq_ratings = f_liq(clipped_hazards[1], census_dens)
+    distance_ratings = f_dist(distances, census_dens)
+    dev_ratings = f_dev(census_dens)
 
     #Convert the census array to a dictionary so that we can add values
-    census_array = zoned_census.to_numpy()
+    census_array = census_dens.to_numpy()
     census_list = np.ndarray.tolist(census_array)
     census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
 
@@ -455,8 +453,9 @@ def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, dis
             proc_census[col_name] = proc_census[col_name].astype(float)
 
     #Save the census file to the file structure so we can validify the module works as expected
-    proc_census.to_file("data/processed/census.shp")
-    proc_census = gpd.read_file("data/processed/census.shp")
+    proc_census.to_file("data/processed/census_final.shp")
+    proc_census = gpd.read_file("data/processed/census_final.shp")
+
     return proc_census
 
 
@@ -485,7 +484,7 @@ def plot_intialised_data(processed_census):
     axs[1, 0].set_title('f_rflood')
     processed_census.plot(ax=axs[1, 1], column='f_liq')
     axs[1, 1].set_title('f_liq')
-    processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='RdYlGn')
+    processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='Blues')
     axs[2, 0].set_title('f_dist')
     processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Blues')
     axs[2, 1].set_title('f_dev')
