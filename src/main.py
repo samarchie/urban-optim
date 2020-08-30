@@ -29,7 +29,7 @@ def main():
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
-    #Merge and process data is it has not already been done
+    #Process data if it has not already been done
     if os.path.isfile("data/processed/census_final.shp"):
         if not os.path.exists("data/processed"):
             os.mkdir("data/processed")

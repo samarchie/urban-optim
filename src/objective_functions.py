@@ -12,8 +12,6 @@ functions:
 5. f_dist
 6. f_dev
 
-Data_Folder imported into each function is a string of the relative filepath to
-the folder where the data (hazards, amenities, etc.) is located
 """
 
 ### Needed modules so far ###

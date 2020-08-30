@@ -276,6 +276,9 @@ def apply_constraints(clipped_census, constraints):
     clipped_census = clipped_census[~clipped_census.isna()['index']]
     constrained_census = clipped_census[clipped_census.geom_type != 'GeometryCollection']
 
+    #Now that all the constraints have taken place, the size of the parcel has most likely changed and hence the column needs updating
+    constrained_census["AREA_SQ_KM"] = constrained_census.area/(1000**2)
+
     #Save the file for computational time and to check valitidy of the module
     constrained_census.to_file("data/processed/constrained_census.shp")
     constrained_census = gpd.read_file("data/processed/constrained_census.shp")
@@ -299,9 +302,6 @@ def add_planning_zones(constrained_census, planning_zones):
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone.
 
     """
-    planning_zones = gpd.read_file("data/boundary/planning_zones.shp")
-    constrained_census = gpd.read_file("data/processed/constrained_census.shp")
-    constrained_census
 
     #Convert the census array to a dictionary so that we can add values
     census_array = constrained_census.to_numpy()
@@ -311,30 +311,26 @@ def add_planning_zones(constrained_census, planning_zones):
     possible_zones = ['Residential', 'Mixed Use', 'Rural', 'Commercial']
 
     for col_number in range(3, 7):
-        # col_number = 4
         zone = possible_zones[col_number - 3]
 
-        #Find the area of which is zoned by the District PLan to be residential
+        #Find the area of which is zoned by the District PLan to be the chosen zone
         res_zone = planning_zones.loc[planning_zones["ZoneGroup"] == zone]
+
         #Find the locations that overlap the residential zone with the census, and determine the size (area) of those polygons
         res_props = gpd.overlay(constrained_census, res_zone, how='intersection')
         areas = res_props.area
-        # res_props.plot()
+        res_props.to_file("sam/{}.shp".format(zone))
 
         for index, prop in res_props.iterrows():
             prop_number = prop[0]
-            # print(census_dict[prop_number])
             property_area = 100 * float(census_dict[prop_number][1]) #in hectares
-            # print("the total property area of {} is {} hectares".format(prop_number, property_area))
 
             #Calculate how much area has already been allocated by previous zone
             current_percentage_added = sum(census_dict[prop_number][3:])
             area_added_so_far = current_percentage_added * property_area/100
-            # print("area added so far: {}".format(area_added_so_far))
 
             #Extract new area to add (in m^2) and what the new updated area would be in hectares
             area_to_add = float(areas[index])/10000 #in hectares
-            # print("area to add: {}".format(area_to_add))
 
             new_area = area_to_add + area_added_so_far
             #Check if the area is less that the actual statistical area size, and adds the percentage to the right column
@@ -388,7 +384,6 @@ def add_density(zoned_census):
 
 
 def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, distances):
-
     """Takes the clipped data, and amends the clipped_census data to include the f_scores for each of the objective functions in a column of the processed_census data file.
 
     f functions for the Christchurch optimisation study. defines the following functions:
@@ -452,11 +447,16 @@ def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, dis
     proc_census = gpd.GeoDataFrame(df)
     proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Commercial %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
     proc_census.set_geometry(col='geometry', inplace=True)
+    proc_census.set_crs("EPSG:2193")
+
+    #Change all the columns from strings to floating point numbers
+    for col_name in proc_census.columns:
+        if col_name != "geometry":
+            proc_census[col_name] = proc_census[col_name].astype(float)
 
     #Save the census file to the file structure so we can validify the module works as expected
     proc_census.to_file("data/processed/census.shp")
     proc_census = gpd.read_file("data/processed/census.shp")
-
     return proc_census
 
 
@@ -487,11 +487,14 @@ def plot_intialised_data(processed_census):
     axs[1, 1].set_title('f_liq')
     processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='RdYlGn')
     axs[2, 0].set_title('f_dist')
-    processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Greens_r')
+    processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Blues')
     axs[2, 1].set_title('f_dev')
 
     centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
     centres.plot(ax=axs[2, 0], color='black', zorder=4)
 
-    plt.savefig("fig/final/objective_functions.png", transparent=False)
+    if not os.path.exists("fig/exploratory"):
+        os.mkdir("fig/exploratory")
+    plt.savefig("fig/exploratory/objective_functions.png", transparent=False)
+
     plt.show()
