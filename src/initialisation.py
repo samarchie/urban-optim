@@ -13,6 +13,7 @@ import pandas as pd
 import rasterio as rio
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 
 #Import home-made modules
 from src.objective_functions import *
@@ -338,14 +339,7 @@ def add_planning_zones(constrained_census, planning_zones):
             new_area = area_to_add + area_added_so_far
             #Check if the area is less that the actual statistical area size, and adds the percentage to the right column
             if new_area <= property_area:
-                census_dict[prop_number][col_number] += 100 * area_to_add/property_area
-            else:
-                print("DID NOT ADD NUMBER!")
-                print(census_dict[prop_number])
-                print("the total property area of {} is {} hectares".format(prop_number, property_area))
-                print("area added so far: {}".format(area_added_so_far))
-                print("area to add: {} for zone {}".format(area_to_add, zone))
-                print(" ")
+                census_dict[prop_number][col_number] += area_to_add/property_area
 
 
     #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
@@ -464,3 +458,40 @@ def add_f_scores(zoned_census, raw_census, clipped_hazards, clipped_coastal, dis
     proc_census = gpd.read_file("data/processed/census.shp")
 
     return proc_census
+
+
+def plot_intialised_data(processed_census):
+    """This module plots the objective functions of the processed data to check validity of the prcoessing/initialisation phase.
+
+    Parameters
+    ----------
+    processed_census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone, and another column indicating density of dwellings in each statistical area. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
+
+    Returns
+    -------
+    None
+
+    """
+
+    fig, axs = plt.subplots(3, 2, figsize=(15,15))
+    fig.suptitle('Objective Functions')
+
+    processed_census.plot(ax=axs[0, 0], column='f_tsu', cmap='Blues')
+    axs[0, 0].set_title('f_tsu')
+    processed_census.plot(ax=axs[0, 1], column='f_cflood', cmap='Blues')
+    axs[0, 1].set_title('f_cflood')
+    processed_census.plot(ax=axs[1, 0], column='f_rflood', cmap='Blues')
+    axs[1, 0].set_title('f_rflood')
+    processed_census.plot(ax=axs[1, 1], column='f_liq')
+    axs[1, 1].set_title('f_liq')
+    processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='RdYlGn')
+    axs[2, 0].set_title('f_dist')
+    processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Greens_r')
+    axs[2, 1].set_title('f_dev')
+
+    centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
+    centres.plot(ax=axs[2, 0], color='black', zorder=4)
+
+    plt.savefig("fig/final/objective_functions.png", transparent=False)
+    plt.show()

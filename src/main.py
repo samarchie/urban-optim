@@ -54,33 +54,10 @@ def main():
     else:
         processed_census = gpd.read_file("data/processed/census_final.shp")
 
-    print(processed_census)
+    #Plot the processed census data and check the onjective functions are working as expected!
+    plot_intialised_data(processed_census)
+
+
 
 if __name__ == "__main__":
     main()
-
-
-processed_census = gpd.read_file('data/processed/census_final.shp')
-centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
-processed_census['f_dev'].unique()
-centres
-
-import matplotlib.pyplot as plt
-fig, axs = plt.subplots(3, 2, figsize=(15,15))
-fig.suptitle('Objective Functions')
-processed_census.plot(ax=axs[0, 0], column='f_tsu', cmap='Blues')
-axs[0, 0].set_title('f_tsu')
-processed_census.plot(ax=axs[0, 1], column='f_cflood', cmap='Blues')
-axs[0, 1].set_title('f_cflood')
-processed_census.plot(ax=axs[1, 0], column='f_rflood', cmap='Blues')
-axs[1, 0].set_title('f_rflood')
-processed_census.plot(ax=axs[1, 1], column='f_liq')
-axs[1, 1].set_title('f_liq')
-processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='RdYlGn')
-axs[2, 0].set_title('f_dist')
-processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Greens_r')
-axs[2, 1].set_title('f_dev')
-
-centres.plot(ax=axs[2, 0], color='black', zorder=4)
-
-plt.show()
