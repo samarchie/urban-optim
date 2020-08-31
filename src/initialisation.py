@@ -3,7 +3,7 @@
 29th of July 2020
 Author: Sam Archie and Jamie Fleming
 
-This module/script shall contain multiple definitions that will complete Phase 1 of the genetic algorthm. All data will be imported and pre-processed.
+This module/script shall contain multiple definitions that will complete Phase 1 of the project. All data will be imported and pre-processed (constraint handling and f-scores) before being passed to the next phase.
 
 """
 
@@ -445,18 +445,45 @@ def add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances):
     proc_census = gpd.GeoDataFrame(df)
     proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Commercial %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
     proc_census.set_geometry(col='geometry', inplace=True)
-    proc_census.set_crs("EPSG:2193")
+    proc_census.set_crs("EPSG:2193", inplace=True)
 
-    #Change all the columns from strings to floating point numbers
+    return proc_census
+
+
+def clean_processed_data(proc_census):
+    """This module add index (and SA index) values, converts strings to numbers and saves the processed data. It serves as the final cleanup of the data beofre being passed to the next phase.
+
+    Parameters
+    ----------
+    proc_census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone, and another column indicating density of dwellings in each statistical area. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
+
+    Returns
+    -------
+    None
+
+    """
+
+    #Add the statistical area mesh area number to a columns
+    proc_census["SA index"] = proc_census.index
+
+    #Reset the indexs, and save them as another column so we have a continuous interger range
+    proc_census.reset_index(inplace=True)
+    proc_census["index"] = proc_census.index
+
+    #Switch the index column from last position to first column position
+    cols = proc_census.columns.tolist()
+    proc_census = proc_census[cols[-1:] + cols[:-1]]
+
+    #Change all the columns from strings to floating point numbers or integers
     for col_name in proc_census.columns:
-        if col_name != "geometry":
+        if col_name in ["index", "SA index", "Dwellings"]:
+            proc_census[col_name] = proc_census[col_name].astype(int)
+        elif col_name != "geometry":
             proc_census[col_name] = proc_census[col_name].astype(float)
 
     #Save the census file to the file structure so we can validify the module works as expected
     proc_census.to_file("data/processed/census_final.shp")
-    proc_census = gpd.read_file("data/processed/census_final.shp")
-
-    return proc_census
 
 
 def plot_intialised_data(processed_census):
@@ -476,24 +503,24 @@ def plot_intialised_data(processed_census):
     fig, axs = plt.subplots(3, 2, figsize=(15,15))
     fig.suptitle('Objective Functions')
 
-    processed_census.plot(ax=axs[0, 0], column='f_tsu', cmap='Blues')
+    processed_census.plot(ax=axs[0, 0], column='f_tsu', cmap='Reds')
     axs[0, 0].set_title('f_tsu')
-    processed_census.plot(ax=axs[0, 1], column='f_cflood', cmap='Blues')
+    processed_census.plot(ax=axs[0, 1], column='f_cflood', cmap='Reds')
     axs[0, 1].set_title('f_cflood')
-    processed_census.plot(ax=axs[1, 0], column='f_rflood', cmap='Blues')
+    processed_census.plot(ax=axs[1, 0], column='f_rflood', cmap='Reds')
     axs[1, 0].set_title('f_rflood')
-    processed_census.plot(ax=axs[1, 1], column='f_liq', cmap='Blues')
+    processed_census.plot(ax=axs[1, 1], column='f_liq', cmap='Reds')
     axs[1, 1].set_title('f_liq')
-    processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='Blues')
+    processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='Reds')
     axs[2, 0].set_title('f_dist')
-    processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Blues')
+    processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Reds')
     axs[2, 1].set_title('f_dev')
 
-    centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
-    centres.plot(ax=axs[2, 0], color='black', zorder=4)
+    # centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
+    # centres.plot(ax=axs[2, 0], color='black', zorder=4)
 
     if not os.path.exists("fig/exploratory"):
         os.mkdir("fig/exploratory")
-    plt.savefig("fig/exploratory/objective_functions.png", transparent=False)
+    plt.savefig("fig/exploratory/objective_functions.png", transparent=False, dpi=600)
 
     plt.show()

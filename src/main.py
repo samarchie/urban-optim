@@ -14,11 +14,22 @@ import geopandas as gpd
 
 #Import our home-made modules
 from src.initialisation import *
+from src.genetic_algorithm import *
+
+#Define the parameters that can be changed by the user
+acceptable_dwelling_densities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #Define what are acceptable densities for new areas (in dwelling/hecatres)
+NO_parents = 5 #number of parents/development plans in each iteration to make
+generations = 5 #how many generations/iterations to complete
+prob_crossover = 0.7 #probability of having 2 development plans cross over
+prob_mutation = 0.2 #probability of a development plan mutating
+weightings = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6] #weightings of each objective function
+required_dwellings = 20000 #amount of required dwellings over entire region
+
 
 
 def main():
     """Now this is where the magic happens!"""
-    #PHASE 1: initialisation
+    ####### PHASE 1 - INTIALISATION
 
     #Get data from the user
     boundaries, constraints, census, hazards, coastal_flood, distances = get_data()
@@ -30,7 +41,7 @@ def main():
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
     #Process data if it has not already been done
-    if os.path.isfile("data/processed/census_final.shp"):
+    if not os.path.isfile("data/processed/census_final.shp"):
         if not os.path.exists("data/processed"):
             os.mkdir("data/processed")
 
@@ -49,12 +60,20 @@ def main():
         #Now want to pre-process everything!
         processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
 
+        #Clean the data properties up and we're all processed!
+        clean_processed_data(processed_census)
+
     else:
         processed_census = gpd.read_file("data/processed/census_final.shp")
 
-    #Plot the processed census data and check the onjective functions are working as expected!
-    plot_intialised_data(processed_census)
+    #Plot the processed census data and check the objective functions are working as expected!
+    # plot_intialised_data(processed_census)
 
+
+
+    ###### PHASE 2 - GENETIC ALGORITHM
+
+    development_plans = create_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, processed_census)
 
 
 if __name__ == "__main__":
