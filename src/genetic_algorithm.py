@@ -71,3 +71,6 @@ def create_development_plans(NO_parents, required_dwellings, acceptable_dwelling
         develepment_plans.append(development_plan)
 
     return develepment_plans
+
+
+#Each instance of D is evaluated against the performance functions (f_heat, f_flood etc.) and get a value F which is the sum of the performance functions, f.

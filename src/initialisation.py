@@ -483,14 +483,15 @@ def clean_processed_data(proc_census):
 
     Returns
     -------
-    None
+    cleaned_census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
 
     """
 
     #Add the statistical area mesh area number to a columns
     proc_census["SA index"] = proc_census.index
 
-    #Reset the indexs, and save them as another column so we have a continuous interger range
+    #Reset the indexs, and save them as another column so we have a continuous integer range
     proc_census.reset_index(inplace=True)
     proc_census["index"] = proc_census.index
 
@@ -505,17 +506,56 @@ def clean_processed_data(proc_census):
         elif col_name != "geometry":
             proc_census[col_name] = proc_census[col_name].astype(float)
 
-    #Save the census file to the file structure so we can validify the module works as expected
-    proc_census.to_file("data/processed/census_final.shp")
+    cleaned_census = proc_census[['SA index', 'index', 'Density', 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev', 'geometry']]
+
+    return cleaned_census
 
 
-def plot_intialised_data(processed_census):
+def add_F_scores(cleaned_data, weightings):
+    """This module calculates the total objective function score, called the F-score.
+
+    Parameters
+    ----------
+    cleaned_data : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
+    weightings : List
+        List of normalised weightings for each objective function in order.
+
+    Returns
+    -------
+    census_final : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+
+    """
+
+    census_final = cleaned_data.copy()
+
+    for index, row in census_final.iterrows():
+        #Extarct the f_scores for the statistical area
+        f_scores = row.values[3:-1]
+
+        #For objective funcation, add the product of the f_score and the weighting to the the row
+        F_score = 0
+        for func_num in range(0, len(weightings)):
+            f_score = f_scores[func_num]
+            weighting = weightings[func_num]
+            F_score += f_score * weighting
+
+        census_final.loc[index, "F_score"] = F_score
+
+    # Save the census file to the file structure so we can validify the module works as expected
+    census_final.to_file("data/processed/census_final.shp")
+
+    return census_final
+
+
+def plot_intialised_data(census_final):
     """This module plots the objective functions of the processed data to check validity of the prcoessing/initialisation phase.
 
     Parameters
     ----------
-    processed_census : GeoDataFrame
-        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone, and another column indicating density of dwellings in each statistical area. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
+    census_final : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
     Returns
     -------
@@ -526,17 +566,17 @@ def plot_intialised_data(processed_census):
     fig, axs = plt.subplots(3, 2, figsize=(15,15))
     fig.suptitle('Objective Functions')
 
-    processed_census.plot(ax=axs[0, 0], column='f_tsu', cmap='Reds')
+    census_final.plot(ax=axs[0, 0], column='f_tsu', cmap='Reds')
     axs[0, 0].set_title('f_tsu')
-    processed_census.plot(ax=axs[0, 1], column='f_cflood', cmap='Reds')
+    census_final.plot(ax=axs[0, 1], column='f_cflood', cmap='Reds')
     axs[0, 1].set_title('f_cflood')
-    processed_census.plot(ax=axs[1, 0], column='f_rflood', cmap='Reds')
+    census_final.plot(ax=axs[1, 0], column='f_rflood', cmap='Reds')
     axs[1, 0].set_title('f_rflood')
-    processed_census.plot(ax=axs[1, 1], column='f_liq', cmap='Reds')
+    census_final.plot(ax=axs[1, 1], column='f_liq', cmap='Reds')
     axs[1, 1].set_title('f_liq')
-    processed_census.plot(ax=axs[2, 0], column='f_dist', cmap='Reds')
+    census_final.plot(ax=axs[2, 0], column='f_dist', cmap='Reds')
     axs[2, 0].set_title('f_dist')
-    processed_census.plot(ax=axs[2, 1], column='f_dev', cmap='Reds')
+    census_final.plot(ax=axs[2, 1], column='f_dev', cmap='Reds')
     axs[2, 1].set_title('f_dev')
 
     # centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
@@ -547,3 +587,8 @@ def plot_intialised_data(processed_census):
     plt.savefig("fig/exploratory/objective_functions.png", transparent=False, dpi=600)
 
     plt.show()
+
+    fig, ax = plt.subplots(1, 1, figsize=(15,15))
+    census_final.plot(ax=ax, column='F_score', cmap='Reds')
+    plt.savefig("fig/exploratory/F_scores.png", dpi=600)
+    ax.set_title('F_score')

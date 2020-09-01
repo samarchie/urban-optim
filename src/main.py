@@ -63,18 +63,22 @@ def main():
         #Now want to pre-process everything!
         processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
 
-        #Clean the data properties up and we're all processed!
-        clean_processed_data(processed_census)
+        #Clean the data properties up!
+        cleaned_data = clean_processed_data(processed_census)
+
+        #Take the user weightings and find the F score for each statistical area!
+        census_final = add_F_scores(cleaned_data, weightings)
 
     else:
-        processed_census = gpd.read_file("data/processed/census_final.shp")
+        census_final = gpd.read_file("data/processed/census_final.shp")
 
     #Plot the processed census data and check the objective functions are working as expected!
-    plot_intialised_data(processed_census)
+    plot_intialised_data(census_final)
+
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
-    development_plans = create_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, processed_census)
+    development_plans = create_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, census_final)
 
 
 if __name__ == "__main__":
