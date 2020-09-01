@@ -35,7 +35,10 @@ def main():
     boundaries, constraints, census, hazards, coastal_flood, distances = get_data()
 
     #Clip the data if it has not already been clipped
-    if not os.path.exists("data/clipped"):
+    if not os.path.isfile("data/clipped/census.shp"):
+        if not os.path.exists("data/clipped"):
+            os.mkdir("data/clipped")
+
         clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
@@ -67,9 +70,7 @@ def main():
         processed_census = gpd.read_file("data/processed/census_final.shp")
 
     #Plot the processed census data and check the objective functions are working as expected!
-    # plot_intialised_data(processed_census)
-
-
+    plot_intialised_data(processed_census)
 
     ###### PHASE 2 - GENETIC ALGORITHM
 

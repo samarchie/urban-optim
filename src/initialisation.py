@@ -92,8 +92,17 @@ def clip_to_boundary(boundary, census, hazards, coastal_flood):
 
     #Generate a list of all properties that are within the boundary
     props_in = gpd.clip(census, boundary)
-    props_array = props_in["SA12018_V1"].to_numpy()
+
+    #Take properties that overlap by more than 0.2 hectares
+    props_in["area"] = props_in.area
+    good_props_in = props_in.loc[props_in["area"] > 2000]
+
+    props_array = good_props_in["SA12018_V1"].to_numpy()
     props_list = props_array.tolist()
+
+    #Add a miscellaneous property parcel that is technically out of the urban extent, but would be a great site in my opinion due to proximity.
+    miscellaneous = ["7024480", "7024484"]
+    props_list = props_list + miscellaneous
 
     #Convert the census DataSet to a dictionary, where the key is the statistical area number (SA12018_V1)
     census_array = census.to_numpy()
@@ -278,6 +287,20 @@ def apply_constraints(clipped_census, constraints):
 
     #Now that all the constraints have taken place, the size of the parcel has most likely changed and hence the column needs updating
     constrained_census["AREA_SQ_KM"] = constrained_census.area/(1000**2)
+
+    #Clip out miscellaneous parcels that obviously cant be built on
+    #s-brig spit, airport, port hills, north cant, weird shit,
+    miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291"]
+
+    #Check each parcel to check if it is a bad one
+    good_props = []
+    for row in constrained_census["index"].items():
+        if str(row[1]) in miscellaneous:
+            good_props.append(False)
+        else:
+            good_props.append(True)
+
+    constrained_census = constrained_census[good_props]
 
     #Save the file for computational time and to check valitidy of the module
     constrained_census.to_file("data/processed/constrained_census.shp")
