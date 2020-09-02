@@ -279,17 +279,43 @@ def apply_constraints(clipped_census, constraints):
             constraint.to_crs("EPSG:2193")
 
         #Chop the parts of the statistical areas out that are touching the constraint
-        clipped_census = gpd.overlay(clipped_census, constraint, how='difference', keep_geom_type=False)
+        clipped_census = gpd.overlay(clipped_census, constraint, how='difference', keep_geom_type=True)
 
     #Get rid of any unnecessary empty cells (which arise from the overlaying procedure)
     clipped_census = clipped_census[~clipped_census.isna()['index']]
     constrained_census = clipped_census[clipped_census.geom_type != 'GeometryCollection']
 
+    #However, there are some residual polygons that are utterly useless that still survive. This mainly comes up due to the clipping procedure.
+    constrained_census = clip_bad_parcels(constrained_census)
+
     #Now that all the constraints have taken place, the size of the parcel has most likely changed and hence the column needs updating
     constrained_census["AREA_SQ_KM"] = constrained_census.area/(1000**2)
 
+
+    #Save the file for computational time and to check valitidy of the module
+    constrained_census.to_file("data/processed/constrained_census.shp")
+    constrained_census = gpd.read_file("data/processed/constrained_census.shp")
+
+    return constrained_census
+
+
+def clip_bad_parcels(constrained_census):
+    """This module gets rid of user specified polygons from the census, whihc occur due to the clipping procedure as the Council defined constraints aren't perfect...
+
+    Parameters
+    ----------
+    constrained_census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint.
+
+    Returns
+    -------
+    constrained_census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent.
+
+    """
+
     #Clip out miscellaneous parcels that obviously cant be built on
-    #s-brig spit, airport, port hills, north cant, weird shit,
+    #s-brig spit, airport, port hills, north cant, some weird stuff,
     miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291"]
 
     #Check each parcel to check if it is a bad one
@@ -302,9 +328,26 @@ def apply_constraints(clipped_census, constraints):
 
     constrained_census = constrained_census[good_props]
 
-    #Save the file for computational time and to check valitidy of the module
-    constrained_census.to_file("data/processed/constrained_census.shp")
-    constrained_census = gpd.read_file("data/processed/constrained_census.shp")
+    #Clip out all the zones that are too small around the coastline - these have cropped up because the input Council layers are basically "not great" and think people can build in water lmao... #Tuples are Level_0 and Level_1 labels when data has been exploded.
+    bad_coastal_zones = [(380, 0), (459, 0), (471, 3), (474, 2), (862, 0), (1084, 0), (1695, 0), (1696, 0), (1697, 0), (1803, 0), (1991, 3), (1993, 6), (1994, 0), (1997, 0), (1999, 0), (2000, 0), (90, 21), (90, 19), (123, 10), (123, 0), (577, 0), (577, 3), (1086, 0)]
+
+    #Get rid of lines and small parcels that crop up!
+    exploded_cons_census = constrained_census.explode()
+    exploded_cons_census["area_exp"] = exploded_cons_census.area
+
+    #Check each line in the split/exploded geometries and see if it is really small (eg 10% of total size of property) or if it has been manually selected for deletion
+    for index, row in exploded_cons_census.iterrows():
+        if row["area_exp"] < 0.1 * float(row["AREA_SQ_KM"]) * (1000 * 1000):
+            #Then we've found ourselves a lil naughty boi thats less than 10% of total parcel size. Lets pop this little zit and kill it lol
+            exploded_cons_census.drop(index=row.name, inplace=True)
+        elif row.name in bad_coastal_zones:
+            exploded_cons_census.drop(index=row.name, inplace=True)
+
+    #Regroup the GeoDataFrame by the statistical area index and do some touchups
+    constrained_census = exploded_cons_census.dissolve(by='index')
+    constrained_census.to_file("data/processed/dissolved.shp")
+    constrained_census = gpd.read_file("data/processed/dissolved.shp")
+    constrained_census = constrained_census[["index", "Dwellings", "geometry"]]
 
     return constrained_census
 
@@ -342,7 +385,6 @@ def add_planning_zones(constrained_census, planning_zones):
         #Find the locations that overlap the residential zone with the census, and determine the size (area) of those polygons
         res_props = gpd.overlay(constrained_census, res_zone, how='intersection')
         areas = res_props.area
-        res_props.to_file("sam/{}.shp".format(zone))
 
         for index, prop in res_props.iterrows():
             prop_number = prop[0]
@@ -358,7 +400,7 @@ def add_planning_zones(constrained_census, planning_zones):
             new_area = area_to_add + area_added_so_far
             #Check if the area is less that the actual statistical area size, and adds the percentage to the right column
             if new_area <= property_area:
-                census_dict[prop_number][col_number] += area_to_add/property_area
+                census_dict[prop_number][col_number] += 100 * area_to_add/property_area
 
 
     #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
