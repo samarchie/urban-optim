@@ -78,7 +78,7 @@ def main():
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
-    development_plans = create_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, census_final)
+    development_plans, addition_of_dwellings = create_initial_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, census_final)
 
 
 if __name__ == "__main__":
