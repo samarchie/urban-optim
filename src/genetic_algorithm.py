@@ -12,6 +12,7 @@ import geopandas as gpd
 import os
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 # #Define genetic algorithm Parameters
 # acceptable_dwelling_densities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #Define what are acceptable densities for new areas (in dwelling/hecatres)
@@ -101,4 +102,47 @@ def create_initial_development_plans(NO_parents, required_dwellings, acceptable_
     return develepment_plans, addition_of_dwellings
 
 
-#Each instance of D is evaluated against the performance functions (f_heat, f_flood etc.) and get a value F which is the sum of the performance functions, f.
+def evaluate_development_plans(addition_of_dwellings, census):
+    """This module evaluates and scores each individual development plan with a F scores, that incorporates how many houses are developed in which bad statistical areas.
+
+    Parameters
+    ----------
+    addition_of_dwellings : List
+        A list of NO_parents amount of lists. Each nested list contains integre numbers which indicate the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+
+    Returns
+    -------
+    F_scores : List
+        A list of NO_parents amount of lists of floating point numbers. Each number indicates the inputted census GeoDataFrame and its evaluated score againsgt all objective functions, and the overall combined development score.
+
+    """
+
+    F_scores = []
+
+    #Want to evaluate one development plan at a time
+    for development_plan in addition_of_dwellings:
+
+        rolling_sums = [0] * 6 #one sum for each objective function
+
+        #Check each statistical area in the development plan,
+        for prop_index in range(0, len(census)):
+            #Find the amount of houses to built on each statistical area
+            houses_added = development_plan[prop_index]
+
+            #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
+            if houses_added > 0:
+                #Find the objective scores for each f-function and use the weightings! Add it to the rolling sums list!
+                obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
+                obj_counter = 0
+                for obj_func in obj_funcs:
+                    f_prop_score = census.loc[prop_index, obj_func]
+                    rolling_sums[obj_counter] += f_prop_score * houses_added
+                    obj_counter += 1
+
+        #Once all statistical areas are checked, add the total sum to the end of the list, and then add to the master list as it is the total F-score for the whole development plan!
+        rolling_sums.append(sum(rolling_sums))
+        F_scores.append(rolling_sums)
+
+    return F_scores

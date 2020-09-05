@@ -17,7 +17,7 @@ from src.initialisation import *
 from src.genetic_algorithm import *
 
 #Define the parameters that can be changed by the user
-acceptable_dwelling_densities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #Define what are acceptable densities for new areas (in dwelling/hecatres)
+acceptable_dwelling_densities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #Define what are acceptable sustainble densities for new areas (in dwelling/hecatres)
 NO_parents = 5 #number of parents/development plans in each iteration to make
 generations = 5 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
@@ -64,10 +64,10 @@ def main():
         processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
 
         #Clean the data properties up!
-        cleaned_data = clean_processed_data(processed_census)
+        cleaned_census = clean_processed_data(processed_census)
 
         #Take the user weightings and find the F score for each statistical area!
-        census_final = add_F_scores(cleaned_data, weightings)
+        census_final = apply_weightings(cleaned_census, weightings)
 
     else:
         census_final = gpd.read_file("data/processed/census_final.shp")
@@ -79,6 +79,10 @@ def main():
     ###### PHASE 2 - GENETIC ALGORITHM
 
     development_plans, addition_of_dwellings = create_initial_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, census_final)
+
+    F_scores = evaluate_development_plans(addition_of_dwellings, census_final)
+
+    print(F_scores)
 
 
 if __name__ == "__main__":

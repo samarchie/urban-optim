@@ -553,12 +553,12 @@ def clean_processed_data(proc_census):
     return cleaned_census
 
 
-def add_F_scores(cleaned_data, weightings):
-    """This module calculates the total objective function score, called the F-score.
+def apply_weightings(cleaned_census, weightings):
+    """This module calculates the total objective function score, called the F-score, and modifies the f-scores by a weighting scheme.
 
     Parameters
     ----------
-    cleaned_data : GeoDataFrame
+    cleaned_census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
     weightings : List
         List of normalised weightings for each objective function in order.
@@ -570,10 +570,13 @@ def add_F_scores(cleaned_data, weightings):
 
     """
 
-    census_final = cleaned_data.copy()
+    census_final = cleaned_census.copy()
+    print(census_final)
+
+    obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
 
     for index, row in census_final.iterrows():
-        #Extarct the f_scores for the statistical area
+        #Extract the f_scores for the statistical area
         f_scores = row.values[3:-1]
 
         #For objective funcation, add the product of the f_score and the weighting to the the row
@@ -581,8 +584,14 @@ def add_F_scores(cleaned_data, weightings):
         for func_num in range(0, len(weightings)):
             f_score = f_scores[func_num]
             weighting = weightings[func_num]
+
+            #update the GeoDataFrame using the weighing scheme for that objective function
+            census_final.loc[index, obj_funcs[func_num]] = f_score * weighting
+
+            #Add the weighted score to the rolling F_score sum for the statistical area
             F_score += f_score * weighting
 
+        #Add the total F-score to a column in the GeoDataFrame
         census_final.loc[index, "F_score"] = F_score
 
     # Save the census file to the file structure so we can validify the module works as expected
@@ -634,3 +643,4 @@ def plot_intialised_data(census_final):
     census_final.plot(ax=ax, column='F_score', cmap='Reds')
     plt.savefig("fig/exploratory/F_scores.png", dpi=600)
     ax.set_title('F_score')
+    plt.show()
