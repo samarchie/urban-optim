@@ -6,4 +6,8 @@ zJamie
 venv
 data
 report
+<<<<<<< HEAD
 src/plotty_bois.py
+=======
+.DS_Store
+>>>>>>> 954423f9bda62f881dc5a32ef4f3a9d0419b9880
