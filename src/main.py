@@ -75,8 +75,6 @@ def main():
     #Plot the processed census data and check the objective functions are working as expected!
     plot_intialised_data(census_final)
 
-<<<<<<< HEAD
-=======
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
@@ -86,7 +84,5 @@ def main():
 
     print(F_scores)
 
-
->>>>>>> 954423f9bda62f881dc5a32ef4f3a9d0419b9880
 if __name__ == "__main__":
     main()
