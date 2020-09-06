@@ -52,7 +52,7 @@ def main():
         constraints = update_constraints(constraints, boundaries[1])
 
         #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
-        constrained_census = apply_constraints(clipped_census, constraints)
+        constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
 
         #Add the District Planning Zone in the Census GeoDataFrame
         census_zones = add_planning_zones(constrained_census, boundaries[1])
@@ -84,5 +84,9 @@ def main():
 
     print(F_scores)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0c783fe09d589fe5344b90a18762312e24bbf7b0
 if __name__ == "__main__":
     main()
