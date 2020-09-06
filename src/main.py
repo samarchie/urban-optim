@@ -84,9 +84,5 @@ def main():
 
     print(F_scores)
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 0c783fe09d589fe5344b90a18762312e24bbf7b0
 if __name__ == "__main__":
     main()
