@@ -14,6 +14,7 @@ import rasterio as rio
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import warnings
 
 #Import home-made modules
 from src.objective_functions import *
@@ -247,7 +248,7 @@ def update_constraints(constraints, planning_zones):
     return constraints
 
 
-def apply_constraints(clipped_census, constraints):
+def apply_constraints(clipped_census, constraints, boundary):
     """This module applies the constrains given to the dwelling census data, and returns only areas that can be developed on.
 
     Parameters
@@ -256,6 +257,8 @@ def apply_constraints(clipped_census, constraints):
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region NOT clipped to the urban extent boundary, BUT rather if it any part of the statistical area is within the boundary then it is returned.
     constraints : List of GeoDataFrames
         A list of constraints imposed by the user, which are the boundaries of the red zone, public recreational parks and boundaries of District Planning Zones that cannot be built on.
+    boundary : GeoDataFrame
+        The urban extent of the city distruct urban boundary.
 
     Returns
     -------
@@ -286,7 +289,7 @@ def apply_constraints(clipped_census, constraints):
     constrained_census = clipped_census[clipped_census.geom_type != 'GeometryCollection']
 
     #However, there are some residual polygons that are utterly useless that still survive. This mainly comes up due to the clipping procedure.
-    constrained_census = clip_bad_parcels(constrained_census)
+    constrained_census = clip_bad_parcels(constrained_census, boundary)
 
     #Now that all the constraints have taken place, the size of the parcel has most likely changed and hence the column needs updating
     constrained_census["AREA_SQ_KM"] = constrained_census.area/(1000**2)
@@ -299,13 +302,16 @@ def apply_constraints(clipped_census, constraints):
     return constrained_census
 
 
-def clip_bad_parcels(constrained_census):
+def clip_bad_parcels(constrained_census, boundary):
     """This module gets rid of user specified polygons from the census, whihc occur due to the clipping procedure as the Council defined constraints aren't perfect...
 
     Parameters
     ----------
     constrained_census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint.
+    boundary : GeoDataFrame
+        The urban extent of the city distruct urban boundary.
+
 
     Returns
     -------
@@ -329,15 +335,20 @@ def clip_bad_parcels(constrained_census):
     constrained_census = constrained_census[good_props]
 
     #Clip out all the zones that are too small around the coastline - these have cropped up because the input Council layers are basically "not great" and think people can build in water lmao... #Tuples are Level_0 and Level_1 labels when data has been exploded.
-    bad_coastal_zones = [(380, 0), (459, 0), (471, 3), (474, 2), (862, 0), (1084, 0), (1695, 0), (1696, 0), (1697, 0), (1803, 0), (1991, 3), (1993, 6), (1994, 0), (1997, 0), (1999, 0), (2000, 0), (90, 21), (90, 19), (123, 10), (123, 0), (577, 0), (577, 3), (1086, 0)]
+    bad_coastal_zones = [(459, 0), (1991, 3), (474, 2), (471, 3), (1694, 3), (1997, 0), (1999, 0), (380, 0), (1803, 0), (862, 0), (1697, 0), (2000, 0), (1696, 0), (1084, 0), (1994, 0), (1695, 0)]
 
     #Get rid of lines and small parcels that crop up!
     exploded_cons_census = constrained_census.explode()
     exploded_cons_census["area_exp"] = exploded_cons_census.area
+    exploded_cons_census.to_file("sam/explz.shp")
 
     #Check each line in the split/exploded geometries and see if it is really small (eg 10% of total size of property) or if it has been manually selected for deletion
+    warnings.simplefilter("ignore")
     for index, row in exploded_cons_census.iterrows():
-        if row["area_exp"] < 0.1 * float(row["AREA_SQ_KM"]) * (1000 * 1000):
+        row_geo = gpd.GeoSeries(row.geometry)
+        row_geo = row_geo.set_crs("EPSG:2193")
+
+        if row["area_exp"] < 0.05 * float(row["AREA_SQ_KM"]) * (1000 * 1000) and not (boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()):
             #Then we've found ourselves a lil naughty boi thats less than 10% of total parcel size. Lets pop this little zit and kill it lol
             exploded_cons_census.drop(index=row.name, inplace=True)
         elif row.name in bad_coastal_zones:
