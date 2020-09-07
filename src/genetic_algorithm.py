@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # #Define genetic algorithm Parameters
-# acceptable_dwelling_densities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #Define what are acceptable densities for new areas (in dwelling/hecatres)
+# density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 # NO_parents = 5 #number of parents/development plans in each iteration to make
 # generations = 5 #how many generations/iterations to complete
 # prob_crossover = 0.7 #probability of having 2 development plans cross over
@@ -25,17 +25,17 @@ import matplotlib.pyplot as plt
 #
 # census = gpd.read_file("data/processed/census_final.shp")
 
-def create_initial_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, census):
+def create_initial_development_plans(NO_parents, required_dwellings, density_total, census):
     """This module created the inital set of parents, which are lists of randomised development at randomised statistical areas.
 
     Parameters
     ----------
     NO_parents : Integer
         Number of parent (inital) develeopment plans to be created.
-        required_dwellings : Integer
+    required_dwellings : Integer
         The forecasted amount of dwellings to be constructed in the city district.
-    acceptable_dwelling_densities : List
-        A list fof integers which represent acceptable and sustainable densities in terms of dwelllings per hectare.
+    density_total : Floating Point Number
+        The acceptable maximum densities for new areas (in dwelling/hecatres) for sustainable urabn development.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
@@ -69,10 +69,8 @@ def create_initial_development_plans(NO_parents, required_dwellings, acceptable_
             area_of_property = property_data.area.values[0] / 10000 #in hectares
             already_added_density = development_plan_of_densities[prop_index] #added from this module
 
-            #Pick a random density to develop on the property
-            density_total = random.choice(acceptable_dwelling_densities)
             #Find the density that needs to be added to get to this total
-            density_add = max([0, density_total - existing_density - already_added_density])
+            density_add = random.uniform(0, density_total - existing_density - already_added_density)
             #and convert to dwellings (round down to nearest integer as you cant have half houses hahahaha)
             dwellings_to_add = np.floor(density_add * area_of_property)
             #Update the density due to the rounding down of dwellings added

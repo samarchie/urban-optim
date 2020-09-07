@@ -17,14 +17,13 @@ from src.initialisation import *
 from src.genetic_algorithm import *
 
 #Define the parameters that can be changed by the user
-acceptable_dwelling_densities = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] #Define what are acceptable sustainble densities for new areas (in dwelling/hecatres)
 NO_parents = 5 #number of parents/development plans in each iteration to make
 generations = 5 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of a development plan mutating
-weightings = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6] #weightings of each objective function
+weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
-
+density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 
 
 def main():
@@ -78,7 +77,7 @@ def main():
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
-    development_plans, addition_of_dwellings = create_initial_development_plans(NO_parents, required_dwellings, acceptable_dwelling_densities, census_final)
+    development_plans, addition_of_dwellings = create_initial_development_plans(NO_parents, required_dwellings, density_total, census_final)
 
     F_scores = evaluate_development_plans(addition_of_dwellings, census_final)
 
