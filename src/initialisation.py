@@ -335,10 +335,7 @@ def clip_bad_parcels(constrained_census, boundary):
     constrained_census = constrained_census[good_props]
 
     #Clip out all the zones that are too small around the coastline - these have cropped up because the input Council layers are basically "not great" and think people can build in water lmao... #Tuples are Level_0 and Level_1 labels when data has been exploded.
-<<<<<<< HEAD
-=======
     # bad_coastal_zones = [(459, 0), (1991, 3), (474, 2), (471, 3), (1694, 3), (1997, 0), (1999, 0), (380, 0), (1803, 0), (862, 0), (1697, 0), (2000, 0), (1696, 0), (1084, 0), (1994, 0), (1695, 0)]
->>>>>>> 1f665efba423e80c21f36ea6e032693782029c6d
     bad_coastal_zones = [(383, 0), (2002, 0), (2004, 0), (462, 0), (1996, 3), (477, 2), (474, 3), (1699, 3)]
 
     #Get rid of lines and small parcels that crop up!
