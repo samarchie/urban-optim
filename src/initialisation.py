@@ -321,8 +321,8 @@ def clip_bad_parcels(constrained_census, boundary):
     """
 
     #Clip out miscellaneous parcels that obviously cant be built on
-    #s-brig spit, airport, port hills, north cant, some weird stuff,
-    miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291"]
+    #s-brig spit, airport, port hills, north cant, some weird stuff, some nor-eatern places
+    miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291", "7024284", "7024280", "7024283", "7024483", "7024484", "7024494", "7024496", "7024652", "7024703", "7026385", "7026446", "7024279", "7024347", "7024298", "7024300", "7024305", "7024348"]
 
     #Check each parcel to check if it is a bad one
     good_props = []
@@ -335,12 +335,13 @@ def clip_bad_parcels(constrained_census, boundary):
     constrained_census = constrained_census[good_props]
 
     #Clip out all the zones that are too small around the coastline - these have cropped up because the input Council layers are basically "not great" and think people can build in water lmao... #Tuples are Level_0 and Level_1 labels when data has been exploded.
-    bad_coastal_zones = [(459, 0), (1991, 3), (474, 2), (471, 3), (1694, 3), (1997, 0), (1999, 0), (380, 0), (1803, 0), (862, 0), (1697, 0), (2000, 0), (1696, 0), (1084, 0), (1994, 0), (1695, 0)]
+    # bad_coastal_zones = [(459, 0), (1991, 3), (474, 2), (471, 3), (1694, 3), (1997, 0), (1999, 0), (380, 0), (1803, 0), (862, 0), (1697, 0), (2000, 0), (1696, 0), (1084, 0), (1994, 0), (1695, 0)]
+    bad_coastal_zones = [(383, 0), (2002, 0), (2004, 0), (462, 0), (1996, 3), (477, 2), (474, 3), (1699, 3)]
 
     #Get rid of lines and small parcels that crop up!
     exploded_cons_census = constrained_census.explode()
     exploded_cons_census["area_exp"] = exploded_cons_census.area
-    exploded_cons_census.to_file("sam/explz.shp")
+    #exploded_cons_census.to_file("sam/explz.shp")
 
     #Check each line in the split/exploded geometries and see if it is really small (eg 10% of total size of property) or if it has been manually selected for deletion
     warnings.simplefilter("ignore")
@@ -348,16 +349,21 @@ def clip_bad_parcels(constrained_census, boundary):
         row_geo = gpd.GeoSeries(row.geometry)
         row_geo = row_geo.set_crs("EPSG:2193")
 
-        if row["area_exp"] < 0.05 * float(row["AREA_SQ_KM"]) * (1000 * 1000) and not (boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()):
-            #Then we've found ourselves a lil naughty boi thats less than 10% of total parcel size. Lets pop this little zit and kill it lol
+        if row["area_exp"] < 0.1 * float(row["AREA_SQ_KM"]) * (1000 * 1000) and not (boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()):
+            #Then we've found ourselves a lil naughty boi thats less than 10% of total parcel size outside the zone. Lets pop this little zit and kill it lol
+            exploded_cons_census.drop(index=row.name, inplace=True)
+        elif row["area_exp"] < 0.001 * float(row["AREA_SQ_KM"]) * (1000 * 1000) and (boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()):
+            #Then we have a small little polygon in the city boundary that shall be chopped as it is useless and annoying!
             exploded_cons_census.drop(index=row.name, inplace=True)
         elif row.name in bad_coastal_zones:
+            #As this is a point selected for manual deletion, WE SHALL KILL IT
             exploded_cons_census.drop(index=row.name, inplace=True)
 
     #Regroup the GeoDataFrame by the statistical area index and do some touchups
     constrained_census = exploded_cons_census.dissolve(by='index')
     constrained_census.to_file("data/processed/dissolved.shp")
     constrained_census = gpd.read_file("data/processed/dissolved.shp")
+    constrained_census = constrained_census.rename(columns={'C18_OccP_4': 'Dwellings'})
     constrained_census = constrained_census[["index", "Dwellings", "geometry"]]
 
     return constrained_census
@@ -582,7 +588,8 @@ def apply_weightings(cleaned_census, weightings):
     """
 
     census_final = cleaned_census.copy()
-    print(census_final)
+    #normalise the weightings that were given from the user
+    weightings = np.divide(weightings, [(sum(weightings))]*len(weightings))
 
     obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
 
@@ -644,8 +651,11 @@ def plot_intialised_data(census_final):
     # centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
     # centres.plot(ax=axs[2, 0], color='black', zorder=4)
 
+    if not os.path.exists("fig"):
+        os.mkdir("fig")
     if not os.path.exists("fig/exploratory"):
         os.mkdir("fig/exploratory")
+
     plt.savefig("fig/exploratory/objective_functions.png", transparent=False, dpi=600)
 
     plt.show()
