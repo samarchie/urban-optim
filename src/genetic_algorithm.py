@@ -145,7 +145,7 @@ def evaluate_development_plans(addition_of_dwellings, census):
 
     return F_scores
 
-
+#Do we need to prevent the development plan and other development plan from doing crossover later in the generation loop
 def apply_crossover(development_plan_index, development_plans):
 
     #Determine the development plan picked for cross-over

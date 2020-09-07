@@ -47,9 +47,67 @@ def sort(F_scores, ):
     """
     solutions = copy(F_scores)
     solutions.sort(key=lambda x: x[1][6])
-    solutions
 
-hi
+    Solution = solutions[0]
+
+    NonDom_list = [] # list of non-dominated solutions
+
+    # Pop the first ranked solution for that objective into the non dom list
+    NonDom_list.append(solutions[0])
+    solutions.pop(0)
+
+#    Solution = solutions[1]
+#    Solution[1]
+#    NonDom_list[0][1]
+
+#    Domination_Check(Solution, NonDom_list[0])
+
+    # Iteratively investigate solutions in the solution list against the non dom list
+    for Solution in solutions: #Check each solution in the solution list
+
+        row_count = 0 #keep a track of which row of the non_dom_list incase it needs to be popped
+
+        # Iteratively compare the solution to solutions in the non dom list
+        for NonDom_Sol in NonDom_list:
+            # Assess the fitness of the
+            Dominated, Dominates= Domination_Check(Solution, NonDom_Sol)
+
+            if Dominated == True:
+                # If solution is found to be dominated we stop considering to save
+                # computational time
+                break
+
+            elif Dominates == True:
+                # if the solution in the nondom list is found to be dominated we pop it"
+                NonDom_list.pop(row_count)
+                break
+
+            row_count += 1
+        if Dominated == False:
+            # If the solution is found to be undominated by all the solution in non dom list
+            # it is added to it
+            NonDom_list.append(Solution)
+
+    # return the list of non dominated solutions
+
+    return NonDom_list
+
+def Domination_Check(Solution, NonDom_Solution):
+    # Assume both solutions are dominated untils there one instance where they outperform the other solution.
+    Dominates = True # Stores if the solution dominates any solutions in the non dom list
+    Dominated = True # Stores if the solution is dominated by a solution in the non dom list
+
+    for Objective in range(0, 7):
+        # For each objective function under consideration
+        if Solution[1][Objective] < NonDom_Solution[1][Objective]:
+            # if the solution is found to outpeform (be less than) in any of the objectives it is non dominated
+            Dominated = False
+        elif Solution[1][Objective] > NonDom_Solution[1][Objective]:
+            # if the non dom solution is found to outpeform (be less than) in any of the objectives it remains in the non-dom list
+            Dominates = False
+
+    # returns whether sol or nondom_sol is dominated
+    return Dominated, Dominates
 
 
 def MOPO_update(MOPO_List, parents_gplus1):

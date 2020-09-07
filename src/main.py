@@ -25,8 +25,8 @@ from src.genetic_algorithm import *
 #Define the parameters that can be changed by the user
 NO_parents = 5 #number of parents/development plans in each iteration to make
 generations = 5 #how many generations/iterations to complete
-prob_crossover = 0.7 #probability of having 2 development plans cross over
-prob_mutation = 0.2 #probability of an element in a development plan mutating
+prob_crossover = 0.5 #probability of having 2 development plans cross over
+prob_mutation = 0.9 #probability of an element in a development plan mutating
 weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
