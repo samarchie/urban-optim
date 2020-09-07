@@ -42,9 +42,9 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
     Returns
     -------
     development_plans : List
-        A list of NO_parents amount of lists. Each nested list contains floating point numbers which indicate the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame.
+        A list of NO_parents amount of tuples. Each nested tuple contains an index value (representing which dveelopment plan number it is) and floating point numbers which indicate the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame.
     addition_of_dwellings : List
-        A list of NO_parents amount of lists. Each nested list contains integre numbers which indicate the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame.
+        A list of NO_parents amount of tuples. Each nested tuple contains an index value (representing which dveelopment plan number it is) and floating point numbers which indicate the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame.
 
     """
 
@@ -93,8 +93,8 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
                 assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
         #Once the required amount of dwellings to add is successful, the development plan is complete. Append a copy of the development plan to the master list and keep on iterating to get enough development plans
-        development_plans.append(development_plan_of_densities)
-        addition_of_dwellings.append(assoc_addition_of_dwellings)
+        development_plans.append((number, development_plan_of_densities))
+        addition_of_dwellings.append((number, assoc_addition_of_dwellings))
 
 
     return development_plans, addition_of_dwellings
@@ -106,14 +106,14 @@ def evaluate_development_plans(addition_of_dwellings, census):
     Parameters
     ----------
     addition_of_dwellings : List
-        A list of NO_parents amount of lists. Each nested list contains integre numbers which indicate the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame.
+        A list of NO_parents amount of tuples. Each nested tuple contains an index value (representing which dveelopment plan number it is) and floating point numbers which indicate the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
     Returns
     -------
     F_scores : List
-        A list of NO_parents amount of lists of floating point numbers. Each number indicates the inputted census GeoDataFrame and its evaluated score againsgt all objective functions, and the overall combined development score.
+        A list of NO_parents amount of tuples of floating point numbers. With an index number to represent the development plan number; and all other numbers indicates the inputted census GeoDataFrame and its evaluated score against all objective functions, and the overall combined development score.
 
     """
 
@@ -127,7 +127,7 @@ def evaluate_development_plans(addition_of_dwellings, census):
         #Check each statistical area in the development plan,
         for prop_index in range(0, len(census)):
             #Find the amount of houses to built on each statistical area
-            houses_added = development_plan[prop_index]
+            houses_added = development_plan[1][prop_index]
 
             #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
             if houses_added > 0:
@@ -141,7 +141,7 @@ def evaluate_development_plans(addition_of_dwellings, census):
 
         #Once all statistical areas are checked, add the total sum to the end of the list, and then add to the master list as it is the total F-score for the whole development plan!
         rolling_sums.append(sum(rolling_sums))
-        F_scores.append(rolling_sums)
+        F_scores.append((development_plan[0], rolling_sums))
 
     return F_scores
 
@@ -164,8 +164,7 @@ def apply_crossover(development_plan_index, development_plans):
     print("{} and {}".format(development_plan_index, random_index))
 
     #Do the cross-over procedure - which is all taken care of thanks to DEAP <3
-    crossovered_plans = tools.cxTwoPoint(development_plan, other_development_plan)
-    new_development_plan, new_other_development_plan = crossovered_plans
+    new_development_plan, new_other_development_plan = tools.cxTwoPoint(development_plan, other_development_plan)
 
     #update_constraints the total development plans list with the 2 new/modified/cross-overed development plans
     development_plans[development_plan_index] = new_development_plan

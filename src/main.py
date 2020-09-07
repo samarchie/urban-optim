@@ -91,7 +91,7 @@ def main():
 
     # bleh=0
     for development_plan in development_plans:
-        np_list = np.asarray(development_plan)
+        np_list = np.asarray(development_plan[1])
         census_final[np_list != 0].plot()
         # print(len(census_final[np_list != 0]))
         # census_final[np_list != 0].to_file('test/dev_plan{}.shp'.format(bleh))
@@ -113,12 +113,12 @@ def main():
                 development_plans = apply_crossover(development_plan_index, development_plans)
 
             elif random_number <= prob_mutation:
-                #Then we didnt crossover the solutions and we also now can mutate the development plan!
+                #Then we didnt crossover the solutions and we can mutate the development plan!
                 development_plan = apply_mutation(development_plan_index, development_plans)
 
             else:
                 #Then no modification happens to the development plan
-                modified_development_plan = development_plan
+                development_plan = development_plan
 
         print(development_plans)
 
