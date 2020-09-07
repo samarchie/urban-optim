@@ -7,7 +7,7 @@ This module/script shall contain multiple definitions that will complete Phase 2
 
 """
 
-import deap
+from deap import tools
 import geopandas as gpd
 import os
 import random
@@ -41,14 +41,14 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
 
     Returns
     -------
-    develepment_plans : List
+    development_plans : List
         A list of NO_parents amount of lists. Each nested list contains floating point numbers which indicate the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame.
     addition_of_dwellings : List
         A list of NO_parents amount of lists. Each nested list contains integre numbers which indicate the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame.
 
     """
 
-    develepment_plans = []
+    development_plans = []
     addition_of_dwellings = []
 
     #For each required development plan:
@@ -93,11 +93,11 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
                 assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
         #Once the required amount of dwellings to add is successful, the development plan is complete. Append a copy of the development plan to the master list and keep on iterating to get enough development plans
-        develepment_plans.append(development_plan_of_densities)
+        development_plans.append(development_plan_of_densities)
         addition_of_dwellings.append(assoc_addition_of_dwellings)
 
 
-    return develepment_plans, addition_of_dwellings
+    return development_plans, addition_of_dwellings
 
 
 def evaluate_development_plans(addition_of_dwellings, census):
@@ -144,3 +144,36 @@ def evaluate_development_plans(addition_of_dwellings, census):
         F_scores.append(rolling_sums)
 
     return F_scores
+
+
+def apply_crossover(development_plan_index, development_plans):
+
+    #Determine the development plan picked for cross-over
+    development_plan = development_plans[development_plan_index]
+
+    #Pick another plan to crossover the original with
+    no_of_plans = len(development_plans)
+    random_index = random.randrange(no_of_plans)
+    other_development_plan = development_plans[random_index]
+
+    #Make sure it isn't the same as the one that was meant to be changed lmao!
+    while development_plan == other_development_plan:
+        random_index = random.randrange(no_of_plans)
+        other_development_plan = development_plans[random_index]
+
+    print("{} and {}".format(development_plan_index, random_index))
+
+    #Do the cross-over procedure - which is all taken care of thanks to DEAP <3
+    crossovered_plans = tools.cxTwoPoint(development_plan, other_development_plan)
+    new_development_plan, new_other_development_plan = crossovered_plans
+
+    #update_constraints the total development plans list with the 2 new/modified/cross-overed development plans
+    development_plans[development_plan_index] = new_development_plan
+    development_plans[random_index] = new_other_development_plan
+
+    return development_plans
+
+
+def apply_mutation(development_plan):
+
+    return development_plan

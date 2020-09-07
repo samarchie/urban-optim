@@ -14,7 +14,6 @@ import rasterio as rio
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import warnings
 
 #Import home-made modules
 from src.objective_functions import *
@@ -335,7 +334,6 @@ def clip_bad_parcels(constrained_census, boundary):
     constrained_census = constrained_census[good_props]
 
     #Clip out all the zones that are too small around the coastline - these have cropped up because the input Council layers are basically "not great" and think people can build in water lmao... #Tuples are Level_0 and Level_1 labels when data has been exploded.
-    # bad_coastal_zones = [(459, 0), (1991, 3), (474, 2), (471, 3), (1694, 3), (1997, 0), (1999, 0), (380, 0), (1803, 0), (862, 0), (1697, 0), (2000, 0), (1696, 0), (1084, 0), (1994, 0), (1695, 0)]
     bad_coastal_zones = [(383, 0), (2002, 0), (2004, 0), (462, 0), (1996, 3), (477, 2), (474, 3), (1699, 3)]
 
     #Get rid of lines and small parcels that crop up!
@@ -344,17 +342,16 @@ def clip_bad_parcels(constrained_census, boundary):
     #exploded_cons_census.to_file("sam/explz.shp")
 
     #Check each line in the split/exploded geometries and see if it is really small (eg 10% of total size of property) or if it has been manually selected for deletion
-    warnings.simplefilter("ignore")
     for index, row in exploded_cons_census.iterrows():
-        row_geo = gpd.GeoSeries(row.geometry)
-        row_geo = row_geo.set_crs("EPSG:2193")
 
-        if row["area_exp"] < 0.1 * float(row["AREA_SQ_KM"]) * (1000 * 1000) and not (boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()):
+        if is_small_polygon(row, 0.1) and not is_within_boundary(row, boundary):
             #Then we've found ourselves a lil naughty boi thats less than 10% of total parcel size outside the zone. Lets pop this little zit and kill it lol
             exploded_cons_census.drop(index=row.name, inplace=True)
-        elif row["area_exp"] < 0.001 * float(row["AREA_SQ_KM"]) * (1000 * 1000) and (boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()):
+
+        elif is_small_polygon(row, 0.001) and is_within_boundary(row, boundary):
             #Then we have a small little polygon in the city boundary that shall be chopped as it is useless and annoying!
             exploded_cons_census.drop(index=row.name, inplace=True)
+
         elif row.name in bad_coastal_zones:
             #As this is a point selected for manual deletion, WE SHALL KILL IT
             exploded_cons_census.drop(index=row.name, inplace=True)
@@ -367,6 +364,53 @@ def clip_bad_parcels(constrained_census, boundary):
     constrained_census = constrained_census[["index", "Dwellings", "geometry"]]
 
     return constrained_census
+
+
+def is_small_polygon(row, proportion):
+    """This module determines if a Polygon of a MultiPolygon is relatively large enough to use as a statistical area. Returns True if exploded polygon is less than the specified proportion of the original statistical area size.
+
+    Parameters
+    ----------
+    row : Series
+        A Series containing only the attribute and geometry data of the exploded region.
+    proportion : Floating Point Number
+        A value between 0 and 1 that represents the threshold point for the percentage amount of area of the original statistical area size.
+
+    Returns
+    -------
+    Bool
+        True if exploded polygon is less than 10% of the original statistical area size; otherwise returns False.
+
+    """
+
+    exploded_area = row["area_exp"] #in m^2
+    total_stat_area_size = float(row["AREA_SQ_KM"]) * (1000 * 1000) #converted to m^2
+
+    return exploded_area < proportion * total_stat_area_size
+
+
+def is_within_boundary(row, boundary):
+    """This module evaluates if a polygon is within or intersects the urban extent boundary.
+
+    Parameters
+    ----------
+    row : GeoSeries
+        A Series containing only the attribute and geometry data of the exploded region.
+    boundary : GeoDataFrame
+        The urban extent of the city distruct urban boundary.
+
+    Returns
+    -------
+    Bool
+        True if exploded polygon is within or intersects the city urban boundary; otherwise returns False.
+
+    """
+
+    #Convert the Series to just a GeoSeries of the polygon geometry data
+    row_geo = gpd.GeoSeries(row.geometry)
+    row_geo = row_geo.set_crs("EPSG:2193")
+
+    return boundary.contains(row_geo).any() or row_geo.intersects(boundary).any()
 
 
 def add_planning_zones(constrained_census, planning_zones):

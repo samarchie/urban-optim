@@ -11,6 +11,12 @@ Good luck
 
 import os
 import geopandas as gpd
+import warnings
+import matplotlib.pyplot as plt
+import numpy as np
+import random
+
+warnings.simplefilter("ignore") #Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
 
 #Import our home-made modules
 from src.initialisation import *
@@ -20,7 +26,7 @@ from src.genetic_algorithm import *
 NO_parents = 5 #number of parents/development plans in each iteration to make
 generations = 5 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
-prob_mutation = 0.2 #probability of a development plan mutating
+prob_mutation = 0.2 #probability of an element in a development plan mutating
 weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
@@ -77,11 +83,45 @@ def main():
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
+    #Create an initial set of devlopment plans so that we can start the optimisation somewhere
     development_plans, addition_of_dwellings = create_initial_development_plans(NO_parents, required_dwellings, density_total, census_final)
 
+    #Calculae how well each randomised development plan actually does compared to the objective functions, and also overall.
     F_scores = evaluate_development_plans(addition_of_dwellings, census_final)
 
-    print(F_scores)
+    # bleh=0
+    for development_plan in development_plans:
+        np_list = np.asarray(development_plan)
+        census_final[np_list != 0].plot()
+        # print(len(census_final[np_list != 0]))
+        # census_final[np_list != 0].to_file('test/dev_plan{}.shp'.format(bleh))
+        # bleh +=1
+    plt.show()
+
+
+    #ITERATION PROCEDURE:
+    for generation_number in range(0, generations):
+        #We must perform these modifications to a set amount of iterations, called generations.
+
+        #We must modify and randomise each development plan generated initially.
+        for development_plan_index in range(0, NO_parents):
+            #Generate a random number between 0 and 1, and use this to test if we shall crossover two solutions in a development plan.
+            random_number = random.random()
+
+            if random_number <= prob_crossover:
+                #Then we shall crossover two development plans
+                development_plans = apply_crossover(development_plan_index, development_plans)
+
+            elif random_number <= prob_mutation:
+                #Then we didnt crossover the solutions and we also now can mutate the development plan!
+                development_plan = apply_mutation(development_plan_index, development_plans)
+
+            else:
+                #Then no modification happens to the development plan
+                modified_development_plan = development_plan
+
+        print(development_plans)
+
 
 if __name__ == "__main__":
     main()
