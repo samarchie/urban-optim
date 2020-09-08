@@ -84,10 +84,10 @@ def main():
     ###### PHASE 2 - GENETIC ALGORITHM
 
     #Create an initial set of devlopment plans so that we can start the optimisation somewhere
-    development_plans, addition_of_dwellings = create_initial_development_plans(NO_parents, required_dwellings, density_total, census_final)
+    development_plans = create_initial_development_plans(NO_parents, required_dwellings, density_total, census_final)
 
     #Calculae how well each randomised development plan actually does compared to the objective functions, and also overall.
-    F_scores = evaluate_development_plans(addition_of_dwellings, census_final)
+    development_plans = evaluate_development_plans(development_plans, census_final)
 
     # bleh=0
     for development_plan in development_plans:
@@ -100,27 +100,28 @@ def main():
 
 
     #ITERATION PROCEDURE:
-    for generation_number in range(0, generations):
-        #We must perform these modifications to a set amount of iterations, called generations.
+    # for generation_number in range(0, generations):
+    #     #We must perform these modifications to a set amount of iterations, called generations.
+    #
+    #     #We must modify and randomise each development plan generated initially.
+    #     for development_plan_index in range(0, NO_parents):
+    #         #Generate a random number between 0 and 1, and use this to test if we shall crossover two solutions in a development plan.
+    #         random_number = random.random()
+    #
+    #         if random_number <= prob_crossover:
+    #             #Then we shall crossover two development plans
+    #             development_plans = apply_crossover(development_plan_index, development_plans)
+    #
+    #         elif random_number <= prob_mutation:
+    #             #Then we didnt crossover the solutions and we can mutate the development plan!
+    #             development_plan = apply_mutation(development_plan_index, development_plans)
+    #
+    #         else:
+    #             #Then no modification happens to the development plan
+    #             development_plan = development_plan
 
-        #We must modify and randomise each development plan generated initially.
-        for development_plan_index in range(0, NO_parents):
-            #Generate a random number between 0 and 1, and use this to test if we shall crossover two solutions in a development plan.
-            random_number = random.random()
-
-            if random_number <= prob_crossover:
-                #Then we shall crossover two development plans
-                development_plans = apply_crossover(development_plan_index, development_plans)
-
-            elif random_number <= prob_mutation:
-                #Then we didnt crossover the solutions and we can mutate the development plan!
-                development_plan = apply_mutation(development_plan_index, development_plans)
-
-            else:
-                #Then no modification happens to the development plan
-                development_plan = development_plan
-
-        print(development_plans)
+    for plan in development_plans:
+        print(plan)
 
 
 if __name__ == "__main__":
