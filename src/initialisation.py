@@ -468,7 +468,7 @@ def add_planning_zones(constrained_census, planning_zones):
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     zoned_census = gpd.GeoDataFrame(df)
     #Set some properties of the GeoDataFrame that are necessary
-    zoned_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry', 'Res %', 'Mixed %', 'Rural %', 'Commercial %'])
+    zoned_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry', 'Res %', 'Mixed %', 'Rural %', 'Comm %'])
     zoned_census.set_geometry("geometry")
     zoned_census = zoned_census.set_crs("EPSG:2193")
 
@@ -569,7 +569,7 @@ def add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances):
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
-    proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Commercial %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
+    proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Comm %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
     proc_census.set_geometry(col='geometry', inplace=True)
     proc_census.set_crs("EPSG:2193", inplace=True)
 
@@ -680,17 +680,17 @@ def plot_intialised_data(census_final):
     fig.suptitle('Objective Functions')
 
     census_final.plot(ax=axs[0, 0], column='f_tsu', cmap='Reds')
-    axs[0, 0].set_title('f_tsu')
+    axs[0, 0].set_title('Tsunami Inundation (1 in 2500 year event)')
     census_final.plot(ax=axs[0, 1], column='f_cflood', cmap='Reds')
-    axs[0, 1].set_title('f_cflood')
+    axs[0, 1].set_title('Coastal Flooding (1 in 100 year event) w/ SLR')
     census_final.plot(ax=axs[1, 0], column='f_rflood', cmap='Reds')
-    axs[1, 0].set_title('f_rflood')
+    axs[1, 0].set_title('River Flooding (1 in 500 year event)')
     census_final.plot(ax=axs[1, 1], column='f_liq', cmap='Reds')
-    axs[1, 1].set_title('f_liq')
+    axs[1, 1].set_title('Vulnerability of Liquefaction')
     census_final.plot(ax=axs[2, 0], column='f_dist', cmap='Reds')
-    axs[2, 0].set_title('f_dist')
+    axs[2, 0].set_title('Distance to Key Activity Areas')
     census_final.plot(ax=axs[2, 1], column='f_dev', cmap='Reds')
-    axs[2, 1].set_title('f_dev')
+    axs[2, 1].set_title('District Plan Zones')
 
     # centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
     # centres.plot(ax=axs[2, 0], color='black', zorder=4)
@@ -700,12 +700,13 @@ def plot_intialised_data(census_final):
     if not os.path.exists("fig/exploratory"):
         os.mkdir("fig/exploratory")
 
+    plt.tight_layout()
     plt.savefig("fig/exploratory/objective_functions.png", transparent=False, dpi=600)
-
     plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(15,15))
     census_final.plot(ax=ax, column='F_score', cmap='Reds')
+    ax.set_title('Overall Score against the 6 objective functions, using an average weighting scheme')
+    plt.tight_layout()
     plt.savefig("fig/exploratory/F_scores.png", dpi=600)
-    ax.set_title('F_score')
     plt.show()

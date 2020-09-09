@@ -339,33 +339,32 @@ def f_dist(distance_data, census_dens):
     return f
 
 
-def f_dev(census_with_zones):
+def f_dev(census_dens):
     """Calculates the percentage of each area which is not developable, and
     returns as a decimal less than 1.
 
     Parameters
     ----------
-    census_with_zones : GeoDataFrame
-        contains all the census statistical areas with the amount of each zone
-        they fall in to.
+    census_dens : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. There are also 3 columns indicating percentage of the statistical area in each District Plan Zone, and another column indicating density of dwellings in each statistical area.
 
     Returns
     -------
     numpy array
         An array containing all f values in the same order as the statistical
-        areas are in
+        areas are in, indicating each statistical area's individual score against the development objective function.
 
     """
-    f = np.zeros(len(census_with_zones))
+    f = np.zeros(len(census_dens))
 
     #Change the columns from strings to floating point numbers
-    census_with_zones['Res %'] = census_with_zones['Res %'].astype(float)
-    census_with_zones['Mixed %'] = census_with_zones['Mixed %'].astype(float)
-    census_with_zones['Rural %'] = census_with_zones['Rural %'].astype(float)
+    census_dens['Res %'] = census_dens['Res %'].astype(float)
+    census_dens['Mixed %'] = census_dens['Mixed %'].astype(float)
+    census_dens['Comm %'] = census_dens['Comm %'].astype(float)
 
     # Zhu Li, do the thing!
-    for index, row in census_with_zones.iterrows():
-        developable_score = (row['Res %'] + row['Mixed %'] + row['Rural %'])/100
+    for index, row in census_dens.iterrows():
+        developable_score = (row['Res %'] + row['Mixed %'] + row['Comm %'])/100
         f[index] = 1 - developable_score
 
     return f

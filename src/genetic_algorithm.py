@@ -7,23 +7,23 @@ This module/script shall contain multiple definitions that will complete Phase 2
 
 """
 
-from deap import tools
-import geopandas as gpd
-import os
-import random
-import numpy as np
-import matplotlib.pyplot as plt
-
-#Define genetic algorithm Parameters
-density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
-NO_parents = 5 #number of parents/development plans in each iteration to make
-generations = 5 #how many generations/iterations to complete
-prob_crossover = 0.7 #probability of having 2 development plans cross over
-prob_mutation = 0.2 #probability of a development plan mutating
-weightings = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6] #weightings of each objective function
-required_dwellings = 20000 #amount of required dwellings over entire region
-
-census = gpd.read_file("data/processed/census_final.shp")
+# from deap import tools
+# import geopandas as gpd
+# import os
+# import random
+# import numpy as np
+# import matplotlib.pyplot as plt
+#
+# #Define genetic algorithm Parameters
+# density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
+# NO_parents = 5 #number of parents/development plans in each iteration to make
+# generations = 5 #how many generations/iterations to complete
+# prob_crossover = 0.7 #probability of having 2 development plans cross over
+# prob_mutation = 0.2 #probability of a development plan mutating
+# weightings = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6] #weightings of each objective function
+# required_dwellings = 20000 #amount of required dwellings over entire region
+#
+# census = gpd.read_file("data/processed/census_final.shp")
 
 
 def create_initial_development_plans(NO_parents, required_dwellings, density_total, census):
@@ -43,7 +43,7 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
     Returns
     -------
     development_plans : List
-        A list of NO_parents amount of tuples. Each tuple contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
 
     """
 
@@ -91,8 +91,8 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
                 assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
         #Once the required amount of dwellings to add is successful, the development plan is complete. Append a copy of the development plan to the master list and keep on iterating to get enough development plans
-        development_plans.append((number, development_plan_of_densities, assoc_addition_of_dwellings))
-
+        development_plan = [number, development_plan_of_densities, assoc_addition_of_dwellings]
+        development_plans.append(development_plan)
 
     return development_plans
 
@@ -103,21 +103,21 @@ def evaluate_development_plans(development_plans, census):
     Parameters
     ----------
     development_plans : List
-        A list of NO_parents amount of tuples. Each tuple contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 columns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
     Returns
     -------
     development_plans : List
-        A list of NO_parents amount of tuples. Each tuple contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
+        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
 
     """
 
     #Want to evaluate one development plan at a time
-    for development_plan_index in range(0, len(development_plans)):
+    for dev_index in range(0, len(development_plans)):
         #Get the development plan data
-        development_plan = development_plans[development_plan_index]
+        development_plan = development_plans[dev_index]
 
         f_scores_running_total = [0] * 6 #one sum for each objective function
 
@@ -138,12 +138,9 @@ def evaluate_development_plans(development_plans, census):
 
         #Calculate the summation of the individual objective functions, which will be the F-score.
         f_scores_running_total.append(sum(f_scores_running_total))
-        #Convert the current development_plan tuple to a list and add the F-scores at the end
-        list_of_prev_values = list(development_plan)
-        list_of_prev_values.append(f_scores_running_total)
 
         #Update the original development_plans list with the new tuple of values.
-        development_plans[development_plan_index] = tuple(list_of_prev_values)
+        development_plans[dev_index].append(f_scores_running_total)
 
     return development_plans
 
@@ -154,27 +151,32 @@ def apply_crossover(development_plan_index, development_plans):
     development_plan = development_plans[development_plan_index]
 
     #Pick another plan to crossover the original with
-    no_of_plans = len(development_plans)
-    random_index = random.randrange(no_of_plans)
+    random_index = random.randrange(len(development_plans))
     other_development_plan = development_plans[random_index]
 
     #Make sure it isn't the same as the one that was meant to be changed lmao!
-    while development_plan == other_development_plan:
+    while development_plan_index == random_index:
         random_index = random.randrange(no_of_plans)
         other_development_plan = development_plans[random_index]
 
-    print("{} and {}".format(development_plan_index, random_index))
+    print("crossovered {} and {}".format(development_plan_index, random_index))
+
+    #Get the dwelling addition lists which is what we will crossover.
+    buildings_one = development_plan[2]
+    building_two = other_development_plan[2]
 
     #Do the cross-over procedure - which is all taken care of thanks to DEAP <3
-    new_development_plan, new_other_development_plan = tools.cxTwoPoint(development_plan, other_development_plan)
+    new_development_plan, new_other_development_plan = tools.cxTwoPoint(buildings_one, building_two)
 
-    #update_constraints the total development plans list with the 2 new/modified/cross-overed development plans
-    development_plans[development_plan_index] = new_development_plan
-    development_plans[random_index] = new_other_development_plan
+    #Update the total development plans list with the 2 new/modified/cross-overed development plans
+    development_plans[development_plan_index][2] = new_development_plan
+    development_plans[random_index][2] = new_other_development_plan
 
     return development_plans
 
 
 def apply_mutation(development_plan):
+
+    print("i did a mutate hehe")
 
     return development_plan

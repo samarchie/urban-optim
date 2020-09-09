@@ -86,17 +86,14 @@ def main():
     #Create an initial set of devlopment plans so that we can start the optimisation somewhere
     development_plans = create_initial_development_plans(NO_parents, required_dwellings, density_total, census_final)
 
-    #Calculae how well each randomised development plan actually does compared to the objective functions, and also overall.
+    #Calculate how well each randomised development plan actually does compared to the objective functions, and also overall.
     development_plans = evaluate_development_plans(development_plans, census_final)
 
-    # bleh=0
-    for development_plan in development_plans:
-        np_list = np.asarray(development_plan[1])
-        census_final[np_list != 0].plot()
-        # print(len(census_final[np_list != 0]))
-        # census_final[np_list != 0].to_file('test/dev_plan{}.shp'.format(bleh))
-        # bleh +=1
-    plt.show()
+    #Here's a little section to plot out each of the initial randomised development plans
+    # for development_plan in development_plans:
+    #     np_list = np.asarray(development_plan[1])
+    #     census_final[np_list != 0].plot()
+    # plt.show()
 
 
     #ITERATION PROCEDURE:
@@ -115,14 +112,11 @@ def main():
     #         elif random_number <= prob_mutation:
     #             #Then we didnt crossover the solutions and we can mutate the development plan!
     #             development_plan = apply_mutation(development_plan_index, development_plans)
-    #
-    #         else:
-    #             #Then no modification happens to the development plan
-    #             development_plan = development_plan
-
-    for plan in development_plans:
-        print(plan)
+    #         #If the two randomisations dont occur, then the plan are not updated and kept as is.
 
 
 if __name__ == "__main__":
     main()
+
+
+#code.interact(local=locals())
