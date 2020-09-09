@@ -23,32 +23,21 @@ import geopandas as gpd
 import numpy as np
 from src.genetic_algorithm import *
 import random
+from copy import copy
 
-census = gpd.read_file("data/processed/census_final.shp")
-census
+#index   addition of density   addition of dwellings             f_tsu             f_cflood            f_rflood             f_liq               f_dist              f_dev              F_score
+#[[1,             [],                   [],              [73.41722296047094, 239.63333333333455, 816.50000000000130, 2324.0900000000000, 461.04649317735254, 137.65539336823363, 4052.3424428393932]],
+# [2,             [],                   [],              [68.44216867312252, 198.30000000000052, 666.33333333333460, 2072.6633333333330, 467.27333198655670, 483.07554824970396, 3956.0877155760510]],
+# [3,             [],                   [],              [93.78114078568109, 251.85000000000073, 617.33333333333440, 1709.9199999999996, 462.51575055248367, 345.07654005011780, 3480.4767647216170]],
+# [4,             [],                   [],              [66.77915599208782, 271.71666666666670, 1035.6666666666688, 1754.4533333333330, 486.19605761755247, 628.28276762863160, 4243.0946479049410]],
+# [5,             [],                   [],              [43.72476358181851, 108.40000000000016, 749.33333333333460, 1572.7799999999975, 458.87802733956440, 989.39999754461630, 3922.5161217993320]]]
 
-max(census['F_score'])
-
-objective_functions = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev', 'F_score']
-#index        f_tsu            f_cflood            f_rflood             f_liq               f_dist              f_dev              F_score
-#[(1, [73.41722296047094, 239.63333333333455, 816.50000000000130, 2324.0900000000000, 461.04649317735254, 137.65539336823363, 4052.3424428393932]),
-# (2, [68.44216867312252, 198.30000000000052, 666.33333333333460, 2072.6633333333330, 467.27333198655670, 483.07554824970396, 3956.0877155760510]),
-# (3, [93.78114078568109, 251.85000000000073, 617.33333333333440, 1709.9199999999996, 462.51575055248367, 345.07654005011780, 3480.4767647216170]),
-# (4, [66.77915599208782, 271.71666666666670, 1035.6666666666688, 1754.4533333333330, 486.19605761755247, 628.28276762863160, 4243.0946479049410]),
-# (5, [43.72476358181851, 108.40000000000016, 749.33333333333460, 1572.7799999999975, 458.87802733956440, 989.39999754461630, 3922.5161217993320])]
-
-F_scores = [(1, [73.41722296047094, 239.63333333333455, 816.5000000000013, 2324.09, 461.04649317735254, 137.65539336823363, 4052.3424428393932]), (2, [68.44216867312252, 198.30000000000052, 666.3333333333346, 2072.663333333333, 467.2733319865567, 483.07554824970396, 3956.087715576051]), (3, [93.78114078568109, 251.85000000000073, 617.3333333333344, 1709.9199999999996, 462.51575055248367, 345.0765400501178, 3480.476764721617]), (4, [66.77915599208782, 271.7166666666667, 1035.6666666666688, 1754.453333333333, 486.19605761755247, 628.2827676286316, 4243.094647904941]), (5, [43.72476358181851, 108.40000000000016, 749.3333333333346, 1572.7799999999975, 458.8780273395644, 989.3999975446163, 3922.516121799332])]
-F_scores
-
-
-def sort(F_scores, ):
+def Sort(F_scores):
     """
 
     """
     solutions = copy(F_scores)
-    solutions.sort(key=lambda x: x[1][6])
-
-    Solution = solutions[0]
+    solutions.sort(key=lambda x: x[3][6])
 
     NonDom_list = [] # list of non-dominated solutions
 
@@ -92,6 +81,7 @@ def sort(F_scores, ):
 
     return NonDom_list
 
+
 def Domination_Check(Solution, NonDom_Solution):
     # Assume both solutions are dominated untils there one instance where they outperform the other solution.
     Dominates = True # Stores if the solution dominates any solutions in the non dom list
@@ -99,10 +89,10 @@ def Domination_Check(Solution, NonDom_Solution):
 
     for Objective in range(0, 7):
         # For each objective function under consideration
-        if Solution[1][Objective] < NonDom_Solution[1][Objective]:
+        if Solution[3][Objective] < NonDom_Solution[3][Objective]:
             # if the solution is found to outpeform (be less than) in any of the objectives it is non dominated
             Dominated = False
-        elif Solution[1][Objective] > NonDom_Solution[1][Objective]:
+        elif Solution[3][Objective] > NonDom_Solution[3][Objective]:
             # if the non dom solution is found to outpeform (be less than) in any of the objectives it remains in the non-dom list
             Dominates = False
 
