@@ -7,13 +7,13 @@ This module/script shall contain multiple definitions that will complete Phase 2
 
 """
 
-# from deap import tools
-# import geopandas as gpd
-# import os
-# import random
-# import numpy as np
-# import matplotlib.pyplot as plt
-#
+from deap import tools
+import geopandas as gpd
+import os
+import random
+import numpy as np
+import matplotlib.pyplot as plt
+
 # #Define genetic algorithm Parameters
 # density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 # NO_parents = 5 #number of parents/development plans in each iteration to make
@@ -144,7 +144,7 @@ def evaluate_development_plans(development_plans, census):
 
     return development_plans
 
-#Do we need to prevent the development plan and other development plan from doing crossover later in the generation loop
+
 def apply_crossover(development_plan_index, development_plans):
 
     #Determine the development plan picked for cross-over
@@ -177,6 +177,27 @@ def apply_crossover(development_plan_index, development_plans):
 
 def apply_mutation(development_plan):
 
-    print("i did a mutate hehe")
+    prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
+
+    #Do the mutation procedure - which is all taken care of thanks to DEAP <3
+    development_plan = tools.mutUniformInt(development_plan, lower_bound,  upper_bound, prob_mut_indiv)
 
     return development_plan
+
+
+def update_densities(development_plans, census):
+
+    #Calculate the polygon areas of each statistical area from the GeoDataFrame
+
+
+    #Update each development plan seperately
+    for development_plan in development_plans:
+        #Find out how many statistical areas there are to begin with, and create a blank list
+        no_of_areas = len(development_plan[1])
+        updated_densities = [0] * no_of_areas
+
+        #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
+        for prop_index in range(0, no_of_areas):
+            prop_area =
+
+    return development_plans

@@ -25,8 +25,8 @@ from src.genetic_algorithm import *
 #Define the parameters that can be changed by the user
 NO_parents = 5 #number of parents/development plans in each iteration to make
 generations = 5 #how many generations/iterations to complete
-prob_crossover = 0.5 #probability of having 2 development plans cross over
-prob_mutation = 0.9 #probability of an element in a development plan mutating
+prob_crossover = 0.7 #probability of having 2 development plans cross over
+prob_mutation = 0.2 #probability of an element in a development plan mutating
 weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
@@ -97,26 +97,35 @@ def main():
 
 
     #ITERATION PROCEDURE:
-    # for generation_number in range(0, generations):
-    #     #We must perform these modifications to a set amount of iterations, called generations.
-    #
-    #     #We must modify and randomise each development plan generated initially.
-    #     for development_plan_index in range(0, NO_parents):
-    #         #Generate a random number between 0 and 1, and use this to test if we shall crossover two solutions in a development plan.
-    #         random_number = random.random()
-    #
-    #         if random_number <= prob_crossover:
-    #             #Then we shall crossover two development plans
-    #             development_plans = apply_crossover(development_plan_index, development_plans)
-    #
-    #         elif random_number <= prob_mutation:
-    #             #Then we didnt crossover the solutions and we can mutate the development plan!
-    #             development_plan = apply_mutation(development_plan_index, development_plans)
-    #         #If the two randomisations dont occur, then the plan are not updated and kept as is.
+    for generation_number in range(0, generations):
+        #We must perform these modifications to a set amount of iterations, called generations.
+
+        #We must modify and randomise each development plan generated initially.
+        for development_plan_index in range(0, NO_parents):
+            #Generate a random number between 0 and 1, and use this to test if we shall crossover two solutions in a development plan.
+            random_number = random.random()
+
+            if random_number <= prob_crossover:
+                #Then we shall crossover two development plans
+                development_plans = apply_crossover(development_plan_index, development_plans)
+
+                #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
+                development_plans = update_densities(development_plans, census_final)
+
+                #Then we want to check that the new densities do not exceed the sustainable urban density limit specified by the user
+
+
+            elif random_number <= prob_mutation + prob_crossover:
+                #Then we didnt crossover the solutions and we can mutate the development plan!
+                development_plan = apply_mutation(development_plan_index, development_plans)
+
+                #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
+                development_plans = update_densities(development_plans, census_final)
+
+            # If the two randomisations dont occur, then the plan are not updated and kept as is.
 
 
 if __name__ == "__main__":
     main()
 
-
-#code.interact(local=locals())
+# code.interact(local=locals())
