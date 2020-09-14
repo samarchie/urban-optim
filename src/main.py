@@ -15,12 +15,16 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import sys
+
+# insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
+sys.path.insert(0, str(sys.path[0]) + '/src')
 
 warnings.simplefilter("ignore") #Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
 
 #Import our home-made modules
-from src.initialisation import *
-from src.genetic_algorithm import *
+from initialisation import *
+from genetic_algorithm import *
 
 #Define the parameters that can be changed by the user
 NO_parents = 10 #number of parents/development plans in each iteration to make

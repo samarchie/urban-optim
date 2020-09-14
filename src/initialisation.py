@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #Import home-made modules
-from src.objective_functions import *
+from objective_functions import *
 
 
 def get_data():
