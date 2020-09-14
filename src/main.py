@@ -48,7 +48,7 @@ def main():
         if not os.path.exists("data/clipped"):
             os.mkdir("data/clipped")
 
-        clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census, hazards, coastal_flood)
+        clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
