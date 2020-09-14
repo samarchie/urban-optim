@@ -112,8 +112,8 @@ def main():
                 #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
                 children_plans = update_densities(children_created, census)
 
-                #Do some constraint handling, as the density cant be larger than the 
-                children_plans = verify_densities(children_plans, density_total, census)
+                #Do some constraint handling, as the density cant be larger than the
+                # children_plans = verify_densities(children_plans, density_total, census)
 
                 #Add the children to the list as they're good to use!
                 child_number = len(children)

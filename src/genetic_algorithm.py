@@ -262,16 +262,23 @@ def verify_densities(children_plans, density_total, census):
     for child in children_plans:
 
         #Extract the projected densities of each statistical area for the child plan
-        densities_list = child[1]
+        densities_list = child[1][:]
 
         #Check each statistical area to make sure it is under the threshold amount
         for prop_index in range(len(densities_list)):
 
             if densities_list[prop_index] > density_total:
                 #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
-
                 wrong_density = densities_list[prop_index]
-                extra_dwellings = (wrong_density - density_total) * 
+
+                #Calculate the amount of houses over the limit
+                extra_dwellings = (wrong_density - density_total) * areas[prop_index]
+                #Change the density to be the maximum
+                child[1][prop_index] = density_total
+
+                #Assign the extra houses to a different statistical area so that we reach the same amount of houses overall
+
+
 
 
     return children
