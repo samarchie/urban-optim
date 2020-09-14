@@ -23,8 +23,8 @@ from src.initialisation import *
 from src.genetic_algorithm import *
 
 #Define the parameters that can be changed by the user
-NO_parents = 5 #number of parents/development plans in each iteration to make
-generations = 5 #how many generations/iterations to complete
+NO_parents = 10 #number of parents/development plans in each iteration to make
+generations = 1 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
@@ -100,32 +100,36 @@ def main():
     for generation_number in range(0, generations):
         #We must perform these modifications to a set amount of iterations, called generations.
 
-        #We must modify and randomise each development plan generated initially.
-        for development_plan_index in range(0, NO_parents):
-            #Generate a random number between 0 and 1, and use this to test if we shall crossover two solutions in a development plan.
+        #We need to create NO_parents amount of children! hence, create one at a time
+        children = []
+        for child_index in range(0, NO_parents):
+            #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
             random_number = random.random()
 
             if random_number <= prob_crossover:
+                #Select two parents to create the child via Roulette Selection
+                selected_parents = do_roulette_selection(development_plans, 2)
+
                 #Then we shall crossover two development plans
                 development_plans = apply_crossover(development_plan_index, development_plans)
 
                 #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
                 development_plans = update_densities(development_plans, census_final)
 
-                #Then we want to check that the new densities do not exceed the sustainable urban density limit specified by the user
+                Then we want to check that the new densities do not exceed the sustainable urban density limit specified by the user
 
 
             elif random_number <= prob_mutation + prob_crossover:
-                #Then we didnt crossover the solutions and we can mutate the development plan!
+                #Then we shall create child by mutating one parent
                 development_plan = apply_mutation(development_plan_index, development_plans)
 
                 #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
                 development_plans = update_densities(development_plans, census_final)
 
-            # If the two randomisations dont occur, then the plan are not updated and kept as is.
+            else:
+                # If the two randomisations dont occur, then the plan are not updated and kept as is.
+
 
 
 if __name__ == "__main__":
     main()
-
-# code.interact(local=locals())

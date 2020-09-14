@@ -145,6 +145,49 @@ def evaluate_development_plans(development_plans, census):
     return development_plans
 
 
+def do_roulette_selection(development_plans, k):
+    """This module selects k amount of individuals using a Roulette Selection procedure.
+
+    Parameters
+    ----------
+    development_plans : List
+        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
+    k : Integer
+        The number of individiuals to select
+
+    Returns
+    -------
+    selected_parents : List
+        A list of k amount of lists, which were selected via Roulette tournament. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
+
+    """
+
+    #In order to find the fitness of each dveleopment plan, it is simply the reciprocal of the F_score. Hence lower F_scores (which are superior) will be assigned a (relatively) higher fitness value
+    fitness = [1 / development_plans[ind][3][6] for ind in range(len(development_plans))]
+    sum_fitness = sum(fitness)
+
+    #Zip the development plans and scores together to be able to sort by the F-score
+    sorted_individuals = [[score, ind] for score, ind in sorted(zip(fitness, development_plans))]
+
+    selected_parents = []
+    for i in range(k):
+        #Pick a random number to establish the breaking point, which chooses the individual
+        threshold = random.random() * sum_fitness
+
+        rolling_sum = 0
+        for index in range(len(sorted_individuals)):
+            individual = sorted_individuals[index]
+
+            #Find and add the fitness value for that individual to the rolling sum
+            rolling_sum += individual[0]
+            if rolling_sum > threshold:
+                #Then this is a chosen individual and we use it for crossover or whatever we need! Append the parent data to the master list
+                selected_parents.append(individual[1])
+                break
+
+    return selected_parents
+
+
 def apply_crossover(development_plan_index, development_plans):
 
     #Determine the development plan picked for cross-over
@@ -197,7 +240,7 @@ def update_densities(development_plans, census):
         updated_densities = [0] * no_of_areas
 
         #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
-        for prop_index in range(0, no_of_areas):
-            prop_area =
+        # for prop_index in range(0, no_of_areas):
+        #     prop_area =
 
     return development_plans
