@@ -250,3 +250,28 @@ def update_densities(children_created, census):
         children_plans.append([total_densities, child])
 
     return children_plans
+
+
+def verify_densities(children_plans, density_total, census):
+
+
+    #Calculate the polygon areas of each statistical area from the GeoDataFrame
+    areas = census.area
+
+    #Check each child one at a time
+    for child in children_plans:
+
+        #Extract the projected densities of each statistical area for the child plan
+        densities_list = child[1]
+
+        #Check each statistical area to make sure it is under the threshold amount
+        for prop_index in range(len(densities_list)):
+
+            if densities_list[prop_index] > density_total:
+                #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
+
+                wrong_density = densities_list[prop_index]
+                extra_dwellings = (wrong_density - density_total) * 
+
+
+    return children
