@@ -37,7 +37,7 @@ def main():
     ####### PHASE 1 - INTIALISATION
 
     #Get data from the user
-    boundaries, constraints, census, hazards, coastal_flood, distances = get_data()
+    boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
 
     #Clip the data if it has not already been clipped
     if not os.path.isfile("data/clipped/census.shp"):
@@ -72,62 +72,67 @@ def main():
         cleaned_census = clean_processed_data(processed_census)
 
         #Take the user weightings and find the F score for each statistical area!
-        census_final = apply_weightings(cleaned_census, weightings)
+        census = apply_weightings(cleaned_census, weightings)
 
     else:
-        census_final = gpd.read_file("data/processed/census_final.shp")
+        census = gpd.read_file("data/processed/census_final.shp")
 
     #Plot the processed census data and check the objective functions are working as expected!
-    plot_intialised_data(census_final)
+    # plot_intialised_data(census)
 
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
     #Create an initial set of devlopment plans so that we can start the optimisation somewhere
-    development_plans = create_initial_development_plans(NO_parents, required_dwellings, density_total, census_final)
+    development_plans = create_initial_development_plans(NO_parents, required_dwellings, density_total, census)
 
     #Calculate how well each randomised development plan actually does compared to the objective functions, and also overall.
-    development_plans = evaluate_development_plans(development_plans, census_final)
-
-    #Here's a little section to plot out each of the initial randomised development plans
-    # for development_plan in development_plans:
-    #     np_list = np.asarray(development_plan[1])
-    #     census_final[np_list != 0].plot()
-    # plt.show()
+    development_plans = evaluate_development_plans(development_plans, census)
 
 
     #ITERATION PROCEDURE:
     for generation_number in range(0, generations):
         #We must perform these modifications to a set amount of iterations, called generations.
 
-        #We need to create NO_parents amount of children! hence, create one at a time
+        #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
-        for child_index in range(0, NO_parents):
+
+        while len(children) < NO_parents:
+        # for child_index in range(0, NO_parents):
             #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
             random_number = random.random()
 
             if random_number <= prob_crossover:
-                #Select two parents to create the child via Roulette Selection
+                #Select two parents to create 2 children via Roulette Selection
                 selected_parents = do_roulette_selection(development_plans, 2)
 
-                #Then we shall crossover two development plans
-                development_plans = apply_crossover(development_plan_index, development_plans)
+                #Then we shall crossover two development plans and get some children!
+                children_created = apply_crossover(selected_parents)
 
                 #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
-                development_plans = update_densities(development_plans, census_final)
+                children_plans = update_densities(children_created, census)
 
-                Then we want to check that the new densities do not exceed the sustainable urban density limit specified by the user
+                #Add the children to the list as they're good to use!
+                child_number = len(children)
+                children.append([child_number] + children_plans[0])
+                children.append([child_number + 1] + children_plans[1])
 
+        for child in children:
+            print(child)
 
-            elif random_number <= prob_mutation + prob_crossover:
-                #Then we shall create child by mutating one parent
-                development_plan = apply_mutation(development_plan_index, development_plans)
+                # Then we want to check that the new densities do not exceed the sustainable urban density limit specified by the user
 
-                #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
-                development_plans = update_densities(development_plans, census_final)
+            # elif random_number <= prob_mutation + prob_crossover:
+            #     #Then we shall create child by mutating one parent
+            #     children_created = apply_mutation(development_plan_index, development_plans)
+            #
+            #     #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
+            #     development_plans = update_densities(development_plans, census)
+            #
+            # else:
+            #     # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list.
+            #     children_created = development_plans[len(children)]
 
-            else:
-                # If the two randomisations dont occur, then the plan are not updated and kept as is.
 
 
 
