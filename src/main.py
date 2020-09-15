@@ -15,12 +15,16 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import sys
+
+# insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
+sys.path.insert(0, str(sys.path[0]) + '/src')
 
 warnings.simplefilter("ignore") #Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
 
 #Import our home-made modules
-from src.initialisation import *
-from src.genetic_algorithm import *
+from initialisation import *
+from genetic_algorithm import *
 
 #Define the parameters that can be changed by the user
 NO_parents = 10 #number of parents/development plans in each iteration to make
@@ -44,7 +48,7 @@ def main():
         if not os.path.exists("data/clipped"):
             os.mkdir("data/clipped")
 
-        clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census, hazards, coastal_flood)
+        clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
@@ -111,6 +115,9 @@ def main():
 
                 #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
                 children_plans = update_densities(children_created, census)
+
+                #Do some constraint handling, as the density cant be larger than the
+                # children_plans = verify_densities(children_plans, density_total, census)
 
                 #Add the children to the list as they're good to use!
                 child_number = len(children)

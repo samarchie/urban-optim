@@ -21,7 +21,7 @@ Requirements:
 #Import necessary packages
 import geopandas as gpd
 import numpy as np
-from src.genetic_algorithm import *
+from genetic_algorithm import *
 import random
 from copy import copy
 
