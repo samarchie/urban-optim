@@ -58,7 +58,7 @@ def get_data():
         coastal_flood.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
     #Enter hazards here that are not SLR coastal flood projections
-    hazards = [rio.open('data/raw/hazards/tsunami.tif'), gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp"), gpd.read_file('data/raw/hazards/flood_1_in_500.shp')]
+    hazards = ['data/raw/hazards/tsunami.tif', gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp"), gpd.read_file('data/raw/hazards/flood_1_in_500.shp')]
 
     return boundaries, constraints, census, hazards, coastal_flood, distances
 
@@ -208,10 +208,10 @@ def open_clipped_data(hazards):
     clipped_coastal = []
     for slr in range(0, 310, 10):
         clipped_coastal.append(gpd.read_file("data/clipped/{}cm SLR.shp".format(slr)))
-
+    
     clipped_hazards = []
     for hazard in hazards:
-        if str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
+        if str(type(hazard)) == "<class 'str'>":
             clipped_hazards.append(hazard)
         elif str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
             clipped_hazards.append(hazard)
