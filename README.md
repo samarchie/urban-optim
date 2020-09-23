@@ -24,3 +24,4 @@ The objective functions for the Christchurch optimisation study defines the foll
 * [x] gdal
 * [x] rasterIO
 * [x] descartes
+* [x] rasterstats

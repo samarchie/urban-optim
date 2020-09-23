@@ -69,14 +69,14 @@ def f_tsu(tsunami_fp, census):
     inundation = []
     for i in range(len(nzgd2000)):
         if tif_boundary.contains(nzgd2000['geometry'][i].centroid):
-            a = zonal_stats(nzgd2000['geometry'][i], 'data/raw/hazards/tsunami.tif', stats="min max mean median")
+            stats = zonal_stats(nzgd2000['geometry'][i], tsunami_fp, stats="min max mean median")
             row, col = tsu_data.index(xs[i], ys[i])
             if row < 2792 and col < 2778:
-                a[0]['centroid'] = band1[row, col]
+                stats[0]['centroid'] = band1[row, col]
             else:
-                a.append(0.0)
+                stats.append(0.0)
         else:
-            a[0]['centroid'] = 0.0
+            stats[0]['centroid'] = 0.0
         inundation.append(a[0]['max']) #Currently using maximum inundations from each parcel
 
     #normalise the inundations by dividing by the maximum parcel inundation
