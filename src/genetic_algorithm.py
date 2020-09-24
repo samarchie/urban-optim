@@ -180,7 +180,7 @@ def apply_crossover(selected_parents):
     Parameters
     ----------
     selected_parents : List
-        A list of k amount of lists, which were selected via Roulette tournament. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
+        A list of 2 lists which is a development plan, which were selected via Roulette tournament. The nested lists contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
 
     Returns
     -------
@@ -199,14 +199,29 @@ def apply_crossover(selected_parents):
     return children_created
 
 
-def apply_mutation(development_plan):
+def apply_mutation(selected_parent):
+    """This module mutates a selected parent and thus creates a child via shuflfing the amount of buildings to add in each statiscal area.
+
+    Parameters
+    ----------
+    selected_parent : List
+        A list of 1 lists which is a development plan, which was selected via Roulette tournament. The nested list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
+
+    Returns
+    -------
+    children_created : List
+        A list of 1 list, as there is only one child created. The nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well for the new (child) development plan.
+
+    """
 
     prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 
+    #Extract the buildings addition list of the selected parents
+    buildings = selected_parent[0][2][:]
     #Do the mutation procedure - which is all taken care of thanks to DEAP <3
-    development_plan = tools.mutUniformInt(development_plan, lower_bound,  upper_bound, prob_mut_indiv)
+    child_created = tools.mutShuffleIndexes(buildings, prob_mut_indiv)
 
-    return development_plan
+    return [child_created]
 
 
 def update_densities(children_created, census):

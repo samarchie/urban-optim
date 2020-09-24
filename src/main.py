@@ -34,6 +34,7 @@ prob_mutation = 0.2 #probability of an element in a development plan mutating
 weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
+max_density_possible = 11 #As our crossover/mutation seciton will change densities, we need an upper bound that
 
 
 def main():
@@ -81,8 +82,8 @@ def main():
     else:
         census = gpd.read_file("data/processed/census_final.shp")
 
-    #Plot the processed census data and check the objective functions are working as expected!
-    # plot_intialised_data(census)
+    # Plot the processed census data and check the objective functions are working as expected!
+    plot_intialised_data(census)
 
 
     ###### PHASE 2 - GENETIC ALGORITHM
@@ -103,7 +104,6 @@ def main():
         child_number = 0
 
         while len(children) < NO_parents:
-        # for child_index in range(0, NO_parents):
             #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
             random_number = random.random()
 
@@ -114,34 +114,26 @@ def main():
                 #Then we shall crossover two development plans and get some children!
                 children_created = apply_crossover(selected_parents)
 
-                #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
-                children_plans = update_densities(children_created, census)
 
-                #Do some constraint handling, as the density cant be larger than the
-                # children_plans = verify_densities(children_plans, density_total, census)
+            elif random_number <= prob_mutation + prob_crossover:
 
-                #Add the children to the list as they're good to use!
-                children.append([child_number] + children_plans[0])
-                children.append([child_number + 1] + children_plans[1])
-                child_number += 2
+                #Select one parents to create 1 children via Roulette Selection
+                selected_parent = do_roulette_selection(development_plans, 1)
 
-        for child in children:
-            print(child)
-
-                # Then we want to check that the new densities do not exceed the sustainable urban density limit specified by the user
-
-            # elif random_number <= prob_mutation + prob_crossover:
-            #     #Then we shall create child by mutating one parent
-            #     children_created = apply_mutation(development_plan_index, development_plans)
-            #
-            #     #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
-            #     development_plans = update_densities(development_plans, census)
-            #
-            # else:
-            #     # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list.
-            #     children_created = development_plans[len(children)]
+                #Then we shall create child by mutating one parent
+                children_created = apply_mutation(selected_parent)
 
 
+            else:
+                # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list. But to keep the same format as the other children, only take the dwelling additons list
+                children_created = [development_plans[len(children)][2]]
+
+
+# #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
+# children_plans = update_densities(children_created, census)
+#
+# #Do some constraint handling, as the density cant be larger than the
+# # children_plans = verify_densities(children_plans, density_total, census)
 
 
 if __name__ == "__main__":
