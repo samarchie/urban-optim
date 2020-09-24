@@ -100,6 +100,7 @@ def main():
 
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
+        child_number = 0
 
         while len(children) < NO_parents:
         # for child_index in range(0, NO_parents):
@@ -120,9 +121,9 @@ def main():
                 # children_plans = verify_densities(children_plans, density_total, census)
 
                 #Add the children to the list as they're good to use!
-                child_number = len(children)
                 children.append([child_number] + children_plans[0])
                 children.append([child_number + 1] + children_plans[1])
+                child_number += 2
 
         for child in children:
             print(child)
