@@ -126,11 +126,7 @@ def main():
 
             else:
                 # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list. But to keep the same format as the other children, only take the dwelling additons list
-<<<<<<< HEAD
                 children_created = [development_plans[len(children)][2]]
-=======
-                children_created = development_plans[len(children)][2]
->>>>>>> 2ed7f460ba55568350ad8b7359033079b3f543c5
 
 
 # #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
