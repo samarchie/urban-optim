@@ -99,6 +99,8 @@ def evaluate_development_plans(development_plans, census):
         A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
 
     """
+    #State the column names of the objectiv functions
+    obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
 
     #Want to evaluate one development plan at a time
     for dev_index in range(0, len(development_plans)):
@@ -115,7 +117,6 @@ def evaluate_development_plans(development_plans, census):
             #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
             if houses_added > 0:
                 #Find the objective scores for each f-function and use the weightings! Add it to the rolling sums list!
-                obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
                 obj_counter = 0
                 for obj_func in obj_funcs:
                     f_prop_score = census.loc[prop_index, obj_func]
@@ -199,13 +200,15 @@ def apply_crossover(selected_parents):
     return children_created
 
 
-def apply_mutation(selected_parent):
+def apply_mutation(selected_parent, prob_mut_indiv):
     """This module mutates a selected parent and thus creates a child via shuflfing the amount of buildings to add in each statiscal area.
 
     Parameters
     ----------
     selected_parent : List
         A list of 1 lists which is a development plan, which was selected via Roulette tournament. The nested list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
+    prob_mut_indiv : Float
+        The probability that each individual attribute (statistical area) of the development plan will mutate by swapping places with one other.
 
     Returns
     -------
@@ -214,10 +217,9 @@ def apply_mutation(selected_parent):
 
     """
 
-    prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
-
     #Extract the buildings addition list of the selected parents
     buildings = selected_parent[0][2][:]
+
     #Do the mutation procedure - which is all taken care of thanks to DEAP <3
     child_created = tools.mutShuffleIndexes(buildings, prob_mut_indiv)
 
@@ -244,9 +246,11 @@ def update_densities(children_created, census):
     #Calculate the polygon areas of each statistical area from the GeoDataFrame
     areas = census.area
 
+    #Store the children with updated densities somewhere!
     children_plans = []
+
     #Update each child seperately
-    for child_number in range(len(children_created)):
+    for child_number in range(0, len(children_created)):
         child = children_created[child_number]
 
         #Find out how many statistical areas there are to begin with, and create a blank list
@@ -258,42 +262,50 @@ def update_densities(children_created, census):
             prop_area = areas[prop_index]
             new_dwellings = child[prop_index]
 
-            #Calculate the added density (from new dwellings) and add it to the already existing density
-            total_densities[prop_index] = (new_dwellings / prop_area) + census.loc[prop_index, "Density"]
+            #Calculate the added density (from new dwellings)
+            densities[prop_index] = (new_dwellings / prop_area)
 
         #Append all the information into one list (in the correct order) and add to the master list of children/new development plans
-        children_plans.append([total_densities, child])
+        children_plans.append([densities, child])
 
     return children_plans
 
 
-def verify_densities(children_plans, density_total, census):
+def child_is_good(child, max_density_possible, census):
+    """This module evaluate whether a child satisfies the constraint of a specified density limit.
 
+    Parameters
+    ----------
+    child : List
+        A list of 2 amounts of lists. The first list represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+    max_density_possible : Float
+        The upper bound threshold of sustainable densities in each statistical area.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
-    #Calculate the polygon areas of each statistical area from the GeoDataFrame
+    Returns
+    -------
+    Bool
+        Returns True if the all statiscal areas have a density less than the threshold. Otherwise, it returns False.
+
+    """
+
+    #Extract the area of each statiscal area from the census GeoDataFrame
     areas = census.area
 
-    #Check each child one at a time
-    for child in children_plans:
+    #Extract the projected densities of each statistical area for the child plan
+    densities_to_add = child[0][:]
 
-        #Extract the projected densities of each statistical area for the child plan
-        densities_list = child[1][:]
+    #The child is assumed to be good untill it is shown to be bad!
+    is_good_child = True
 
-        #Check each statistical area to make sure it is under the threshold amount
-        for prop_index in range(len(densities_list)):
+    #Check each statistical area to make sure it is under the threshold amount
+    for prop_index in range(len(densities_list)):
+        #Extract the current density from the GeoDataFrame
+        existing_density = cenus.loc[prop_index, "Density"]
 
-            if densities_list[prop_index] > density_total:
-                #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
-                wrong_density = densities_list[prop_index]
+        if densities_to_add[prop_index] + existing_density > density_total:
+            #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
+            is_good_child = False
 
-                #Calculate the amount of houses over the limit
-                extra_dwellings = (wrong_density - density_total) * areas[prop_index]
-                #Change the density to be the maximum
-                child[1][prop_index] = density_total
-
-                #Assign the extra houses to a different statistical area so that we reach the same amount of houses overall
-
-
-
-
-    return children
+    return is_good_child

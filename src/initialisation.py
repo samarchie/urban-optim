@@ -208,7 +208,7 @@ def open_clipped_data(hazards):
     clipped_coastal = []
     for slr in range(0, 310, 10):
         clipped_coastal.append(gpd.read_file("data/clipped/{}cm SLR.shp".format(slr)))
-    
+
     clipped_hazards = []
     for hazard in hazards:
         if str(type(hazard)) == "<class 'str'>":
@@ -702,11 +702,11 @@ def plot_intialised_data(census_final):
 
     plt.tight_layout()
     plt.savefig("fig/exploratory/objective_functions.png", transparent=False, dpi=600)
-    plt.show()
+    # plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(15,15))
     census_final.plot(ax=ax, column='F_score', cmap='Reds')
     ax.set_title('Overall Score against the 6 objective functions, using an average weighting scheme')
     plt.tight_layout()
     plt.savefig("fig/exploratory/F_scores.png", dpi=600)
-    plt.show()
+    # plt.show()

@@ -22,7 +22,7 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 from rasterstats import zonal_stats
 
-census = gpd.read_file('data/clipped/census.shp')
+# census = gpd.read_file('data/clipped/census.shp')
 tsunami_fp = "data/raw/hazards/tsunami.tif"
 
 def f_tsu(tsunami_fp, census):
@@ -77,7 +77,7 @@ def f_tsu(tsunami_fp, census):
                 stats.append(0.0)
         else:
             stats[0]['centroid'] = 0.0
-        inundation.append(a[0]['max']) #Currently using maximum inundations from each parcel
+        inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
 
     #normalise the inundations by dividing by the maximum parcel inundation
     norm_inundation = inundation/np.max(inundation)

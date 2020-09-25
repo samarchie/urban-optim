@@ -25,12 +25,6 @@ from genetic_algorithm import *
 import random
 from copy import copy
 
-#index   addition of density   addition of dwellings             f_tsu             f_cflood            f_rflood             f_liq               f_dist              f_dev              F_score
-#[[1,             [],                   [],              [73.41722296047094, 239.63333333333455, 816.50000000000130, 2324.0900000000000, 461.04649317735254, 137.65539336823363, 4052.3424428393932]],
-# [2,             [],                   [],              [68.44216867312252, 198.30000000000052, 666.33333333333460, 2072.6633333333330, 467.27333198655670, 483.07554824970396, 3956.0877155760510]],
-# [3,             [],                   [],              [93.78114078568109, 251.85000000000073, 617.33333333333440, 1709.9199999999996, 462.51575055248367, 345.07654005011780, 3480.4767647216170]],
-# [4,             [],                   [],              [66.77915599208782, 271.71666666666670, 1035.6666666666688, 1754.4533333333330, 486.19605761755247, 628.28276762863160, 4243.0946479049410]],
-# [5,             [],                   [],              [43.72476358181851, 108.40000000000016, 749.33333333333460, 1572.7799999999975, 458.87802733956440, 989.39999754461630, 3922.5161217993320]]]
 
 def Sort(F_scores):
     """
@@ -62,8 +56,7 @@ def Sort(F_scores):
             Dominated, Dominates= Domination_Check(Solution, NonDom_Sol)
 
             if Dominated == True:
-                # If solution is found to be dominated we stop considering to save
-                # computational time
+                # If solution is found to be dominated we stop considering to save computational time
                 break
 
             elif Dominates == True:
@@ -73,8 +66,7 @@ def Sort(F_scores):
 
             row_count += 1
         if Dominated == False:
-            # If the solution is found to be undominated by all the solution in non dom list
-            # it is added to it
+            # If the solution is found to be undominated by all the solution in non dom list it is added to it
             NonDom_list.append(Solution)
 
     # return the list of non dominated solutions
