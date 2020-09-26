@@ -21,7 +21,6 @@ The objective functions for the Christchurch optimisation study defines the foll
 #### Modules required:
 * [x] geopandas
 * [x] matplotlib
-* [x] gdal
 * [x] rasterIO
 * [x] descartes
 * [x] rasterstats

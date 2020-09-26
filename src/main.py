@@ -51,6 +51,7 @@ def main():
     #Get data from the user
     boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
     logger.info('Reading metadata')
+
     #Clip the data if it has not already been clipped
     if not os.path.isfile("data/clipped/census.shp"):
         if not os.path.exists("data/clipped"):
