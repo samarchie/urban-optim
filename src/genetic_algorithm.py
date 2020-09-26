@@ -185,8 +185,8 @@ def apply_crossover(selected_parents):
 
     Returns
     -------
-    children_created : Tuple
-        A tuple of 2 lists. Each list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well for the new (child) development plan.
+    children_created : List
+        A list of 2 lists. Each list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well for the new (child) development plan.
 
     """
     #Get the dwelling addition lists which is what we will crossover.
@@ -197,7 +197,7 @@ def apply_crossover(selected_parents):
     children_created = tools.cxTwoPoint(buildings_one, buildings_two)
 
 
-    return children_created
+    return list(children_created)
 
 
 def apply_mutation(selected_parent, prob_mut_indiv):
@@ -238,7 +238,7 @@ def update_densities(children_created, census):
 
     Returns
     -------
-    children_plans
+    children_plans : List
         A list of NO_parent amounts of lists. Each list contains two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
 
     """
@@ -251,11 +251,13 @@ def update_densities(children_created, census):
 
     #Update each child seperately
     for child_number in range(0, len(children_created)):
+
+        #Extract the child to be checked
         child = children_created[child_number]
 
         #Find out how many statistical areas there are to begin with, and create a blank list
         no_of_areas = len(child)
-        total_densities = [0] * no_of_areas
+        densities = [0] * no_of_areas
 
         #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
         for prop_index in range(no_of_areas):
@@ -289,10 +291,6 @@ def child_is_good(child, max_density_possible, census):
         Returns True if the all statiscal areas have a density less than the threshold. Otherwise, it returns False.
 
     """
-
-    #Extract the area of each statiscal area from the census GeoDataFrame
-    areas = census.area
-
     #Extract the projected densities of each statistical area for the child plan
     densities_to_add = child[0][:]
 
@@ -300,12 +298,15 @@ def child_is_good(child, max_density_possible, census):
     is_good_child = True
 
     #Check each statistical area to make sure it is under the threshold amount
-    for prop_index in range(len(densities_list)):
+    for prop_index in range(len(densities_to_add)):
         #Extract the current density from the GeoDataFrame
-        existing_density = cenus.loc[prop_index, "Density"]
+        existing_density = float(census.loc[prop_index, "Density"])
+        density_to_add = float(densities_to_add[prop_index])
 
-        if densities_to_add[prop_index] + existing_density > density_total:
+        if density_to_add + existing_density > max_density_possible:
             #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
             is_good_child = False
 
     return is_good_child
+
+from logger_config import *

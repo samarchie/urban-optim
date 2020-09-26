@@ -8,3 +8,4 @@ data
 report
 .DS_Store
 test
+logging.log

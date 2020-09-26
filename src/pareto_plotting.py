@@ -9,7 +9,6 @@ beep boop here some pretty graphs
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from paretochart.paretochart import pareto
-pareto([1, 2, 3, 26, 24])
 
 def add_to_paretofront_set(paretofront_set, parents):
     """

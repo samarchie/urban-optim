@@ -22,11 +22,15 @@ sys.path.insert(0, str(sys.path[0]) + '/src')
 
 warnings.simplefilter("ignore") #Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
 
+#Set up the logging software so we can track efficieny of the genetic algortihm and see where code breaks
+from logger_config import *
+logger = logging.getLogger(__name__)
+
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
 from non_dom_sorting import *
-from pareto import *
+from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
 NO_parents = 10 #number of parents/development plans in each iteration to make
@@ -46,7 +50,7 @@ def main():
 
     #Get data from the user
     boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
-
+    logger.info('Reading metadata')
     #Clip the data if it has not already been clipped
     if not os.path.isfile("data/clipped/census.shp"):
         if not os.path.exists("data/clipped"):
@@ -122,6 +126,8 @@ def main():
                 #Then we shall crossover two development plans and get some children!
                 children_created = apply_crossover(selected_parents)
 
+                children_created = list(children_created)
+
 
             elif random_number <= prob_mutation + prob_crossover:
 
@@ -146,19 +152,20 @@ def main():
                 #Test if they meet the constraints of density limits
                 if child_is_good(child, max_density_possible, census):
                     #Give the child a filler value thta means nothing, just because thats how the evaluate_development_plans module is coded up and there must be something in the 0th spot.
-                    child = ["filler_number"] + child
+                    child.insert(0, "filler value")
 
                     #Want to calculate the F-scores
-                    evaluated_child = evaluate_development_plans([child], census)
+                    evaluated_children = evaluate_development_plans([child], census)
+                    evaluated_child = evaluated_children[0]
 
                     #make sure we aren't adding a child to the list if we have already reached the limit. This case may exists when doing crossover is done but only 1 child is required
                     if len(children) < NO_parents:
                         #Delete that stupid filler value we added before
-                        child = child.pop(0)
+                        evaluated_child.pop(0)
                         #And insert the correct child index value!
-                        child = child.insert(0, len(children))
+                        evaluated_child.insert(0, len(children))
                         #Then add to children lists
-                        children.append([len(children)] + child)
+                        children.append(evaluated_child)
 
                 #If the child does not meet the constraints of the density limit, then it is not carried on and is not used any further. basically it is aborted and another child will be made as the list is stll under the NO_parents threshold.
 
