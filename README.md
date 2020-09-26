@@ -25,3 +25,4 @@ The objective functions for the Christchurch optimisation study defines the foll
 * [x] rasterIO
 * [x] descartes
 * [x] rasterstats
+* [x] rogeriopradoj-paretochart (python3 version of paretochart)
