@@ -50,7 +50,6 @@ def main():
 
     #Get data from the user
     boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
-    logger.info('Reading metadata')
 
     #Clip the data if it has not already been clipped
     if not os.path.isfile("data/clipped/census.shp"):
@@ -60,6 +59,7 @@ def main():
         clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
+    logger.info('Clipping complete')
 
     #Process data if it has not already been done
     if not os.path.isfile("data/processed/census_final.shp"):
@@ -90,8 +90,11 @@ def main():
     else:
         census = gpd.read_file("data/processed/census_final.shp")
 
+    logger.info('Processing/initialisation complete')
+
     # Plot the processed census data and check the objective functions are working as expected!
     plot_intialised_data(census)
+    logger.info('f_functions and F-scores plotted and saved')
 
 
     ###### PHASE 2 - GENETIC ALGORITHM
@@ -104,6 +107,7 @@ def main():
 
     #Establish a master list that retians that parents at each iteration. Evidently, the 0th place is for the initial parents we just created
     parents_at_each_generation = [development_plans]
+    logger.info('Initial plans created and entering GA now')
 
 
     #ITERATION PROCEDURE:
@@ -129,7 +133,6 @@ def main():
 
                 children_created = list(children_created)
 
-
             elif random_number <= prob_mutation + prob_crossover:
 
                 #Select one parents to create 1 children via Roulette Selection
@@ -138,11 +141,9 @@ def main():
                 #Then we shall create child by mutating one parent
                 children_created = apply_mutation(selected_parent, prob_mut_indiv)
 
-
             else:
                 # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list. But to keep the same format as the other children, only take the dwelling additons list
                 children_created = [parents[len(children)][2][:]]
-
 
             #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
             children_plans = update_densities(children_created, census)
@@ -183,7 +184,9 @@ def main():
         #Save the successful children in the master list so that they can be used for the next iteration!
         parents_at_each_generation.append(new_parents)
 
+        logger.info('Generation {} complete'.format(generation_number))
 
+    logger.info('Genetic algorithm complete, exiting for-loop now')
 
     ########### PHASE 3 - PARETO PLOTS
 
@@ -194,6 +197,8 @@ def main():
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
     for parents in parents_at_each_generation:
         paretofront_set = add_to_paretofront_set(paretofront_set, parents)
+
+    logger.info('Pareto set has been updated with all parents')
 
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_fronts(paretofront_set)

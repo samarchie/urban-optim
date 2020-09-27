@@ -223,7 +223,7 @@ def apply_mutation(selected_parent, prob_mut_indiv):
     #Do the mutation procedure - which is all taken care of thanks to DEAP <3
     child_created = tools.mutShuffleIndexes(buildings, prob_mut_indiv)
 
-    return [child_created]
+    return list(child_created)
 
 
 def update_densities(children_created, census):
@@ -232,7 +232,7 @@ def update_densities(children_created, census):
     Parameters
     ----------
     children_created : Tuple
-        A tuple of 2 lists. Each list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well for the new (child) development plan.
+        A list of 1 or 2 lists. In each list, there is one nested list that represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame. This represents the new child dvelopment plan.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
@@ -256,11 +256,11 @@ def update_densities(children_created, census):
         child = children_created[child_number]
 
         #Find out how many statistical areas there are to begin with, and create a blank list
-        no_of_areas = len(child)
+        no_of_areas = len(census)
         densities = [0] * no_of_areas
 
         #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
-        for prop_index in range(no_of_areas):
+        for prop_index in range(0, no_of_areas):
             prop_area = areas[prop_index]
             new_dwellings = child[prop_index]
 
@@ -308,5 +308,3 @@ def child_is_good(child, max_density_possible, census):
             is_good_child = False
 
     return is_good_child
-
-from logger_config import *
