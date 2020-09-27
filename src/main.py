@@ -176,9 +176,10 @@ def main():
 
         #Do non dominated sorting to figure out the champions between the children and the parents
         ######NEED TO ASK JAMIE HOW TO USE HIS SORT FUNCTION. KINDA NEEDS TO INPUT EVERYTHING NOT JUST F-FUNCTIONS
-        new_parents = Sort(F_scores)
+        new_parents = Sort(parents_and_children)
 
         #Update the MOPO list to see if we have any new superior solutions!
+        MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]
         MOPO_List = MOPO_update(MOPO_List, new_parents)
 
         #Save the successful children in the master list so that they can be used for the next iteration!

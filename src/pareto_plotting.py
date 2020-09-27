@@ -8,7 +8,7 @@ beep boop here some pretty graphs
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
-from paretochart.paretochart import pareto
+#from paretochart.paretochart import pareto
 
 def add_to_paretofront_set(paretofront_set, parents):
     """
