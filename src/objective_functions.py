@@ -22,8 +22,9 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 from rasterstats import zonal_stats
 
-# census = gpd.read_file('data/clipped/census.shp')
+census = gpd.read_file('data/clipped/census.shp')
 tsunami_fp = "data/raw/hazards/tsunami.tif"
+#census = gpd.read_file('data/processed/census_final.shp')
 
 def f_tsu(tsunami_fp, census):
     """
@@ -63,20 +64,19 @@ def f_tsu(tsunami_fp, census):
     band1 = tsu_data.read(1)
 
     #things break if coordinates are outside the tif, so we can use this to make sure coordinates are in the tsu_data before retrieving their values
-    tif_boundary = Polygon([(172.540500,-43.356800), (172.868300,-43.356800), (172.868300,-43.686300), (172.540500,-43.686300), (172.540500,-43.356800)])
+    tif_boundary = Polygon([(172.5405, -43.3568), (172.8683, -43.3568), (172.8683, -43.6863), (172.5405, -43.6863), (172.5405, -43.3568)])
+    nzgd2000 = gpd.clip(nzgd2000, tif_boundary)
 
-    #Find the {minimum, maximum, mean, median, centroid} inundation for each parcel
+    #Find the (minimum, maximum, mean, median, centroid) inundation for each parcel
     inundation = []
     for i in range(len(nzgd2000)):
-        if tif_boundary.contains(nzgd2000['geometry'][i].centroid):
-            stats = zonal_stats(nzgd2000['geometry'][i], tsunami_fp, stats="min max mean median")
-            row, col = tsu_data.index(xs[i], ys[i])
-            if row < 2792 and col < 2778:
-                stats[0]['centroid'] = band1[row, col]
-            else:
-                stats.append(0.0)
+        stats = zonal_stats(nzgd2000['geometry'][i], tsunami_fp, stats="min max mean median")
+        row, col = tsu_data.index(xs[i], ys[i])
+        if row < 2792 and col < 2778:
+            stats[0]['centroid'] = band1[row, col]
         else:
-            stats[0]['centroid'] = 0.0
+            stats.append(0.0)
+
         inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
 
     #normalise the inundations by dividing by the maximum parcel inundation

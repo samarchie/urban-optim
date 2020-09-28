@@ -98,6 +98,8 @@ def MOPO_update(MOPO_List, parents_gplus1):
     parents_gplus1 is a list of tuples, containing an identifying index and a list F_scores for each D
     """
 
+    # Sort the parents by each objective function. Check if the best parent for each
+    # objective beats the current one in the MOPO set and if so update the MOPO with the better one
     parents_gplus1.sort(key=lambda x: x[1][0])
     if parents_gplus1[0][1][0] < MOPO_List[0][0]:
         MOPO_List[0][0] = parents_gplus1[0][1][0]

@@ -38,7 +38,7 @@ generations = 1 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
-weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
+weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 max_density_possible = 11.0 #As our crossover/mutation seciton will change densities, we need an upper bound that
@@ -192,7 +192,7 @@ def main():
     ########### PHASE 3 - PARETO PLOTS
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #                  1   2   3   4   5   6   7   8   9   10  11  12  13  14  15
+    #             1   2   3   4   5   6   7   8   9   10  11  12  13  14  15
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
