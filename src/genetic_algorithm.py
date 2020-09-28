@@ -7,14 +7,49 @@ This module/script shall contain multiple definitions that will complete Phase 2
 
 """
 
-from deap import tools
+from deap import tools, base, creator
 import os
 import random
 import numpy as np
 
-def create_initial_development_plans(NO_parents, required_dwellings, density_total, census):
-    """This module created the inital set of parents, which are lists of randomised development at randomised statistical areas.
 
+def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible):
+
+    #Set up the DEAP class called an individual, and apply the weights to the Fitness class as well
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0, -1.0, -1.0, -1.0, -1.0))
+    #Set up the individual, with attributes for fitnesses, densities and if it is a good child or not.
+    creator.create("Individual", list, fitness=creator.FitnessMin, densities=None, valid=None)
+
+    #Create the toolbox where all the population is saved
+    toolbox = base.Toolbox()
+
+    #Initialise how to create an individual via the create_initial_development_plan module, and also deytail how to make a population (repeat making individuals till there are NO_parents)
+    #Basically, an individual will be a list of len(census) long that has intergers that indicate how many buildings are to be built in that statiscal area.
+    toolbox.register("individual", initDevPlan, creator.Individual, required_dwellings=required_dwellings, density_total=density_total, census=census, max_density_possible=max_density_possible)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+    #Now we need the register the genetic algorithm methods that we will use!
+    toolbox.register("crossover", tools.cxTwoPoint)
+    toolbox.register("mutate", tools.mutShuffleIndexes, indpb=prob_mut_indiv)
+    toolbox.register("select", tools.selNSGA2, k=NO_parents, nd='standard')
+
+    #We also need to specifiy some home-made functions that we'd like to use as well
+    toolbox.register("evaluate", evaluate_development_plan, census=census)
+
+    return toolbox
+
+
+def initDevPlan(self, required_dwellings, density_total, census, max_density_possible):
+
+    self.individual = create_initial_development_plan(self, required_dwellings, density_total, census)
+    self.densities = get_densities(self, census)
+    self.valid = child_is_good(self, max_density_possible, census)
+
+    return self
+
+
+def create_initial_development_plan(self, required_dwellings, density_total, census):
+    """This module created the inital set of parents, which are lists of randomised development at randomised statistical areas.
     Parameters
     ----------
     NO_parents : Integer
@@ -25,208 +60,57 @@ def create_initial_development_plans(NO_parents, required_dwellings, density_tot
         The acceptable maximum densities for new areas (in dwelling/hecatres) for sustainable urabn development.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
-
     Returns
     -------
     development_plans : List
         A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
-
     """
 
-    development_plans = []
+    development_plan_of_densities = [0] * len(census)
+    assoc_addition_of_dwellings = [0] * len(census)
 
-    #For each required development plan:
-    for number in range(0, NO_parents):
-        #Create a list, where each index is the row of the processed_column (eg statistical area) and each SA is densifiied by 0 dwellings/hecatres to start with
-        development_plan_of_densities = [0] * len(census)
-        assoc_addition_of_dwellings = [0] * len(census)
+    #Use a while loop to keep on adding dwellings (densifying) untill the required amount is met!
+    dwellings_added = 0
+    while dwellings_added < required_dwellings:
+        #Pick a random statistical area to develop on
+        prop_index = random.randint(0, len(census) - 1)
+        property_data = census.loc[census["index"] == prop_index]
 
-        #Use a while loop to keep on adding dwellings (densifying) untill the required amount is met!
-        dwellings_added = 0
-        while dwellings_added < required_dwellings:
-            #Pick a random statistical area to develop on
-            prop_index = random.randint(0, len(census) - 1)
-            property_data = census.loc[census["index"] == prop_index]
+        #and get its attributes (density already present and the area)
+        existing_density = property_data["Density"].values[0]
+        area_of_property = property_data.area.values[0] / 10000 #in hectares
+        already_added_density = development_plan_of_densities[prop_index] #added from this module
 
-            #and get its attributes (density already present and the area)
-            existing_density = property_data["Density"].values[0]
-            area_of_property = property_data.area.values[0] / 10000 #in hectares
-            already_added_density = development_plan_of_densities[prop_index] #added from this module
+        #Pick a density (under the sustainable threshold) that shall be used to densify this statistical area
+        density_add = random.uniform(0, density_total - existing_density - already_added_density)
+        #and convert to dwellings (round down to nearest integer as you cant have half houses hahahaha)
+        dwellings_to_add = np.floor(density_add * area_of_property)
+        #Update the density due to the rounding down of dwellings added
+        density = dwellings_to_add / area_of_property
 
-            #Pick a density (under the sustainable threshold) that shall be used to densify this statistical area
-            density_add = random.uniform(0, density_total - existing_density - already_added_density)
-            #and convert to dwellings (round down to nearest integer as you cant have half houses hahahaha)
-            dwellings_to_add = np.floor(density_add * area_of_property)
-            #Update the density due to the rounding down of dwellings added
-            density = dwellings_to_add / area_of_property
+        #Check if not going over the required dwellings and add to totals and development_plans accordingly
+        if dwellings_to_add + dwellings_added < required_dwellings:
+            dwellings_added += dwellings_to_add
+            development_plan_of_densities[prop_index] += density
+            assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
-            #Check if not going over the required dwellings and add to totals and development_plans accordingly
-            if dwellings_to_add + dwellings_added < required_dwellings:
-                dwellings_added += dwellings_to_add
-                development_plan_of_densities[prop_index] += density
-                assoc_addition_of_dwellings[prop_index] += dwellings_to_add
+        else:
+            #The density that was randomised was too much! So reduce it
+            dwellings_to_add = required_dwellings - dwellings_added
+            dwellings_added = required_dwellings #to stop the while loop as we now have enough dwellings that were required
 
-            else:
-                #The density that was randomised was too much! So reduce it
-                dwellings_to_add = required_dwellings - dwellings_added
-                dwellings_added = required_dwellings #to stop the while loop as we now have enough dwellings that were required
+            #Calculate the new density
+            new_density = dwellings_to_add / area_of_property # in dw/ha
+            development_plan_of_densities[prop_index] += density
+            assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
-                #Calculate the new density
-                new_density = dwellings_to_add / area_of_property # in dw/ha
-                development_plan_of_densities[prop_index] += density
-                assoc_addition_of_dwellings[prop_index] += dwellings_to_add
+    #Once the required amount of dwellings to add is successful, the development plan is complete. Append a copy of the development plan to the master list and keep on iterating to get enough development plans
+    development_plan = assoc_addition_of_dwellings
 
-        #Once the required amount of dwellings to add is successful, the development plan is complete. Append a copy of the development plan to the master list and keep on iterating to get enough development plans
-        development_plan = [number, development_plan_of_densities, assoc_addition_of_dwellings]
-        development_plans.append(development_plan)
-
-    return development_plans
+    return development_plan
 
 
-def evaluate_development_plans(development_plans, census):
-    """This module evaluates and scores each individual development plan with a F scores, that incorporates how many houses are developed in which bad statistical areas.
-
-    Parameters
-    ----------
-    development_plans : List
-        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
-    census : GeoDataFrame
-        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 columns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
-
-    Returns
-    -------
-    development_plans : List
-        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
-
-    """
-    #State the column names of the objectiv functions
-    obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
-
-    #Want to evaluate one development plan at a time
-    for dev_index in range(0, len(development_plans)):
-        #Get the development plan data
-        development_plan = development_plans[dev_index]
-
-        f_scores_running_total = [0] * 6 #one sum for each objective function
-
-        #Check each statistical area in the development plan,
-        for prop_index in range(0, len(census)):
-            #Find the amount of houses to built on each statistical area
-            houses_added = development_plan[2][prop_index]
-
-            #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
-            if houses_added > 0:
-                #Find the objective scores for each f-function and use the weightings! Add it to the rolling sums list!
-                obj_counter = 0
-                for obj_func in obj_funcs:
-                    f_prop_score = census.loc[prop_index, obj_func]
-                    f_scores_running_total[obj_counter] += f_prop_score * houses_added
-                    obj_counter += 1
-
-        #Calculate the summation of the individual objective functions, which will be the F-score.
-        f_scores_running_total.append(sum(f_scores_running_total))
-
-        #Update the original development_plans list with the new tuple of values.
-        development_plans[dev_index].append(f_scores_running_total)
-
-    return development_plans
-
-
-def do_roulette_selection(development_plans, k):
-    """This module selects k amount of individuals using a Roulette Selection procedure.
-
-    Parameters
-    ----------
-    development_plans : List
-        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
-    k : Integer
-        The number of individiuals to select.
-
-    Returns
-    -------
-    selected_parents : List
-        A list of k amount of lists, which were selected via Roulette tournament. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
-
-    """
-
-    #In order to find the fitness of each dveleopment plan, it is simply the reciprocal of the F_score. Hence lower F_scores (which are superior) will be assigned a (relatively) higher fitness value
-    fitness = [1 / development_plans[ind][3][6] for ind in range(len(development_plans))]
-    sum_fitness = sum(fitness)
-
-    #Zip the development plans and scores together to be able to sort by the F-score
-    sorted_individuals = [[score, ind] for score, ind in sorted(zip(fitness, development_plans))]
-
-    selected_parents = []
-    for i in range(k):
-        #Pick a random number to establish the breaking point, which chooses the individual
-        threshold = random.random() * sum_fitness
-
-        rolling_sum = 0
-        for index in range(len(sorted_individuals)):
-            individual = sorted_individuals[index]
-
-            #Find and add the fitness value for that individual to the rolling sum
-            rolling_sum += individual[0]
-            if rolling_sum > threshold:
-                #Then this is a chosen individual and we use it for crossover or whatever we need! Append the parent data to the master list
-                selected_parents.append(individual[1])
-                break
-
-    return selected_parents
-
-
-def apply_crossover(selected_parents):
-    """This module crossovers the 2 selected parents using a 2-point crossover procedure.
-
-    Parameters
-    ----------
-    selected_parents : List
-        A list of 2 lists which is a development plan, which were selected via Roulette tournament. The nested lists contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
-
-    Returns
-    -------
-    children_created : List
-        A list of 2 lists. Each list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well for the new (child) development plan.
-
-    """
-    #Get the dwelling addition lists which is what we will crossover.
-    buildings_one = selected_parents[0][2][:]
-    buildings_two = selected_parents[1][2][:]
-
-    #Do the cross-over procedure - which is all taken care of thanks to DEAP <3
-    children_created = tools.cxTwoPoint(buildings_one, buildings_two)
-
-
-    return list(children_created)
-
-
-def apply_mutation(selected_parent, prob_mut_indiv):
-    """This module mutates a selected parent and thus creates a child via shuflfing the amount of buildings to add in each statiscal area.
-
-    Parameters
-    ----------
-    selected_parent : List
-        A list of 1 lists which is a development plan, which was selected via Roulette tournament. The nested list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions, and then the summation which acts as the overall development plan F-score!
-    prob_mut_indiv : Float
-        The probability that each individual attribute (statistical area) of the development plan will mutate by swapping places with one other.
-
-    Returns
-    -------
-    children_created : List
-        A list of 1 list, as there is only one child created. The nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well for the new (child) development plan.
-
-    """
-
-    #Extract the buildings addition list of the selected parents
-    buildings = selected_parent[0][2][:]
-
-    #Do the mutation procedure - which is all taken care of thanks to DEAP <3
-    child_created = tools.mutShuffleIndexes(buildings, prob_mut_indiv)
-
-    return list(child_created)
-
-
-def update_densities(children_created, census):
+def get_densities(self, census):
     """This module takes the children (additions of dwellings) and calculates the associated density of development.
 
     Parameters
@@ -242,38 +126,25 @@ def update_densities(children_created, census):
         A list of NO_parent amounts of lists. Each list contains two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
 
     """
-
-    #Calculate the polygon areas of each statistical area from the GeoDataFrame
+    #Get the areas of the statistical areas
     areas = census.area
 
-    #Store the children with updated densities somewhere!
-    children_plans = []
+    #Find out how many statistical areas there are to begin with, and create a blank list
+    no_of_areas = len(census)
+    densities = [0] * no_of_areas
 
-    #Update each child seperately
-    for child_number in range(0, len(children_created)):
+    #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
+    for prop_index in range(0, no_of_areas):
+        prop_area = areas[prop_index]
+        new_dwellings = self.individual[prop_index]
 
-        #Extract the child to be checked
-        child = children_created[child_number]
+        #Calculate the added density (from new dwellings)
+        densities[prop_index] = (new_dwellings / prop_area)
 
-        #Find out how many statistical areas there are to begin with, and create a blank list
-        no_of_areas = len(census)
-        densities = [0] * no_of_areas
-
-        #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
-        for prop_index in range(0, no_of_areas):
-            prop_area = areas[prop_index]
-            new_dwellings = child[prop_index]
-
-            #Calculate the added density (from new dwellings)
-            densities[prop_index] = (new_dwellings / prop_area)
-
-        #Append all the information into one list (in the correct order) and add to the master list of children/new development plans
-        children_plans.append([densities, child])
-
-    return children_plans
+    return densities
 
 
-def child_is_good(child, max_density_possible, census):
+def child_is_good(self, max_density_possible, census):
     """This module evaluate whether a child satisfies the constraint of a specified density limit.
 
     Parameters
@@ -291,20 +162,55 @@ def child_is_good(child, max_density_possible, census):
         Returns True if the all statiscal areas have a density less than the threshold. Otherwise, it returns False.
 
     """
-    #Extract the projected densities of each statistical area for the child plan
-    densities_to_add = child[0][:]
-
     #The child is assumed to be good untill it is shown to be bad!
     is_good_child = True
 
     #Check each statistical area to make sure it is under the threshold amount
-    for prop_index in range(len(densities_to_add)):
+    for prop_index in range(len(self.densities)):
         #Extract the current density from the GeoDataFrame
         existing_density = float(census.loc[prop_index, "Density"])
-        density_to_add = float(densities_to_add[prop_index])
+        density_to_add = float(self.densities[prop_index])
 
         if density_to_add + existing_density > max_density_possible:
             #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
             is_good_child = False
+            break
 
     return is_good_child
+
+
+def evaluate_development_plan(self, census):
+    """This module evaluates and scores each individual development plan with f scores, that incorporates how many houses are developed in which bad statistical areas.
+    Parameters
+    ----------
+    development_plans : List
+        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 columns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    Returns
+    -------
+    development_plans : Tuple
+        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions!
+    """
+    #State the column names of the objectiv functions
+    obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
+
+    f_scores_running_total = [0] * 6 #one sum for each objective function
+
+    #Check each statistical area in the development plan,
+    for prop_index in range(0, len(census)):
+        #Find the amount of houses to built on each statistical area
+        houses_added = self.individual[prop_index]
+
+        #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
+        if houses_added > 0:
+            #Find the objective scores for each f-function and use the weightings! Add it to the rolling sums list!
+            obj_counter = 0
+            for obj_func in obj_funcs:
+                f_prop_score = census.loc[prop_index, obj_func]
+                f_scores_running_total[obj_counter] += f_prop_score * houses_added
+                obj_counter += 1
+
+    f_scores = tuple(f_scores_running_total)
+
+    return f_scores

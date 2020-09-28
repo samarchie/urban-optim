@@ -65,6 +65,8 @@ def f_tsu(tsunami_fp, census):
 
     #things break if coordinates are outside the tif, so we can use this to make sure coordinates are in the tsu_data before retrieving their values
     tif_boundary = Polygon([(172.5405, -43.3568), (172.8683, -43.3568), (172.8683, -43.6863), (172.5405, -43.6863), (172.5405, -43.3568)])
+
+    nzgd2000["geometry"] = nzgd2000.buffer(0)
     nzgd2000 = gpd.clip(nzgd2000, tif_boundary)
 
     #Find the (minimum, maximum, mean, median, centroid) inundation for each parcel

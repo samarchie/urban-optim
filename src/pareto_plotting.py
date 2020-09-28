@@ -13,9 +13,21 @@ import os
 #from paretochart.paretochart import pareto
 
 def add_to_pareto_set(pareto_set, parents):
-    """
-    Takes all Development plans for this generation, and adds all parents to the pareto_set to be plotted later.
+    """This module adds the parents from each generation to the pareto set. Takes all Development plans for this generation, and adds all parents to the pareto_set to be plotted later.
     Pareto set is essentially a list of all objective function combinations found in the GA
+
+    Parameters
+    ----------
+    paretofront_set : List
+        A list of 15 nested lists. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions.
+    parents : List
+        A list of NO_parent amounts of lists. Each list contains an index value and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.The third nested list represents the scores of the parent against each objective function and the overall F-score.
+
+    Returns
+    -------
+    paretofront_set : List
+        A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions.
+
     """
 
     # Iterate through all current development plans

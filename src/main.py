@@ -17,6 +17,7 @@ import numpy as np
 import random
 import sys
 
+
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
 
@@ -38,7 +39,7 @@ generations = 1 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
-weightings = [1, 1, 1, 1, 1, 1] #user defined weightings of each objective function
+weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 max_density_possible = 11.0 #As our crossover/mutation seciton will change densities, we need an upper bound that
@@ -99,20 +100,32 @@ def main():
 
     ###### PHASE 2 - GENETIC ALGORITHM
 
-    #Create an initial set of devlopment plans so that we can start the optimisation somewhere
-    development_plans = create_initial_development_plans(NO_parents, required_dwellings, density_total, census)
+    #Set up a counter that is the master key that identifies what plan is what
+    dev_index_master = 0
 
-    #Calculate how well each randomised development plan actually does compared to the objective functions, and also overall.
-    development_plans = evaluate_development_plans(development_plans, census)
+    #Initialise and setup the DEAP toolbox of how we store and use our population.
+    toolbox = initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible)
 
-    #Establish a master list that retians that parents at each iteration. Evidently, the 0th place is for the initial parents we just created
-    parents_at_each_generation = [development_plans]
-    logger.info('Initial plans created and entering GA now')
+    #Create the initial population of NO_parent amount of development plans
+    logger.info('Started creating initial population')
+    pop = toolbox.population(n=NO_parents)
+
+    #Check for bad children and kill them
+
+    #Add the fitness values to the individuals
+    fitnesses = list(map(toolbox.evaluate, pop))
+    for ind, fit in zip(pop, fitnesses):
+        ind.fitness.values = fit
 
 
-    #ITERATION PROCEDURE:
-    for generation_number in range(0, generations):
-        #We must perform these modifications to a set amount of iterations, called generations.
+    #Add the f_scores to each of the individuals
+    ###ITERATION PROCEDURE:
+    logger.info('Initial population created and entering GA loop now')
+
+
+    #We must perform these modifications to a set amount of iterations, called generations.
+    generation_number = 0
+    while generation_number < generations:
 
         #Grab the parents (which are the successfulf children from last iteration) and use them to make the new children
         parents = parents_at_each_generation[-1][:]
@@ -174,9 +187,7 @@ def main():
         #Now we have all the children we require, and we must rank them against the parents!
         parents_and_children = children + parents
 
-        #Do non dominated sorting to figure out the champions between the children and the parents
-        ######NEED TO ASK JAMIE HOW TO USE HIS SORT FUNCTION. KINDA NEEDS TO INPUT EVERYTHING NOT JUST F-FUNCTIONS
-        new_parents = Sort(parents_and_children)
+        #Do NSGA2 sorting to figure out the champions between the children and the parents
 
         #Update the MOPO list to see if we have any new superior solutions!
         MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]
@@ -189,15 +200,16 @@ def main():
 
     logger.info('Genetic algorithm complete, exiting for-loop now')
 
+
     ########### PHASE 3 - PARETO PLOTS
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #             1   2   3   4   5   6   7   8   9   10  11  12  13  14  15
+    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
     for parents in parents_at_each_generation:
-        pareto_set = add_to_pareto_set(pareto_set, parents)
+        pareto_set = add_to_paretofront_set(pareto_set, parents)
 
     logger.info('Pareto set has been updated with all parents')
 

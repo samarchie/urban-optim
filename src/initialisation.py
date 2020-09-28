@@ -565,6 +565,7 @@ def add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances):
         value.append(float(distance_ratings[index]))
         value.append(float(dev_ratings[index]))
         index += 1
+    logger.info('f_scores added')
 
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
@@ -608,6 +609,7 @@ def clean_processed_data(proc_census):
             proc_census[col_name] = proc_census[col_name].astype(int)
         elif col_name != "geometry":
             proc_census[col_name] = proc_census[col_name].astype(float)
+    logger.info('data cleaned')
 
     cleaned_census = proc_census[['SA index', 'index', 'Density', 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev', 'geometry']]
 
@@ -621,8 +623,8 @@ def apply_weightings(cleaned_census, weightings):
     ----------
     cleaned_census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
-    weightings : List
-        List of normalised weightings for each objective function in order.
+    weightings : Numpy Array
+        Array of normalised weightings for each objective function in order.
 
     Returns
     -------
@@ -636,6 +638,7 @@ def apply_weightings(cleaned_census, weightings):
     weightings = np.divide(weightings, [(sum(weightings))]*len(weightings))
 
     obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
+    logger.info('about to start weightings')
 
     for index, row in census_final.iterrows():
         #Extract the f_scores for the statistical area
@@ -655,6 +658,7 @@ def apply_weightings(cleaned_census, weightings):
 
         #Add the total F-score to a column in the GeoDataFrame
         census_final.loc[index, "F_score"] = F_score
+    logger.info('weightings applied')
 
     # Save the census file to the file structure so we can validify the module works as expected
     census_final.to_file("data/processed/census_final.shp")
