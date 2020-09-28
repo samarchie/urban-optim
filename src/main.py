@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import sys
-
+from deap import tools, base, creator
 
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
@@ -99,6 +99,7 @@ def main():
 
 
     ###### PHASE 2 - GENETIC ALGORITHM
+    census = gpd.read_file("data/processed/census_final.shp")
 
     #Set up a counter that is the master key that identifies what plan is what
     dev_index_master = 0
@@ -110,15 +111,13 @@ def main():
     logger.info('Started creating initial population')
     pop = toolbox.population(n=NO_parents)
 
-    #Check for bad children and kill them
-
-    #Add the fitness values to the individuals
+    # Add the fitness values to the individuals
     fitnesses = list(map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
+        ind.fitness = creator.FitnessMulti()
         ind.fitness.values = fit
 
 
-    #Add the f_scores to each of the individuals
     ###ITERATION PROCEDURE:
     logger.info('Initial population created and entering GA loop now')
 

@@ -16,9 +16,10 @@ import numpy as np
 def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible):
 
     #Set up the DEAP class called an individual, and apply the weights to the Fitness class as well
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0, -1.0, -1.0, -1.0, -1.0, -1.0))
+    creator.create("FitnessMulti", base.Fitness, weights=(-1,)*6)
+
     #Set up the individual, with attributes for fitnesses, densities and if it is a good child or not.
-    creator.create("Individual", list, fitness=creator.FitnessMin, densities=None, valid=None)
+    creator.create("Individual", list, fitness=None, densities=None, valid=None)
 
     #Create the toolbox where all the population is saved
     toolbox = base.Toolbox()
@@ -31,7 +32,8 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     #Now we need the register the genetic algorithm methods that we will use!
     toolbox.register("crossover", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutShuffleIndexes, indpb=prob_mut_indiv)
-    toolbox.register("select", tools.selNSGA2, k=NO_parents, nd='standard')
+    toolbox.register("select_best", tools.selNSGA2, nd='standard')
+    toolbox.register("select", tools.selRoulette)
 
     #We also need to specifiy some home-made functions that we'd like to use as well
     toolbox.register("evaluate", evaluate_development_plan, census=census)
@@ -40,12 +42,15 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
 
 
 def initDevPlan(self, required_dwellings, density_total, census, max_density_possible):
+    #Create a blank individual
+    ind = self()
 
-    self.individual = create_initial_development_plan(self, required_dwellings, density_total, census)
-    self.densities = get_densities(self, census)
-    self.valid = child_is_good(self, max_density_possible, census)
+    #Fill it with information
+    ind.individual = create_initial_development_plan(ind, required_dwellings, density_total, census)
+    ind.densities = get_densities(ind, census)
+    ind.valid = child_is_good(ind, max_density_possible, census)
 
-    return self
+    return ind
 
 
 def create_initial_development_plan(self, required_dwellings, density_total, census):
@@ -104,10 +109,7 @@ def create_initial_development_plan(self, required_dwellings, density_total, cen
             development_plan_of_densities[prop_index] += density
             assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
-    #Once the required amount of dwellings to add is successful, the development plan is complete. Append a copy of the development plan to the master list and keep on iterating to get enough development plans
-    development_plan = assoc_addition_of_dwellings
-
-    return development_plan
+    return assoc_addition_of_dwellings
 
 
 def get_densities(self, census):
