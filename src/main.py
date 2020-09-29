@@ -30,12 +30,12 @@ logger = logging.getLogger(__name__)
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
-from non_dom_sorting import *
+# from non_dom_sorting import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
-NO_parents = 10 #number of parents/development plans in each iteration to make
-generations = 1 #how many generations/iterations to complete
+NO_parents = 5 #number of parents/development plans in each iteration to make
+NO_generations = 2 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
@@ -99,103 +99,88 @@ def main():
 
 
     ###### PHASE 2 - GENETIC ALGORITHM
-    census = gpd.read_file("data/processed/census_final.shp")
-
-    #Set up a counter that is the master key that identifies what plan is what
-    dev_index_master = 0
 
     #Initialise and setup the DEAP toolbox of how we store and use our population.
     toolbox = initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible)
 
-    #Create the initial population of NO_parent amount of development plans
     logger.info('Started creating initial population')
+
+    #Create the initial population of NO_parent amount of development plans
     pop = toolbox.population(n=NO_parents)
 
-    # Add the fitness values to the individuals
-    fitnesses = list(map(toolbox.evaluate, pop))
-    for ind, fit in zip(pop, fitnesses):
-        ind.fitness = creator.FitnessMulti()
-        ind.fitness.values = fit
+    #Add the other attributes to the individuals before finding the fitness values
+    parents = add_attributes(pop, toolbox, creator, census, max_density_possible)
 
+    #Add the intial parents to the master parents list
+    master_parents = [parents]
+    for parent in parents:
+        print(parent)
+    print(" ")
 
-    ###ITERATION PROCEDURE:
     logger.info('Initial population created and entering GA loop now')
 
 
-    #We must perform these modifications to a set amount of iterations, called generations.
-    generation_number = 0
-    while generation_number < generations:
 
-        #Grab the parents (which are the successfulf children from last iteration) and use them to make the new children
-        parents = parents_at_each_generation[-1][:]
+    ###ITERATION PROCEDURE:
+    for gen_number in range(1, NO_generations + 1):
+
+        #We must make sure that we follow the rules of the GA method
+        assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
 
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
-
         while len(children) < NO_parents:
             #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
-            random_number = random.random()
+            op_choice = random.random()
 
-            if random_number <= prob_crossover:
-                #Select two parents to create 2 children via Roulette Selection
-                selected_parents = do_roulette_selection(parents, 2)
+            #Apply cross-over
+            if op_choice < prob_crossover:
+                #Select two parents via Roulette Selection to create a child
+                parent1, parent2 = list(map(toolbox.clone, toolbox.select(individuals=parents, k=2)))
 
-                #Then we shall crossover two development plans and get some children!
-                children_created = apply_crossover(selected_parents)
+                #Perform a love-making ritual that binds the two parents till death do them part <3
+                child, _ = toolbox.mate(parent1, parent2)
 
-                children_created = list(children_created)
+            #Apply mutation
+            elif op_choice < prob_crossover + prob_mutation:
+                #Select 1 parent via Roulette Selection to create a child
+                parent = toolbox.clone(toolbox.select(individuals=parents, k=1))
+                #The child, stright agter birth, recieves a vaccination and this causes autism. They then mutate and well...
+                child = toolbox.mutate(parent)
 
-            elif random_number <= prob_mutation + prob_crossover:
-
-                #Select one parents to create 1 children via Roulette Selection
-                selected_parent = do_roulette_selection(parents, 1)
-
-                #Then we shall create child by mutating one parent
-                children_created = apply_mutation(selected_parent, prob_mut_indiv)
-
+            #Apply reproduction (random parent unchanged)
             else:
-                # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list. But to keep the same format as the other children, only take the dwelling additons list
-                children_created = [parents[len(children)][2][:]]
+                #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
+                child = toolbox.select(individuals=parents, k=1)
 
-            #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
-            children_plans = update_densities(children_created, census)
 
-            #Do some constraint handling, as the density cant be larger than the sustainable limit set by the user so we must check each new child to make sure they are okay
-            for child in children_plans:
+            #Update the child attributes with the correct ones
+            child.densities = get_densities(child, census)
+            child.valid = child_is_good(child, max_density_possible, census)
 
-                #Test if they meet the constraints of density limits
-                if child_is_good(child, max_density_possible, census):
-                    #Give the child a filler value thta means nothing, just because thats how the evaluate_development_plans module is coded up and there must be something in the 0th spot.
-                    child.insert(0, "filler value")
+            # Add the fitness values to the individuals
+            child.fitness = creator.FitnessMulti()
+            child.fitness.values = toolbox.evaluate(child)
 
-                    #Want to calculate the F-scores
-                    evaluated_children = evaluate_development_plans([child], census)
-                    evaluated_child = evaluated_children[0]
+            #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacriufice. The good child, however, leads a very happy life and settles down and marries later.
+            if child.valid:
+                children.append(child)
 
-                    #make sure we aren't adding a child to the list if we have already reached the limit. This case may exists when doing crossover is done but only 1 child is required
-                    if len(children) < NO_parents:
-                        #Delete that stupid filler value we added before
-                        evaluated_child.pop(0)
-                        #And insert the correct child index value!
-                        evaluated_child.insert(0, len(children))
-                        #Then add to children lists
-                        children.append(evaluated_child)
 
-                #If the child does not meet the constraints of the density limit, then it is not carried on and is not used any further. basically it is aborted and another child will be made as the list is stll under the NO_parents threshold.
+        #Now we have all the children all ready! lets mix them with the parents and select the fittest ones for the next generation!
+        parents[:] = toolbox.select_best(parents + children)
 
-        #Now we have all the children we require, and we must rank them against the parents!
-        parents_and_children = children + parents
+        #Save the successful children in the master list so that they can be viewd later on if needed!
+        master_parents.append(parents)
 
-        #Do NSGA2 sorting to figure out the champions between the children and the parents
+        for child in children:
+            print(child)
 
         #Update the MOPO list to see if we have any new superior solutions!
         MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]
         MOPO_List = MOPO_update(MOPO_List, new_parents)
 
-        #Save the successful children in the master list so that they can be used for the next iteration!
-        parents_at_each_generation.append(new_parents)
-
-        logger.info('Generation {} complete'.format(generation_number))
+        logger.info('Generation {} complete'.format(gen_number))
 
     logger.info('Genetic algorithm complete, exiting for-loop now')
 
@@ -203,7 +188,7 @@ def main():
     ########### PHASE 3 - PARETO PLOTS
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #              1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
