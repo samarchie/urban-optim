@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random
 import sys
-from deap import tools, base, creator, algorithms
+from deap import tools, base, creator
 
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
-from non_dom_sorting import *
+# from non_dom_sorting import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user

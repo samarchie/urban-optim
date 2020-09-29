@@ -7,7 +7,7 @@ This module/script shall contain multiple definitions that will complete Phase 2
 
 """
 
-from deap import tools, base, creator, algorithms
+from deap import tools, base, creator
 import os
 import random
 import numpy as np
