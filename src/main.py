@@ -113,9 +113,6 @@ def main():
 
     #Add the intial parents to the master parents list
     master_parents = [parents]
-    for parent in parents:
-        print(parent)
-    print(" ")
 
     logger.info('Initial population created and entering GA loop now')
 
@@ -126,7 +123,7 @@ def main():
 
         #We must make sure that we follow the rules of the GA method
         assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
-
+        methods = []
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
         while len(children) < NO_parents:
@@ -137,23 +134,22 @@ def main():
             if op_choice < prob_crossover:
                 #Select two parents via Roulette Selection to create a child
                 parent1, parent2 = list(map(toolbox.clone, toolbox.select(individuals=parents, k=2)))
-
+                methods.append("Cross-over")
                 #Perform a love-making ritual that binds the two parents till death do them part <3
-                child, _ = toolbox.mate(parent1, parent2)
+                child = toolbox.mate(parent1, parent2)[0]
 
             #Apply mutation
             elif op_choice < prob_crossover + prob_mutation:
                 #Select 1 parent via Roulette Selection to create a child
                 parent = toolbox.clone(toolbox.select(individuals=parents, k=1))
                 #The child, stright agter birth, recieves a vaccination and this causes autism. They then mutate and well...
-                child = toolbox.mutate(parent)
-
+                child = toolbox.mutate(parent)[0][0]
+                methods.append("Mutation")
             #Apply reproduction (random parent unchanged)
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
-                child = toolbox.select(individuals=parents, k=1)
-
-
+                child = toolbox.select(individuals=parents, k=1)[0]
+                methods.append("Random Selection")
             #Update the child attributes with the correct ones
             child.densities = get_densities(child, census)
             child.valid = child_is_good(child, max_density_possible, census)
@@ -173,8 +169,16 @@ def main():
         #Save the successful children in the master list so that they can be viewd later on if needed!
         master_parents.append(parents)
 
-        for child in children:
-            print(child)
+        for number in range(0, len(parents)):
+            print("Old parent:")
+            print(master_parents[gen_number-1][number])
+            print('New child made using {}:'.format(methods[number]))
+            print(children[number])
+            print(" ")
+
+        print(" ")
+        print("new parents selected are:")
+        print(parents)
 
         #Update the MOPO list to see if we have any new superior solutions!
         MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]

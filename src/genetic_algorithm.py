@@ -102,7 +102,7 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
     return ind
 
 
-def get_densities(self, census):
+def get_densities(ind, census):
     """This module takes the children (additions of dwellings) and calculates the associated density of development.
 
     Parameters
@@ -122,13 +122,12 @@ def get_densities(self, census):
     areas = census.area
 
     #Find out how many statistical areas there are to begin with, and create a blank list
-    no_of_areas = len(census)
-    densities = [0] * no_of_areas
+    densities = [0] * len(census)
 
     #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
-    for prop_index in range(0, no_of_areas):
+    for prop_index in range(0, len(census)):
         prop_area = areas[prop_index]
-        new_dwellings = self[prop_index]
+        new_dwellings = ind[prop_index]
 
         #Calculate the added density (from new dwellings)
         densities[prop_index] = (new_dwellings / prop_area)
@@ -211,23 +210,9 @@ def evaluate_development_plan(self, census):
 def add_attributes(pop, toolbox, creator, census, max_density_possible):
 
     #Look at each individual at a time
-    for index in range(0, len(pop)):
-        #Extract the individual, and assign/assess its attributes
-        ind = pop[index]
+    for ind in pop:
         ind.densities = get_densities(ind, census)
         ind.valid = child_is_good(ind, max_density_possible, census)
-
-        #We need to check each child to make suer it is good
-        while not ind.valid:
-            #As we have a bad child, then we need to make a new one instead
-            ind = toolbox.individual()
-
-            #And populate the newborn with the correct attributes
-            ind.densities = get_densities(ind, census)
-            ind.valid = child_is_good(ind, max_density_possible, census)
-
-            #Kill the bad child by overwiting it with the new child
-            pop[index] = ind
 
     # Add the fitness values to the individuals
     fitnesses = list(map(toolbox.evaluate, pop))
@@ -235,6 +220,5 @@ def add_attributes(pop, toolbox, creator, census, max_density_possible):
         #As the fitness attribute is currently 'None', then we give it the Fitness function and then pass it the fitness values
         ind.fitness = creator.FitnessMulti()
         ind.fitness.values = fit
-
 
     return pop
