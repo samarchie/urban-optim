@@ -22,9 +22,10 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 from rasterstats import zonal_stats
 
-#census = gpd.read_file('data/clipped/census.shp')
-#tsunami_fp = "data/raw/hazards/tsunami.tif"
-#census = gpd.read_file('data/processed/census_final.shp')
+# census = gpd.read_file('data/clipped/census.shp')
+# census = gpd.read_file('data/processed/census_with_density.shp')
+# tsunami_fp = "data/raw/hazards/tsunami.tif"
+# f_tsu(tsunami_fp, census)
 
 def f_tsu(tsunami_fp, census):
     """
@@ -51,12 +52,12 @@ def f_tsu(tsunami_fp, census):
     tsu_data = rio.open(tsunami_fp)
 
     #Convert census data to the right projection and coordinate system
-    nzgd2000 = census.to_crs('NZGD2000')
+    census = census.to_crs('NZGD2000')
 
     #Create blank arrays and fill with coordinates of all parcel centroids
     xs = []
     ys = []
-    for geom in nzgd2000['geometry']:
+    for geom in census['geometry']:
         xs.append(geom.centroid.x)
         ys.append(geom.centroid.y)
 
@@ -66,22 +67,40 @@ def f_tsu(tsunami_fp, census):
     #things break if coordinates are outside the tif, so we can use this to make sure coordinates are in the tsu_data before retrieving their values
     tif_boundary = Polygon([(172.5405, -43.3568), (172.8683, -43.3568), (172.8683, -43.6863), (172.5405, -43.6863), (172.5405, -43.3568)])
 
-    nzgd2000["geometry"] = nzgd2000.buffer(0)
-    nzgd2000 = gpd.clip(nzgd2000, tif_boundary)
-    nzgd2000.to_file("data/clipped/nzgd2000.shp")
-    nzgd2000 = gpd.read_file("data/clipped/nzgd2000.shp")
+    # nzgd2000 = gpd.GeoDataFrame(columns=['index'])
+    # for index, row in census.iterrows():
+    #     if tif_boundary.contains(row['geometry']):
+    #         nzgd2000 = nzgd2000.append(row)
+    #
+    # nzgd2000.to_file("data/clipped/nzgd2000.shp")
+    # nzgd2000 = gpd.read_file("data/clipped/nzgd2000.shp")
 
     #Find the (minimum, maximum, mean, median, centroid) inundation for each parcel
     inundation = []
-    for i in range(len(nzgd2000)):
-        stats = zonal_stats(nzgd2000['geometry'][i], tsunami_fp, stats="min max mean median")
-        row, col = tsu_data.index(xs[i], ys[i])
-        if row < 2792 and col < 2778:
-            stats[0]['centroid'] = band1[row, col]
-        else:
-            stats.append(0.0)
+    for index, row in census.iterrows():
+        if tif_boundary.contains(row['geometry']):
+            stats = zonal_stats(census['geometry'][index], tsunami_fp, stats="min max mean median")
+            row, col = tsu_data.index(xs[index], ys[index])
+            if row < 2792 and col < 2778:
+                stats[0]['centroid'] = band1[row, col]
+            else:
+                stats[0]['centroid'] = 0.0
 
-        inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
+            inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
+        else:
+            inundation.append(0.0)
+
+
+    # inundation = []
+    # for i in range(len(nzgd2000)):
+    #     stats = zonal_stats(nzgd2000['geometry'][i], tsunami_fp, stats="min max mean median")
+    #     row, col = tsu_data.index(xs[i], ys[i])
+    #     if row < 2792 and col < 2778:
+    #         stats[0]['centroid'] = band1[row, col]
+    #     else:
+    #         stats.append(0.0)
+    #
+    #     inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
 
     #normalise the inundations by dividing by the maximum parcel inundation
     norm_inundation = inundation/np.max(inundation)
