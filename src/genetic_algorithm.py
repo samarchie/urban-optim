@@ -19,14 +19,14 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     creator.create("FitnessMulti", base.Fitness, weights=(-1,)*6)
 
     #Set up the individual, with attributes for fitnesses, densities and if it is a good child or not.
-    creator.create("Individual", list, fitness=None, densities=None, valid=None)
+    creator.create("Individual", list, fitness=creator.FitnessMulti, densities=None, valid=None)
 
     #Create the toolbox where all the population is saved
     toolbox = base.Toolbox()
 
     #Initialise how to create an individual via the create_initial_development_plan module, and also deytail how to make a population (repeat making individuals till there are NO_parents)
     #Basically, an individual will be a list of len(census) long that has intergers that indicate how many buildings are to be built in that statiscal area.
-    toolbox.register("individual", initDevPlan, creator.Individual, required_dwellings=required_dwellings, density_total=density_total, census=census, max_density_possible=max_density_possible)
+    toolbox.register("individual", create_initial_development_plan, creator.Individual, required_dwellings=required_dwellings, density_total=density_total, census=census)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
     #Now we need the register the genetic algorithm methods that we will use!
@@ -41,19 +41,7 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     return toolbox
 
 
-def initDevPlan(self, required_dwellings, density_total, census, max_density_possible):
-    #Create a blank individual
-    ind = self()
-
-    #Fill it with information
-    ind.individual = create_initial_development_plan(ind, required_dwellings, density_total, census)
-    ind.densities = get_densities(ind, census)
-    ind.valid = child_is_good(ind, max_density_possible, census)
-
-    return ind
-
-
-def create_initial_development_plan(self, required_dwellings, density_total, census):
+def create_initial_development_plan(ind_class, required_dwellings, density_total, census):
     """This module created the inital set of parents, which are lists of randomised development at randomised statistical areas.
     Parameters
     ----------
@@ -109,7 +97,9 @@ def create_initial_development_plan(self, required_dwellings, density_total, cen
             development_plan_of_densities[prop_index] += density
             assoc_addition_of_dwellings[prop_index] += dwellings_to_add
 
-    return assoc_addition_of_dwellings
+    ind = ind_class(assoc_addition_of_dwellings)
+
+    return ind
 
 
 def get_densities(self, census):
@@ -138,7 +128,7 @@ def get_densities(self, census):
     #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
     for prop_index in range(0, no_of_areas):
         prop_area = areas[prop_index]
-        new_dwellings = self.individual[prop_index]
+        new_dwellings = self[prop_index]
 
         #Calculate the added density (from new dwellings)
         densities[prop_index] = (new_dwellings / prop_area)
@@ -202,7 +192,7 @@ def evaluate_development_plan(self, census):
     #Check each statistical area in the development plan,
     for prop_index in range(0, len(census)):
         #Find the amount of houses to built on each statistical area
-        houses_added = self.individual[prop_index]
+        houses_added = self[prop_index]
 
         #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
         if houses_added > 0:
@@ -216,3 +206,35 @@ def evaluate_development_plan(self, census):
     f_scores = tuple(f_scores_running_total)
 
     return f_scores
+
+
+def add_attributes(pop, toolbox, creator, census, max_density_possible):
+
+    #Look at each individual at a time
+    for index in range(0, len(pop)):
+        #Extract the individual, and assign/assess its attributes
+        ind = pop[index]
+        ind.densities = get_densities(ind, census)
+        ind.valid = child_is_good(ind, max_density_possible, census)
+
+        #We need to check each child to make suer it is good
+        while not ind.valid:
+            #As we have a bad child, then we need to make a new one instead
+            ind = toolbox.individual()
+
+            #And populate the newborn with the correct attributes
+            ind.densities = get_densities(ind, census)
+            ind.valid = child_is_good(ind, max_density_possible, census)
+
+            #Kill the bad child by overwiting it with the new child
+            pop[index] = ind
+
+    # Add the fitness values to the individuals
+    fitnesses = list(map(toolbox.evaluate, pop))
+    for ind, fit in zip(pop, fitnesses):
+        #As the fitness attribute is currently 'None', then we give it the Fitness function and then pass it the fitness values
+        ind.fitness = creator.FitnessMulti()
+        ind.fitness.values = fit
+
+
+    return pop

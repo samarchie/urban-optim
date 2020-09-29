@@ -94,7 +94,7 @@ def main():
     logger.info('Processing/initialisation complete')
 
     # Plot the processed census data and check the objective functions are working as expected!
-    plot_intialised_data(census)
+    # plot_intialised_data(census)
     logger.info('f_functions and F-scores plotted and saved')
 
 
@@ -107,113 +107,109 @@ def main():
     #Initialise and setup the DEAP toolbox of how we store and use our population.
     toolbox = initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible)
 
-    #Create the initial population of NO_parent amount of development plans
     logger.info('Started creating initial population')
+
+    #Create the initial population of NO_parent amount of development plans
     pop = toolbox.population(n=NO_parents)
 
-    # Add the fitness values to the individuals
-    fitnesses = list(map(toolbox.evaluate, pop))
-    for ind, fit in zip(pop, fitnesses):
-        ind.fitness = creator.FitnessMulti()
-        ind.fitness.values = fit
+    #Add the other attributes to the individuals before finding the fitness values
+    pop = add_attributes(pop, toolbox, creator, census, max_density_possible)
 
-
-    ###ITERATION PROCEDURE:
     logger.info('Initial population created and entering GA loop now')
 
-
+    ###ITERATION PROCEDURE:
     #We must perform these modifications to a set amount of iterations, called generations.
-    generation_number = 0
-    while generation_number < generations:
-
-        #Grab the parents (which are the successfulf children from last iteration) and use them to make the new children
-        parents = parents_at_each_generation[-1][:]
-
-        #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
-        children = []
-
-        while len(children) < NO_parents:
-            #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
-            random_number = random.random()
-
-            if random_number <= prob_crossover:
-                #Select two parents to create 2 children via Roulette Selection
-                selected_parents = do_roulette_selection(parents, 2)
-
-                #Then we shall crossover two development plans and get some children!
-                children_created = apply_crossover(selected_parents)
-
-                children_created = list(children_created)
-
-            elif random_number <= prob_mutation + prob_crossover:
-
-                #Select one parents to create 1 children via Roulette Selection
-                selected_parent = do_roulette_selection(parents, 1)
-
-                #Then we shall create child by mutating one parent
-                children_created = apply_mutation(selected_parent, prob_mut_indiv)
-
-            else:
-                # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list. But to keep the same format as the other children, only take the dwelling additons list
-                children_created = [parents[len(children)][2][:]]
-
-            #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
-            children_plans = update_densities(children_created, census)
-
-            #Do some constraint handling, as the density cant be larger than the sustainable limit set by the user so we must check each new child to make sure they are okay
-            for child in children_plans:
-
-                #Test if they meet the constraints of density limits
-                if child_is_good(child, max_density_possible, census):
-                    #Give the child a filler value thta means nothing, just because thats how the evaluate_development_plans module is coded up and there must be something in the 0th spot.
-                    child.insert(0, "filler value")
-
-                    #Want to calculate the F-scores
-                    evaluated_children = evaluate_development_plans([child], census)
-                    evaluated_child = evaluated_children[0]
-
-                    #make sure we aren't adding a child to the list if we have already reached the limit. This case may exists when doing crossover is done but only 1 child is required
-                    if len(children) < NO_parents:
-                        #Delete that stupid filler value we added before
-                        evaluated_child.pop(0)
-                        #And insert the correct child index value!
-                        evaluated_child.insert(0, len(children))
-                        #Then add to children lists
-                        children.append(evaluated_child)
-
-                #If the child does not meet the constraints of the density limit, then it is not carried on and is not used any further. basically it is aborted and another child will be made as the list is stll under the NO_parents threshold.
-
-        #Now we have all the children we require, and we must rank them against the parents!
-        parents_and_children = children + parents
-
-        #Do NSGA2 sorting to figure out the champions between the children and the parents
-
-        #Update the MOPO list to see if we have any new superior solutions!
-        MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]
-        MOPO_List = MOPO_update(MOPO_List, new_parents)
-
-        #Save the successful children in the master list so that they can be used for the next iteration!
-        parents_at_each_generation.append(new_parents)
-
-        logger.info('Generation {} complete'.format(generation_number))
-
-    logger.info('Genetic algorithm complete, exiting for-loop now')
-
-
-    ########### PHASE 3 - PARETO PLOTS
-
-    #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
-
-    #For each successful generation, add the parents to the pareto set so that they can be plotted out
-    for parents in parents_at_each_generation:
-        pareto_set = add_to_paretofront_set(pareto_set, parents)
-
-    logger.info('Pareto set has been updated with all parents')
-
-    #Plot the pareto plots so we do our discussion and view the results
-    plot_pareto_fronts(pareto_set)
+    # generation_number = 0
+    # while generation_number < generations:
+    #
+    #     #Grab the parents (which are the successfulf children from last iteration) and use them to make the new children
+    #     parents = parents_at_each_generation[-1][:]
+    #
+    #     #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
+    #     children = []
+    #
+    #     while len(children) < NO_parents:
+    #         #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
+    #         random_number = random.random()
+    #
+    #         if random_number <= prob_crossover:
+    #             #Select two parents to create 2 children via Roulette Selection
+    #             selected_parents = do_roulette_selection(parents, 2)
+    #
+    #             #Then we shall crossover two development plans and get some children!
+    #             children_created = apply_crossover(selected_parents)
+    #
+    #             children_created = list(children_created)
+    #
+    #         elif random_number <= prob_mutation + prob_crossover:
+    #
+    #             #Select one parents to create 1 children via Roulette Selection
+    #             selected_parent = do_roulette_selection(parents, 1)
+    #
+    #             #Then we shall create child by mutating one parent
+    #             children_created = apply_mutation(selected_parent, prob_mut_indiv)
+    #
+    #         else:
+    #             # If the two randomisations dont occur, then the plan are not updated and kept as is from the original dveelopment plan list. But to keep the same format as the other children, only take the dwelling additons list
+    #             children_created = [parents[len(children)][2][:]]
+    #
+    #         #Update the densities of the development plans as the dwelling counts have changed in some statistical areas
+    #         children_plans = update_densities(children_created, census)
+    #
+    #         #Do some constraint handling, as the density cant be larger than the sustainable limit set by the user so we must check each new child to make sure they are okay
+    #         for child in children_plans:
+    #
+    #             #Test if they meet the constraints of density limits
+    #             if child_is_good(child, max_density_possible, census):
+    #                 #Give the child a filler value thta means nothing, just because thats how the evaluate_development_plans module is coded up and there must be something in the 0th spot.
+    #                 child.insert(0, "filler value")
+    #
+    #                 #Want to calculate the F-scores
+    #                 evaluated_children = evaluate_development_plans([child], census)
+    #                 evaluated_child = evaluated_children[0]
+    #
+    #                 #make sure we aren't adding a child to the list if we have already reached the limit. This case may exists when doing crossover is done but only 1 child is required
+    #                 if len(children) < NO_parents:
+    #                     #Delete that stupid filler value we added before
+    #                     evaluated_child.pop(0)
+    #                     #And insert the correct child index value!
+    #                     evaluated_child.insert(0, len(children))
+    #                     #Then add to children lists
+    #                     children.append(evaluated_child)
+    #
+    #             #If the child does not meet the constraints of the density limit, then it is not carried on and is not used any further. basically it is aborted and another child will be made as the list is stll under the NO_parents threshold.
+    #
+    #     #Now we have all the children we require, and we must rank them against the parents!
+    #     parents_and_children = children + parents
+    #
+    #     #Do NSGA2 sorting to figure out the champions between the children and the parents
+    #
+    #     #Update the MOPO list to see if we have any new superior solutions!
+    #     MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]
+    #     MOPO_List = MOPO_update(MOPO_List, new_parents)
+    #
+    #     #Save the successful children in the master list so that they can be used for the next iteration!
+    #     parents_at_each_generation.append(new_parents)
+    #
+    #     logger.info('Generation {} complete'.format(generation_number))
+    #
+    # logger.info('Genetic algorithm complete, exiting for-loop now')
+    #
+    #
+    # ########### PHASE 3 - PARETO PLOTS
+    #
+    # #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
+    # #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    # pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
+    #
+    # #For each successful generation, add the parents to the pareto set so that they can be plotted out
+    # for parents in parents_at_each_generation:
+    #     pareto_set = add_to_paretofront_set(pareto_set, parents)
+    #
+    # logger.info('Pareto set has been updated with all parents')
+    #
+    # #Plot the pareto plots so we do our discussion and view the results
+    # plot_pareto_fronts(pareto_set)
 
 
 
