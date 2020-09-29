@@ -203,7 +203,7 @@ def main():
     ########### PHASE 3 - PARETO PLOTS
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    #              1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out

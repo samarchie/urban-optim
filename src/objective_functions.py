@@ -22,8 +22,8 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 from rasterstats import zonal_stats
 
-census = gpd.read_file('data/clipped/census.shp')
-tsunami_fp = "data/raw/hazards/tsunami.tif"
+#census = gpd.read_file('data/clipped/census.shp')
+#tsunami_fp = "data/raw/hazards/tsunami.tif"
 #census = gpd.read_file('data/processed/census_final.shp')
 
 def f_tsu(tsunami_fp, census):
@@ -68,6 +68,8 @@ def f_tsu(tsunami_fp, census):
 
     nzgd2000["geometry"] = nzgd2000.buffer(0)
     nzgd2000 = gpd.clip(nzgd2000, tif_boundary)
+    nzgd2000.to_file("data/clipped/nzgd2000.shp")
+    nzgd2000 = gpd.read_file("data/clipped/nzgd2000.shp")
 
     #Find the (minimum, maximum, mean, median, centroid) inundation for each parcel
     inundation = []
