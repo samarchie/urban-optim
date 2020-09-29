@@ -7,7 +7,7 @@ This module/script shall contain multiple definitions that will complete Phase 2
 
 """
 
-from deap import tools, base, creator
+from deap import tools, base, creator, algorithms
 import os
 import random
 import numpy as np
@@ -30,9 +30,9 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
     #Now we need the register the genetic algorithm methods that we will use!
-    toolbox.register("crossover", tools.cxTwoPoint)
+    toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutShuffleIndexes, indpb=prob_mut_indiv)
-    toolbox.register("select_best", tools.selNSGA2, nd='standard')
+    toolbox.register("select_best", tools.selNSGA2, k=NO_parents, nd='standard')
     toolbox.register("select", tools.selRoulette)
 
     #We also need to specifiy some home-made functions that we'd like to use as well

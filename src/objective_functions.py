@@ -22,8 +22,8 @@ import pandas as pd
 from shapely.geometry import Point, Polygon
 from rasterstats import zonal_stats
 
-#census = gpd.read_file('data/clipped/census.shp')
-#tsunami_fp = "data/raw/hazards/tsunami.tif"
+census = gpd.read_file('data/clipped/census.shp')
+tsunami_fp = "data/raw/hazards/tsunami.tif"
 #census = gpd.read_file('data/processed/census_final.shp')
 
 def f_tsu(tsunami_fp, census):
