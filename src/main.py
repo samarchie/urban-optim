@@ -17,6 +17,7 @@ import numpy as np
 import random
 import sys
 from deap import tools, base, creator
+import operator
 
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
@@ -30,11 +31,10 @@ logger = logging.getLogger(__name__)
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
-from ss.non_dom_sorting import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
-NO_parents = 5 #number of parents/development plans in each iteration to make
+NO_parents = 10 #number of parents/development plans in each iteration to make
 NO_generations = 2 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
@@ -111,14 +111,19 @@ def main():
     #Add the other attributes to the individuals before finding the fitness values
     parents = add_attributes(pop, toolbox, creator, census, max_density_possible)
 
-    #Add the intial parents to the master parents list
-    master_parents = [parents]
+    #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
+    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
+
+    #For each successful generation, add the parents to the pareto set so that they can be plotted out
+    # pareto_set = add_to_pareto_set(pareto_set, parents)
+
+    #Create a blank MOPO list (which in DEAP is called the Hall of Fame) and add the initial parents to the list
+    hof = tools.HallOfFame(maxsize=len(weightings), similar=>)
+    tools.HallOfFame.update(hof, population=parents)
 
     logger.info('Initial population created and entering GA loop now')
 
-    #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #              1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
 
     ###ITERATION PROCEDURE:
@@ -126,7 +131,7 @@ def main():
 
         #We must make sure that we follow the rules of the GA method
         assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
-        methods = []
+
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
         while len(children) < NO_parents:
@@ -137,7 +142,6 @@ def main():
             if op_choice < prob_crossover:
                 #Select two parents via Roulette Selection to create a child
                 parent1, parent2 = list(map(toolbox.clone, toolbox.select(individuals=parents, k=2)))
-                methods.append("Cross-over")
                 #Perform a love-making ritual that binds the two parents till death do them part <3
                 child = toolbox.mate(parent1, parent2)[0]
 
@@ -147,12 +151,11 @@ def main():
                 parent = toolbox.clone(toolbox.select(individuals=parents, k=1))
                 #The child, stright agter birth, recieves a vaccination and this causes autism. They then mutate and well...
                 child = toolbox.mutate(parent)[0][0]
-                methods.append("Mutation")
             #Apply reproduction (random parent unchanged)
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
-                methods.append("Random Selection")
+
             #Update the child attributes with the correct ones
             child.densities = get_densities(child, census)
             child.valid = child_is_good(child, max_density_possible, census)
@@ -161,7 +164,7 @@ def main():
             child.fitness = creator.FitnessMulti()
             child.fitness.values = toolbox.evaluate(child)
 
-            #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacriufice. The good child, however, leads a very happy life and settles down and marries later.
+            #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, leads a very happy life and settles down and marries later.
             if child.valid:
                 children.append(child)
 
@@ -170,18 +173,25 @@ def main():
         parents[:] = toolbox.select_best(parents + children)
 
         #For each successful generation, add the parents to the pareto set so that they can be plotted out
-        pareto_set = add_to_pareto_set(pareto_set, parents)
+        # pareto_set = add_to_pareto_set(pareto_set, parents)
+
+        #Update the MOPO list (called the Hall of Fame in DEAP) to see if we have any new superior solutions!
+        tools.HallOfFame.update(hof, population=parents)
 
 
         logger.info('Generation {} complete'.format(gen_number))
 
     logger.info('Genetic algorithm complete, exiting for-loop now')
 
+    print(hof[0].fitness.values)
+    print(hof[1].fitness.values)
+    print(hof[2].fitness.values)
+    print(hof[3].fitness.values)
+    print(hof[4].fitness.values)
+    print(hof[5].fitness.values)
+
 
     ########### PHASE 3 - PARETO PLOTS
-
-
-    logger.info('Pareto set has been updated with all parents')
 
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_fronts(pareto_set)
