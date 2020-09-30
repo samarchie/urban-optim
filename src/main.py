@@ -118,9 +118,8 @@ def main():
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
     # pareto_set = add_to_pareto_set(pareto_set, parents)
 
-    #Create a blank MOPO list (which in DEAP is called the Hall of Fame) and add the initial parents to the list
-    hof = tools.HallOfFame(maxsize=len(weightings))
-    tools.HallOfFame.update(hof, population=parents)
+    #Update the MOPO list to see if we have any new superior solutions!
+    MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
 
     logger.info('Initial population created and entering GA loop now')
 
@@ -175,8 +174,8 @@ def main():
         #For each successful generation, add the parents to the pareto set so that they can be plotted out
         pareto_set = add_to_pareto_set(pareto_set, parents)
 
-        #Update the MOPO list (called the Hall of Fame in DEAP) to see if we have any new superior solutions!
-        tools.HallOfFame.update(hof, population=parents)
+        #Update the MOPO list to see if we have any new superior solutions!
+        MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
 
 
         logger.info('Generation {} complete'.format(gen_number))

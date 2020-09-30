@@ -222,3 +222,56 @@ def add_attributes(pop, toolbox, creator, census, max_density_possible):
         ind.fitness.values = fit
 
     return pop
+
+
+def update_MOPO(MOPO_List, parents_gplus1):
+    """
+    checks the new set of parents (g+1) against the MOPO set, and updates the MOPO set if the new development plan has a better result in any of the objective functions
+    parents_gplus1 is a list of tuples, containing an identifying index and a list F_scores for each D
+    """
+
+    # Sort the parents by each objective function. Check if the best parent for each
+    # objective beats the current one in the MOPO set and if so update the MOPO with the better one
+    parents_gplus1.sort(key=lambda x: x[1][0])
+    if parents_gplus1[0][1][0] < MOPO_List[0][0]:
+        MOPO_List[0][0] = parents_gplus1[0][1][0]
+        MOPO_List[0][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for f_tsu")
+
+    parents_gplus1.sort(key=lambda x: x[1][1])
+    if parents_gplus1[0][1][1] < MOPO_List[1][0]:
+        MOPO_List[1][0] = parents_gplus1[0][1][1]
+        MOPO_List[1][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for f_cflood")
+
+    parents_gplus1.sort(key=lambda x: x[1][2])
+    if parents_gplus1[0][1][2] < MOPO_List[2][0]:
+        MOPO_List[2][0] = parents_gplus1[0][1][2]
+        MOPO_List[2][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for f_rflood")
+
+    parents_gplus1.sort(key=lambda x: x[1][3])
+    if parents_gplus1[0][1][3] < MOPO_List[3][0]:
+        MOPO_List[3][0] = parents_gplus1[0][1][3]
+        MOPO_List[3][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for f_liq")
+
+    parents_gplus1.sort(key=lambda x: x[1][4])
+    if parents_gplus1[0][1][4] < MOPO_List[4][0]:
+        MOPO_List[4][0] = parents_gplus1[0][1][4]
+        MOPO_List[4][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for f_dist")
+
+    parents_gplus1.sort(key=lambda x: x[1][5])
+    if parents_gplus1[0][1][5] < MOPO_List[5][0]:
+        MOPO_List[5][0] = parents_gplus1[0][1][5]
+        MOPO_List[5][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for f_dev")
+
+    parents_gplus1.sort(key=lambda x: x[1][6])
+    if parents_gplus1[0][1][6] < MOPO_List[6][0]:
+        MOPO_List[6][0] = parents_gplus1[0][1][6]
+        MOPO_List[6][1] = parents_gplus1[0][0]
+        print("MOPO List Updated for F_scores")
+
+    return MOPO_List
