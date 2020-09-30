@@ -35,7 +35,7 @@ from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
 NO_parents = 20 #number of parents/development plans in each iteration to make
-NO_generations = 10 #how many generations/iterations to complete
+NO_generations = 3 #how many generations/iterations to complete
 prob_crossover = 0 #probability of having 2 development plans cross over
 prob_mutation = 1 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
@@ -123,8 +123,11 @@ def main():
     MOPO_List = [[],      [],     [],      [],    [],      [],    []]
 
     #Update the MOPO list to see if we have any new superior solutions!
-    # MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
-
+    MOPO_List = update_MOPO(MOPO_List, parents, empty=True)
+    for obj_num in range(0, 6):
+        print(MOPO_List[obj_num][-1].fitness.values)
+    print(sum(MOPO_List[6][-1].fitness.values))
+    print(" ")
     logger.info('Initial population created and entering GA loop now')
 
 
@@ -188,8 +191,11 @@ def main():
         pareto_set = add_to_pareto_set(pareto_set, parents)
 
         #Update the MOPO list to see if we have any new superior solutions!
-        # MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
-
+        MOPO_List = update_MOPO(MOPO_List, parents)
+        for obj_num in range(0, 6):
+            print(MOPO_List[obj_num][-1].fitness.values)
+        print(sum(MOPO_List[6][-1].fitness.values))
+        print(" ")
 
         logger.info('Generation {} complete'.format(gen_number))
 

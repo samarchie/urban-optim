@@ -227,57 +227,61 @@ def add_attributes(pop, toolbox, creator, census, max_density_possible):
     return pop
 
 
-def update_MOPO(MOPO_List, parents):
+def update_MOPO(MOPO_List, parents, empty=False):
     """
     checks the new set of parents (g+1) against the MOPO set, and updates the MOPO set if the new development plan has a better result in any of the objective functions
     parents_gplus1 is a list of tuples, containing an identifying index and a list F_scores for each D
     """
 
-    # Sort the parents by each objective function. Check if the best parent for each
-    # objective beats the current one in the MOPO set and if so update the MOPO with the better one
+    #if the list is empty, then we need to add the initial parents to it
+    if empty:
 
+        for obj_num in range(0, 6):
+            #sort by the objectoive function
+            parents.sort(key=lambda x: x.fitness.values[obj_num])
+            #Add the best one to the MOPO list
+            MOPO_List[obj_num].append(parents[0])
 
-    parents.sort(key=lambda x: x.fitness.values[0])
-    if parents[0].fitness.values[0] < MOPO_List[0].fitness.values[0]:
-        MOPO_List[0][0] = parents_gplus1[0][1][0]
-        MOPO_List[0][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for f_tsu")
+        #Overall objective function - F-score
+        parents.sort(key=lambda x: sum(x.fitness.values))
+        MOPO_List[6].append(parents[0])
 
-    parents.sort(key=lambda x: x.fitness.values[1])
-    if parents_gplus1[0][1][1] < MOPO_List[1][0]:
-        MOPO_List[1][0] = parents_gplus1[0][1][1]
-        MOPO_List[1][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for f_cflood")
+    # Sort the parents by each objective function. Check if the best parent for each objective beats the current one in the MOPO set and if so update the MOPO with the better one.
+    else:
+        #1st objective function - f_tsunami
+        parents.sort(key=lambda x: x.fitness.values[0])
+        if parents[0].fitness.values[0] < MOPO_List[0][-1].fitness.values[0]:
+            MOPO_List[0].append(parents[0])
 
-    parents.sort(key=lambda x: x.fitness.values[2])
-    if parents_gplus1[0][1][2] < MOPO_List[2][0]:
-        MOPO_List[2][0] = parents_gplus1[0][1][2]
-        MOPO_List[2][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for f_rflood")
+        #2nd objective function - f_coastal_flooding
+        parents.sort(key=lambda x: x.fitness.values[1])
+        if parents[0].fitness.values[1] < MOPO_List[1][-1].fitness.values[1]:
+            MOPO_List[1].append(parents[0])
 
-    parents.sort(key=lambda x: x.fitness.values[3])
-    if parents_gplus1[0][1][3] < MOPO_List[3][0]:
-        MOPO_List[3][0] = parents_gplus1[0][1][3]
-        MOPO_List[3][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for f_liq")
+        #3rd objective function - f_river_flooding
+        parents.sort(key=lambda x: x.fitness.values[2])
+        if parents[0].fitness.values[2] < MOPO_List[2][-1].fitness.values[2]:
+            MOPO_List[2].append(parents[0])
 
-    parents.sort(key=lambda x: x.fitness.values[4])
-    if parents_gplus1[0][1][4] < MOPO_List[4][0]:
-        MOPO_List[4][0] = parents_gplus1[0][1][4]
-        MOPO_List[4][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for f_dist")
+        #4th objective function - f_liquefaction_vulnerability
+        parents.sort(key=lambda x: x.fitness.values[3])
+        if parents[0].fitness.values[3] < MOPO_List[3][-1].fitness.values[3]:
+            MOPO_List[3].append(parents[0])
 
-    parents.sort(key=lambda x: x.fitness.values[5])
-    if parents_gplus1[0][1][5] < MOPO_List[5][0]:
-        MOPO_List[5][0] = parents_gplus1[0][1][5]
-        MOPO_List[5][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for f_dev")
+        #5th objective function - f_distance
+        parents.sort(key=lambda x: x.fitness.values[4])
+        if parents[0].fitness.values[4] < MOPO_List[4][-1].fitness.values[4]:
+            MOPO_List[4].append(parents[0])
 
-    #Get total F-scores
-    parents.sort(key=lambda x: sum(x.fitness.values))
-    if parents_gplus1[0][1][6] < MOPO_List[6][0]:
-        MOPO_List[6][0] = parents_gplus1[0][1][6]
-        MOPO_List[6][1] = parents_gplus1[0][0]
-        print("MOPO List Updated for F_scores")
+        #6th objective function - f_district_planning
+        parents.sort(key=lambda x: x.fitness.values[5])
+        if parents[0].fitness.values[5] < MOPO_List[5][-1].fitness.values[5]:
+            MOPO_List[5].append(parents[0])
+
+        #Overall objective function - F-score
+        parents.sort(key=lambda x: sum(x.fitness.values))
+        if sum(parents[0].fitness.values) < sum(MOPO_List[6][-1].fitness.values):
+            MOPO_List[6].append(parents[0])
+
 
     return MOPO_List
