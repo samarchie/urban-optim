@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
-# from non_dom_sorting import *
+from ss.non_dom_sorting import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
@@ -116,6 +116,9 @@ def main():
 
     logger.info('Initial population created and entering GA loop now')
 
+    #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
+    #              1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
 
     ###ITERATION PROCEDURE:
@@ -166,23 +169,9 @@ def main():
         #Now we have all the children all ready! lets mix them with the parents and select the fittest ones for the next generation!
         parents[:] = toolbox.select_best(parents + children)
 
-        #Save the successful children in the master list so that they can be viewd later on if needed!
-        master_parents.append(parents)
+        #For each successful generation, add the parents to the pareto set so that they can be plotted out
+        pareto_set = add_to_pareto_set(pareto_set, parents)
 
-        for number in range(0, len(parents)):
-            print("Old parent:")
-            print(master_parents[gen_number-1][number])
-            print('New child made using {}:'.format(methods[number]))
-            print(children[number])
-            print(" ")
-
-        print(" ")
-        print("new parents selected are:")
-        print(parents)
-
-        #Update the MOPO list to see if we have any new superior solutions!
-        MOPO_List = [(-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, []), (-1, [])]
-        MOPO_List = MOPO_update(MOPO_List, new_parents)
 
         logger.info('Generation {} complete'.format(gen_number))
 
@@ -191,13 +180,6 @@ def main():
 
     ########### PHASE 3 - PARETO PLOTS
 
-    #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
-
-    #For each successful generation, add the parents to the pareto set so that they can be plotted out
-    for parents in parents_at_each_generation:
-        pareto_set = add_to_paretofront_set(pareto_set, parents)
 
     logger.info('Pareto set has been updated with all parents')
 

@@ -33,40 +33,44 @@ def add_to_pareto_set(pareto_set, parents):
     # Iterate through all current development plans
     for parent in parents:
         # Check if each unique objective pair has been added yet, and add it if not
-        if (parent[2][0], parent[2][1]) not in pareto_set[0]:
-            pareto_set[0].append((parent[2][0], parent[2][1]))
-        if (parent[2][0], parent[2][2]) not in pareto_set[1]:
-            pareto_set[1].append((parent[2][0], parent[2][2]))
-        if (parent[2][0], parent[2][3]) not in pareto_set[2]:
-            pareto_set[2].append((parent[2][0], parent[2][3]))
-        if (parent[2][0], parent[2][4]) not in pareto_set[3]:
-            pareto_set[3].append((parent[2][0], parent[2][4]))
-        if (parent[2][0], parent[2][5]) not in pareto_set[4]:
-            pareto_set[4].append((parent[2][0], parent[2][5]))
 
-        if (parent[2][1], parent[2][2]) not in pareto_set[5]:
-            pareto_set[5].append((parent[2][1], parent[2][2]))
-        if (parent[2][1], parent[2][3]) not in pareto_set[6]:
-            pareto_set[6].append((parent[2][1], parent[2][3]))
-        if (parent[2][1], parent[2][4]) not in pareto_set[7]:
-            pareto_set[7].append((parent[2][1], parent[2][4]))
-        if (parent[2][1], parent[2][5]) not in pareto_set[8]:
-            pareto_set[8].append((parent[2][1], parent[2][5]))
+        #f_scores= (f_tsu, f_cflood, f_rflood, f_liq, f_dist, f_dev)
+        f_scores = parent.fitness.values
 
-        if (parent[2][2], parent[2][3]) not in pareto_set[9]:
-            pareto_set[9].append((parent[2][2], parent[2][3]))
-        if (parent[2][2], parent[2][4]) not in pareto_set[10]:
-            pareto_set[10].append((parent[2][2], parent[2][4]))
-        if (parent[2][2], parent[2][5]) not in pareto_set[11]:
-            pareto_set[11].append((parent[2][2], parent[2][5]))
+        if (f_scores[0], f_scores[1]) not in pareto_set[0]:
+            pareto_set[0].append((f_scores[0], f_scores[1]))
+        if (f_scores[0], f_scores[2]) not in pareto_set[1]:
+            pareto_set[1].append((f_scores[0], f_scores[2]))
+        if (f_scores[0], f_scores[3]) not in pareto_set[2]:
+            pareto_set[2].append((f_scores[0], f_scores[3]))
+        if (f_scores[0], f_scores[4]) not in pareto_set[3]:
+            pareto_set[3].append((f_scores[0], f_scores[4]))
+        if (f_scores[0], f_scores[5]) not in pareto_set[4]:
+            pareto_set[4].append((f_scores[0], f_scores[5]))
 
-        if (parent[2][3], parent[2][4]) not in pareto_set[12]:
-            pareto_set[12].append((parent[2][3], parent[2][4]))
-        if (parent[2][3], parent[2][5]) not in pareto_set[13]:
-            pareto_set[13].append((parent[2][3], parent[2][5]))
+        if (f_scores[1], f_scores[2]) not in pareto_set[5]:
+            pareto_set[5].append((f_scores[1], f_scores[2]))
+        if (f_scores[1], f_scores[3]) not in pareto_set[6]:
+            pareto_set[6].append((f_scores[1], f_scores[3]))
+        if (f_scores[1], f_scores[4]) not in pareto_set[7]:
+            pareto_set[7].append((f_scores[1], f_scores[4]))
+        if (f_scores[1], f_scores[5]) not in pareto_set[8]:
+            pareto_set[8].append((f_scores[1], f_scores[5]))
 
-        if (parent[2][4], parent[2][5]) not in pareto_set[14]:
-            pareto_set[14].append((parent[2][4], parent[2][5]))
+        if (f_scores[2], f_scores[3]) not in pareto_set[9]:
+            pareto_set[9].append((f_scores[2], f_scores[3]))
+        if (f_scores[2], f_scores[4]) not in pareto_set[10]:
+            pareto_set[10].append((f_scores[2], f_scores[4]))
+        if (f_scores[2], f_scores[5]) not in pareto_set[11]:
+            pareto_set[11].append((f_scores[2], f_scores[5]))
+
+        if (f_scores[3], f_scores[4]) not in pareto_set[12]:
+            pareto_set[12].append((f_scores[3], f_scores[4]))
+        if (f_scores[3], f_scores[5]) not in pareto_set[13]:
+            pareto_set[13].append((f_scores[3], f_scores[5]))
+
+        if (f_scores[4], f_scores[5]) not in pareto_set[14]:
+            pareto_set[14].append((f_scores[4], f_scores[5]))
 
     return pareto_set
 
