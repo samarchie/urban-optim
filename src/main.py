@@ -34,10 +34,10 @@ from genetic_algorithm import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
-NO_parents = 200 #number of parents/development plans in each iteration to make
+NO_parents = 20 #number of parents/development plans in each iteration to make
 NO_generations = 10 #how many generations/iterations to complete
-prob_crossover = 0.7 #probability of having 2 development plans cross over
-prob_mutation = 0.2 #probability of an element in a development plan mutating
+prob_crossover = 0 #probability of having 2 development plans cross over
+prob_mutation = 1 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
@@ -116,10 +116,14 @@ def main():
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
-    # pareto_set = add_to_pareto_set(pareto_set, parents)
+    pareto_set = add_to_pareto_set(pareto_set, parents)
+
+    #Create a blank MOPO list where each nested list represents the best case of each objective function (and total F-score) seen
+    #           f_tsu  f_cflood  f_rflood f_liq,  f_dist  f_dev,  F-score
+    MOPO_List = [[],      [],     [],      [],    [],      [],    []]
 
     #Update the MOPO list to see if we have any new superior solutions!
-    MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
+    # MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
 
     logger.info('Initial population created and entering GA loop now')
 
@@ -148,19 +152,28 @@ def main():
             elif op_choice < prob_crossover + prob_mutation:
                 #Select 1 parent via Roulette Selection to create a child
                 parent = toolbox.clone(toolbox.select(individuals=parents, k=1))
-                #The child, stright agter birth, recieves a vaccination and this causes autism. They then mutate and well...
-                child = toolbox.mutate(parent)[0][0]
+                while type(parent) != creator.Individual:
+                    parent = parent[0]
+
+                #The child, straight after birth, recieves a vaccination and this causes autism. They then mutate and well...
+                child = toolbox.mutate(parent)[0]
+
+                #Sometimes the returned child is a list of the DEAP class so lets extract it if thats the case
+                while type(child) != creator.Individual:
+                    child = child[0]
+
             #Apply reproduction (random parent unchanged)
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
+                method="select"
 
             #Update the child attributes with the correct ones
             child.densities = get_densities(child, census)
             child.valid = child_is_good(child, max_density_possible, census)
 
             # Add the fitness values to the individuals
-            child.fitness = creator.FitnessMulti()
+            # child.fitness = creator.FitnessMulti()
             child.fitness.values = toolbox.evaluate(child)
 
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, leads a very happy life and settles down and marries later.
@@ -175,25 +188,26 @@ def main():
         pareto_set = add_to_pareto_set(pareto_set, parents)
 
         #Update the MOPO list to see if we have any new superior solutions!
-        MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
+        # MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
 
 
         logger.info('Generation {} complete'.format(gen_number))
 
     logger.info('Genetic algorithm complete, exiting for-loop now')
 
-    print(hof[0].fitness.values)
-    print(hof[1].fitness.values)
-    print(hof[2].fitness.values)
-    print(hof[3].fitness.values)
-    print(hof[4].fitness.values)
-    print(hof[5].fitness.values)
 
 
     ########### PHASE 3 - PARETO PLOTS
 
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_fronts(pareto_set)
+
+
+
+
+    ######### PHASE 4 - ENDING
+
+    print("kachow")
 
 
 

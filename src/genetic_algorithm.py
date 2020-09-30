@@ -122,12 +122,15 @@ def get_densities(ind, census):
     areas = census.area
 
     #Find out how many statistical areas there are to begin with, and create a blank list
-    densities = [0] * len(census)
+    densities = [0] * len(areas)
 
     #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
-    for prop_index in range(0, len(census)):
+    for prop_index in range(0, len(areas)):
         prop_area = areas[prop_index]
-        new_dwellings = ind[prop_index]
+        try:
+            new_dwellings = ind[prop_index]
+        except:
+            print(ind)
 
         #Calculate the added density (from new dwellings)
         densities[prop_index] = (new_dwellings / prop_area)
@@ -218,13 +221,13 @@ def add_attributes(pop, toolbox, creator, census, max_density_possible):
     fitnesses = list(map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
         #As the fitness attribute is currently 'None', then we give it the Fitness function and then pass it the fitness values
-        ind.fitness = creator.FitnessMulti()
+        # ind.fitness = creator.FitnessMulti()
         ind.fitness.values = fit
 
     return pop
 
 
-def update_MOPO(MOPO_List, parents_gplus1):
+def update_MOPO(MOPO_List, parents):
     """
     checks the new set of parents (g+1) against the MOPO set, and updates the MOPO set if the new development plan has a better result in any of the objective functions
     parents_gplus1 is a list of tuples, containing an identifying index and a list F_scores for each D
@@ -232,43 +235,46 @@ def update_MOPO(MOPO_List, parents_gplus1):
 
     # Sort the parents by each objective function. Check if the best parent for each
     # objective beats the current one in the MOPO set and if so update the MOPO with the better one
-    parents_gplus1.sort(key=lambda x: x[1][0])
-    if parents_gplus1[0][1][0] < MOPO_List[0][0]:
+
+
+    parents.sort(key=lambda x: x.fitness.values[0])
+    if parents[0].fitness.values[0] < MOPO_List[0].fitness.values[0]:
         MOPO_List[0][0] = parents_gplus1[0][1][0]
         MOPO_List[0][1] = parents_gplus1[0][0]
         print("MOPO List Updated for f_tsu")
 
-    parents_gplus1.sort(key=lambda x: x[1][1])
+    parents.sort(key=lambda x: x.fitness.values[1])
     if parents_gplus1[0][1][1] < MOPO_List[1][0]:
         MOPO_List[1][0] = parents_gplus1[0][1][1]
         MOPO_List[1][1] = parents_gplus1[0][0]
         print("MOPO List Updated for f_cflood")
 
-    parents_gplus1.sort(key=lambda x: x[1][2])
+    parents.sort(key=lambda x: x.fitness.values[2])
     if parents_gplus1[0][1][2] < MOPO_List[2][0]:
         MOPO_List[2][0] = parents_gplus1[0][1][2]
         MOPO_List[2][1] = parents_gplus1[0][0]
         print("MOPO List Updated for f_rflood")
 
-    parents_gplus1.sort(key=lambda x: x[1][3])
+    parents.sort(key=lambda x: x.fitness.values[3])
     if parents_gplus1[0][1][3] < MOPO_List[3][0]:
         MOPO_List[3][0] = parents_gplus1[0][1][3]
         MOPO_List[3][1] = parents_gplus1[0][0]
         print("MOPO List Updated for f_liq")
 
-    parents_gplus1.sort(key=lambda x: x[1][4])
+    parents.sort(key=lambda x: x.fitness.values[4])
     if parents_gplus1[0][1][4] < MOPO_List[4][0]:
         MOPO_List[4][0] = parents_gplus1[0][1][4]
         MOPO_List[4][1] = parents_gplus1[0][0]
         print("MOPO List Updated for f_dist")
 
-    parents_gplus1.sort(key=lambda x: x[1][5])
+    parents.sort(key=lambda x: x.fitness.values[5])
     if parents_gplus1[0][1][5] < MOPO_List[5][0]:
         MOPO_List[5][0] = parents_gplus1[0][1][5]
         MOPO_List[5][1] = parents_gplus1[0][0]
         print("MOPO List Updated for f_dev")
 
-    parents_gplus1.sort(key=lambda x: x[1][6])
+    #Get total F-scores
+    parents.sort(key=lambda x: sum(x.fitness.values))
     if parents_gplus1[0][1][6] < MOPO_List[6][0]:
         MOPO_List[6][0] = parents_gplus1[0][1][6]
         MOPO_List[6][1] = parents_gplus1[0][0]
