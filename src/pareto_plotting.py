@@ -93,6 +93,7 @@ def plot_pareto_fronts(pareto_set):
     index = 0
     col = 0
     row = 0
+
     for objective_pair in pareto_set:
 
         pareto_front = identify_pareto_front(objective_pair)
@@ -114,8 +115,9 @@ def plot_pareto_fronts(pareto_set):
 
         # Yay let make pretty picture
         axs[row, col].scatter(xs1, ys1, marker='x')
-        axs[row, col].plot(xs2, ys2)
+        axs[row, col].plot(xs2, ys2, color='red')
         axs[row, col].set_title(subtitles[index])
+        axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
 
         #Logic to keep track of which plot we are up to
         if col < cols-1:
@@ -127,11 +129,10 @@ def plot_pareto_fronts(pareto_set):
         index += 1
 
 
-
     if not os.path.exists("fig/final"):
         os.mkdir("fig/final")
 
-        # Save figure
+    # Save figure
     plt.savefig("fig/final/pareto_fronts.png", transparent=False, dpi=600)
 
     # Show the plots

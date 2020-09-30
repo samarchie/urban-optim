@@ -34,8 +34,8 @@ from genetic_algorithm import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
-NO_parents = 20 #number of parents/development plans in each iteration to make
-NO_generations = 10 #how many generations/iterations to complete
+NO_parents = 1000 #number of parents/development plans in each iteration to make
+NO_generations = 100 #how many generations/iterations to complete
 prob_crossover = 0 #probability of having 2 development plans cross over
 prob_mutation = 1 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
