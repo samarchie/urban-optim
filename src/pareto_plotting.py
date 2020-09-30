@@ -94,16 +94,23 @@ def plot_pareto_fronts(pareto_set):
     col = 0
     row = 0
     for objective_pair in pareto_set:
+
+        pareto_front = identify_pareto_front(objective_pair)
+        pareto_front.sort()
+
         # Create x and y coordinates for each objective pair
         xs1 = [x[0] for x in objective_pair]
         ys1 = [y[1] for y in objective_pair]
 
         #Find which points are on objective front, and assign their x and y coordinates in a plotable format
-        pareto_front = identify_pareto_front(objective_pair)
-        pareto_front.sort()
-
         xs2 = [x[0] for x in pareto_front]
         ys2 = [y[1] for y in pareto_front]
+
+        # Normalise plots
+        xs2 = xs2/np.max(xs1)
+        ys2 = ys2/np.max(ys1)
+        xs1 = xs1/np.max(xs1)
+        ys1 = ys1/np.max(ys1)
 
         # Yay let make pretty picture
         axs[row, col].scatter(xs1, ys1, marker='x')

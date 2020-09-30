@@ -34,8 +34,8 @@ from genetic_algorithm import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
-NO_parents = 10 #number of parents/development plans in each iteration to make
-NO_generations = 2 #how many generations/iterations to complete
+NO_parents = 200 #number of parents/development plans in each iteration to make
+NO_generations = 10 #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
@@ -119,7 +119,7 @@ def main():
     # pareto_set = add_to_pareto_set(pareto_set, parents)
 
     #Create a blank MOPO list (which in DEAP is called the Hall of Fame) and add the initial parents to the list
-    hof = tools.HallOfFame(maxsize=len(weightings), similar=>)
+    hof = tools.HallOfFame(maxsize=len(weightings))
     tools.HallOfFame.update(hof, population=parents)
 
     logger.info('Initial population created and entering GA loop now')
@@ -173,7 +173,7 @@ def main():
         parents[:] = toolbox.select_best(parents + children)
 
         #For each successful generation, add the parents to the pareto set so that they can be plotted out
-        # pareto_set = add_to_pareto_set(pareto_set, parents)
+        pareto_set = add_to_pareto_set(pareto_set, parents)
 
         #Update the MOPO list (called the Hall of Fame in DEAP) to see if we have any new superior solutions!
         tools.HallOfFame.update(hof, population=parents)
