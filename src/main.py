@@ -34,10 +34,17 @@ from genetic_algorithm import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
+<<<<<<< HEAD
 NO_parents = 1000 #number of parents/development plans in each iteration to make
 NO_generations = 100 #how many generations/iterations to complete
 prob_crossover = 0 #probability of having 2 development plans cross over
 prob_mutation = 1 #probability of an element in a development plan mutating
+=======
+NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
+NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
+prob_crossover = 0.7 #probability of having 2 development plans cross over
+prob_mutation = 0.2 #probability of an element in a development plan mutating
+>>>>>>> 850c7406c4b31189b89dcee81e8b86af20dfdedb
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
@@ -123,7 +130,7 @@ def main():
     MOPO_List = [[],      [],     [],      [],    [],      [],    []]
 
     #Update the MOPO list to see if we have any new superior solutions!
-    # MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
+    MOPO_List = update_MOPO(MOPO_List, parents, empty=True)
 
     logger.info('Initial population created and entering GA loop now')
 
@@ -188,8 +195,7 @@ def main():
         pareto_set = add_to_pareto_set(pareto_set, parents)
 
         #Update the MOPO list to see if we have any new superior solutions!
-        # MOPO_List = update_MOPO(MOPO_List, parents_gplus1)
-
+        MOPO_List = update_MOPO(MOPO_List, parents)
 
         logger.info('Generation {} complete'.format(gen_number))
 
