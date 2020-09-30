@@ -662,7 +662,7 @@ def apply_weightings(cleaned_census, weightings):
     return census_final
 
 
-def plot_intialised_data(census_final):
+def plot_intialised_data(census_final, weightings):
     """This module plots the objective functions of the processed data to check validity of the prcoessing/initialisation phase.
 
     Parameters
@@ -692,21 +692,14 @@ def plot_intialised_data(census_final):
     census_final.plot(ax=axs[2, 1], column='f_dev', cmap='Reds')
     axs[2, 1].set_title('District Plan Zones')
 
-    # centres = gpd.read_file('data/raw/socioeconomic/key_activity_areas.shp')
-    # centres.plot(ax=axs[2, 0], color='black', zorder=4)
-
     if not os.path.exists("fig"):
         os.mkdir("fig")
-    if not os.path.exists("fig/exploratory"):
-        os.mkdir("fig/exploratory")
 
     plt.tight_layout()
-    plt.savefig("fig/exploratory/objective_functions.png", transparent=False, dpi=600)
-    # plt.show()
+    plt.savefig("fig/objective_functions.png", transparent=False, dpi=600)
 
     fig, ax = plt.subplots(1, 1, figsize=(15,15))
     census_final.plot(ax=ax, column='F_score', cmap='Reds')
-    ax.set_title('Overall Score against the 6 objective functions, using an average weighting scheme')
+    ax.set_title('Overall Score against the 6 objective functions, using a {} weighting scheme'.format(weightings))
     plt.tight_layout()
-    plt.savefig("fig/exploratory/F_scores.png", dpi=600)
-    # plt.show()
+    plt.savefig("fig/F_scores.png", dpi=600)

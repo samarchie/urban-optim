@@ -10,7 +10,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-#from paretochart.paretochart import pareto
+
 
 def add_to_pareto_set(pareto_set, parents):
     """This module adds the parents from each generation to the pareto set. Takes all Development plans for this generation, and adds all parents to the pareto_set to be plotted later.
@@ -75,7 +75,7 @@ def add_to_pareto_set(pareto_set, parents):
     return pareto_set
 
 
-def plot_pareto_fronts(pareto_set):
+def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     """
     pretty self explanatory tbh
     """
@@ -84,6 +84,7 @@ def plot_pareto_fronts(pareto_set):
     rows = 5 # Number of rows of subplots
     cols = 3 # Number of columns of subplots
     fig, axs = plt.subplots(rows, cols, figsize=[20, 20])
+    fig.suptitle('Pareto Plots')
 
     #set up subplot subtitles
     subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
@@ -128,15 +129,9 @@ def plot_pareto_fronts(pareto_set):
 
         index += 1
 
-
-    if not os.path.exists("fig/final"):
-        os.mkdir("fig/final")
-
     # Save figure
-    plt.savefig("fig/final/pareto_fronts.png", transparent=False, dpi=600)
-
-    # Show the plots
-    plt.show()
+    plt.tight_layout()
+    plt.savefig("fig/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def identify_pareto_front(scores):

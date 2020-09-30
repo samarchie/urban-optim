@@ -95,7 +95,7 @@ def main():
     logger.info('Processing/initialisation complete')
 
     # Plot the processed census data and check the objective functions are working as expected!
-    plot_intialised_data(census)
+    plot_intialised_data(census, weightings)
     logger.info('f_functions and F-scores plotted and saved')
 
 
@@ -113,7 +113,7 @@ def main():
     parents = add_attributes(pop, toolbox, creator, census, max_density_possible)
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
-    #                  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+    #             1   2   3   4   5   6   7   8   9   10  11  12  13  14  15
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
@@ -139,7 +139,7 @@ def main():
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
         while len(children) < NO_parents:
-            #Generate a random number between 0 and 1, and use this to test HOW we will create a new child!
+            #Generate a random number between 0 and 1, and use this to test HoW we will create a new child!
             op_choice = random.random()
 
             #Apply cross-over
@@ -167,7 +167,6 @@ def main():
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
-                method="select"
 
             #Update the child attributes with the correct ones
             child.densities = get_densities(child, census)
@@ -197,10 +196,10 @@ def main():
 
 
 
-    ########### PHASE 3 - PARETO PLOTS
+    ########### PHASE 3 - PARETO FRONTS AND OTHER PLOTS
 
     #Plot the pareto plots so we do our discussion and view the results
-    plot_pareto_fronts(pareto_set)
+    plot_pareto_plots(pareto_set, NO_parents, NO_generations)
 
 
 
