@@ -18,6 +18,7 @@ import random
 import sys
 from deap import tools, base, creator
 import operator
+import array
 
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
@@ -168,13 +169,13 @@ def main():
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
 
-            #Update the child attributes with the correct ones
-            child.densities = get_densities(child, census)
-            child.valid = child_is_good(child, max_density_possible, census)
+            #Update the child attributes with the correct ones if they are a new child (eg mut or crossover modules delete fitness values)
+            if not child.fitness.valid:
+                child.densities = get_densities(child, census)
+                child.valid = child_is_good(child, max_density_possible, census)
 
-            # Add the fitness values to the individuals
-            # child.fitness = creator.FitnessMulti()
-            child.fitness.values = toolbox.evaluate(child)
+                # Add the fitness values to the individuals
+                child.fitness.values = toolbox.evaluate(child)
 
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, leads a very happy life and settles down and marries later.
             if child.valid:

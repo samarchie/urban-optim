@@ -11,6 +11,7 @@ from deap import tools, base, creator
 import os
 import random
 import numpy as np
+import array
 
 
 def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible):
@@ -19,7 +20,7 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     creator.create("FitnessMulti", base.Fitness, weights=(-1,)*6)
 
     #Set up the individual, with attributes for fitnesses, densities and if it is a good child or not.
-    creator.create("Individual", list, fitness=creator.FitnessMulti, densities=None, valid=None)
+    creator.create("Individual", array.array, typecode='d', fitness=creator.FitnessMulti, densities=None, valid=None)
 
     #Create the toolbox where all the population is saved
     toolbox = base.Toolbox()
@@ -134,6 +135,8 @@ def get_densities(ind, census):
 
         #Calculate the added density (from new dwellings)
         densities[prop_index] = (new_dwellings / prop_area)
+
+    densities = array.array("d", densities)
 
     return densities
 

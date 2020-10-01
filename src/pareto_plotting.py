@@ -130,7 +130,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
         index += 1
 
     # Save figure
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.savefig("fig/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
