@@ -37,39 +37,39 @@ def add_to_pareto_set(pareto_set, parents):
         #f_scores= (f_tsu, f_cflood, f_rflood, f_liq, f_dist, f_dev)
         f_scores = parent.fitness.values
 
-        if (f_scores[0], f_scores[1]) not in pareto_set[0]: # f_tsu vs f_cflood
+        if (f_scores[0], f_scores[1]) not in pareto_set[0]:
             pareto_set[0].append((f_scores[0], f_scores[1]))
-        if (f_scores[0], f_scores[2]) not in pareto_set[1]: # f_tsu vs f_rflood
+        if (f_scores[0], f_scores[2]) not in pareto_set[1]:
             pareto_set[1].append((f_scores[0], f_scores[2]))
-        if (f_scores[0], f_scores[3]) not in pareto_set[2]: # f_tsu vs f_liq
+        if (f_scores[0], f_scores[3]) not in pareto_set[2]:
             pareto_set[2].append((f_scores[0], f_scores[3]))
-        if (f_scores[0], f_scores[4]) not in pareto_set[3]: # f_tsu vs f_dist
+        if (f_scores[0], f_scores[4]) not in pareto_set[3]:
             pareto_set[3].append((f_scores[0], f_scores[4]))
-        if (f_scores[0], f_scores[5]) not in pareto_set[4]: # f_tsu vs f_dev
+        if (f_scores[0], f_scores[5]) not in pareto_set[4]:
             pareto_set[4].append((f_scores[0], f_scores[5]))
 
-        if (f_scores[1], f_scores[2]) not in pareto_set[5]: # f_cflood vs f_rflood
+        if (f_scores[1], f_scores[2]) not in pareto_set[5]:
             pareto_set[5].append((f_scores[1], f_scores[2]))
-        if (f_scores[1], f_scores[3]) not in pareto_set[6]: # f_cflood vs f_liq
+        if (f_scores[1], f_scores[3]) not in pareto_set[6]:
             pareto_set[6].append((f_scores[1], f_scores[3]))
-        if (f_scores[1], f_scores[4]) not in pareto_set[7]: # f_cflood vs f_dist
+        if (f_scores[1], f_scores[4]) not in pareto_set[7]:
             pareto_set[7].append((f_scores[1], f_scores[4]))
-        if (f_scores[1], f_scores[5]) not in pareto_set[8]: # f_cflood vs f_dev
+        if (f_scores[1], f_scores[5]) not in pareto_set[8]:
             pareto_set[8].append((f_scores[1], f_scores[5]))
 
-        if (f_scores[2], f_scores[3]) not in pareto_set[9]: # f_rflood vs f_liq
+        if (f_scores[2], f_scores[3]) not in pareto_set[9]:
             pareto_set[9].append((f_scores[2], f_scores[3]))
-        if (f_scores[2], f_scores[4]) not in pareto_set[10]: # f_rflood vs f_dist
+        if (f_scores[2], f_scores[4]) not in pareto_set[10]:
             pareto_set[10].append((f_scores[2], f_scores[4]))
-        if (f_scores[2], f_scores[5]) not in pareto_set[11]: # f_rflood vs f_dev
+        if (f_scores[2], f_scores[5]) not in pareto_set[11]:
             pareto_set[11].append((f_scores[2], f_scores[5]))
 
-        if (f_scores[3], f_scores[4]) not in pareto_set[12]: # f_liq vs f_dist
+        if (f_scores[3], f_scores[4]) not in pareto_set[12]:
             pareto_set[12].append((f_scores[3], f_scores[4]))
-        if (f_scores[3], f_scores[5]) not in pareto_set[13]: # f_liq vs f_dev
+        if (f_scores[3], f_scores[5]) not in pareto_set[13]:
             pareto_set[13].append((f_scores[3], f_scores[5]))
 
-        if (f_scores[4], f_scores[5]) not in pareto_set[14]: # f_dist vs f_dev
+        if (f_scores[4], f_scores[5]) not in pareto_set[14]:
             pareto_set[14].append((f_scores[4], f_scores[5]))
 
     return pareto_set
@@ -80,16 +80,23 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     pretty self explanatory tbh
     """
 
-    # set up subplots
+    # set up subplots for pareto plots (all markers and front)
     rows = 5 # Number of rows of subplots
     cols = 3 # Number of columns of subplots
-    fig, axs = plt.subplots(rows, cols, figsize=[30, 30])
+    fig, axs = plt.subplots(rows, cols, figsize=[20, 20])
     fig.suptitle('Pareto Plots')
 
-    #set up subplot subtitles and labels
-    # subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
+    # set up subplots for pareto front plots
+    rows2 = 3 # Number of rows of subplots
+    cols2 = 2 # Number of columns of subplots
+    fig2, axs2 = plt.subplots(rows2, cols2, figsize=[20, 20])
+    fig2.suptitle('Pareto Front Plots')
 
-    labels = ['f_tsu',  'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
+    #Set up subplot axis titles (y-axis)
+    obj_funcs = ["f_tsu", "f_cflood", "f_rflood", "f_liq", "f_dist", "f_dev"]
+
+    #set up subplot subtitles
+    subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
 
     # Set up plot indexes so we know where to plot each objective pair
     # these will iterate
@@ -147,9 +154,21 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
 
         index += 1
 
-    # Save figure
-    # plt.tight_layout()
-    plt.savefig("fig/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+        #Now we want to add to the pareto front plots as welL!
+        fig2, axs2 = add_to_pareto_fronts_plots((xs2, ys2), fig2, axs2, subtitles[index])
+
+    # Save figures
+    fig.savefig("fig/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+
+    counter = 0
+    for row in range(0, rows2):
+        for col in range(0, cols2):
+
+            axs2[row, col].set(xlabel='f', ylabel='{}'.format(obj_funcs[counter]))
+            axs2[row, col].set(xlim=(0, 1), ylim=(0, 1))
+            axs2[row, col].legend(obj_funcs)
+
+    fig2.savefig("fig/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def identify_pareto_front(scores):
@@ -185,68 +204,47 @@ def identify_pareto_front(scores):
     return result
 
 
-def plot_pareto_fronts(pareto_set, NO_parents, NO_generations):
-
-    # set up subplots
-    rows = 3 # Number of rows of subplots
-    cols = 2 # Number of columns of subplots
-    fig, axs = plt.subplots(rows, cols, figsize=[20, 20])
-    fig.suptitle('Pareto Front Plots')
+def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
 
     #Set up subplot axis titles (y-axis)
-    subtitles = ["f_tsu", "f_cflood", "f_rflood", "f_liq", "f_dist", "f_dev"]
-
-    pareto_set_names = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
+    obj_funcs = ["f_tsu", "f_cflood", "f_rflood", "f_liq", "f_dist", "f_dev"]
 
     plot_layout = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+    plot_colours = ["#003049", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
 
+    #Figure out what objectives we have and and put them in the right plot axis and column!
+    # print(pareto_set_names)
+    pareto_names = pareto_set_names.split(" ")
 
-    # Set up plot indexes so we know where to plot each objective pair these will iterate
+    for title_index in range(0, len(obj_funcs)):
 
-    for index in range(0, len(pareto_set)):
-        objective_pair = pareto_set[index]
+        title = obj_funcs[title_index]
 
-        pareto_front = identify_pareto_front(objective_pair)
-        pareto_front.sort()
+        if pareto_names[0] == title:
+            #Then we have the thing we want first (eg need to swap the x and y coordinates as we want to plot the f function on the y axis!)
+            ys2, xs2 = data
 
-        #Find which points are on objective front, and assign their x and y coordinates in a plotable format
-        xs2 = [x[0] for x in pareto_front]
-        ys2 = [y[1] for y in pareto_front]
+            row, col = plot_layout[title_index]
 
-        # Normalise plots
-        xs2 = xs2/np.max(xs1)
-        ys2 = ys2/np.max(ys1)
+            other_index = obj_funcs.index(pareto_names[2])
+            color = plot_colours[other_index]
 
-        #Figure out what objectives we have and and put them in the right plot axis and column!
-        pareto_names = pareto_set_names[index].split(" ")
-
-        for title_index in range(0, subtitles):
-
-            title = subtitles[index]
-
-            if pareto_names[0] == title:
-                #Then we have the thing we want first (eg need to swap the x and y coordinates as we want to plot the f function on the y axis!)
-                xs2, ys2 = ys2, xs2
-
-                row, col = plot_layout[title_index]
-
-                # Yay let make pretty picture
-                axs[row, col].plot(xs2, ys2, color='red')
-                axs[row, col].set_title(subtitles[index])
-                axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
+            # Yay let make pretty picture
+            axs2[row, col].plot(xs2, ys2, color=color)
 
 
 
-            elif pareto_names[2] == title:
-                #The the data is the right way around for plotting!
+        elif pareto_names[2] == title:
+            #The the data is the right way around for plotting!
+            xs2, ys2 = data
 
-                row, col = plot_layout[title_index]
+            row, col = plot_layout[title_index]
 
-                # Yay let make pretty picture
-                axs[row, col].plot(xs2, ys2, color='red')
-                axs[row, col].set_title(subtitles[index])
-                axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
+            other_index = obj_funcs.index(pareto_names[0])
+            color = plot_colours[other_index]
+
+            # Yay let make pretty picture
+            axs2[row, col].plot(xs2, ys2, color=color)
 
 
-    # Save figure
-    plt.savefig("fig/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    return fig2, axs2

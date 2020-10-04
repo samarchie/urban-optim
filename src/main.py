@@ -35,7 +35,6 @@ from genetic_algorithm import *
 from pareto_plotting import *
 
 #Define the parameters that can be changed by the user
-
 NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
 NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
 prob_crossover = 0.7 #probability of having 2 development plans cross over
@@ -202,7 +201,6 @@ def main():
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_plots(pareto_set, NO_parents, NO_generations)
 
-    plot_pareto_fronts(pareto_set, NO_parents, NO_generations)
 
 
 
