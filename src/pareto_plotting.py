@@ -180,6 +180,8 @@ def plot_pareto_fronts(pareto_set, NO_parents, NO_generations):
 
     pareto_set_names = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
 
+    plot_layout = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+
 
     # Set up plot indexes so we know where to plot each objective pair these will iterate
 
@@ -198,7 +200,7 @@ def plot_pareto_fronts(pareto_set, NO_parents, NO_generations):
         ys2 = ys2/np.max(ys1)
 
         #Figure out what objectives we have and and put them in the right plot axis and column!
-        pareto_names = pareto_set_names[1].split(" ")
+        pareto_names = pareto_set_names[index].split(" ")
 
         for title_index in range(0, subtitles):
 
@@ -207,9 +209,20 @@ def plot_pareto_fronts(pareto_set, NO_parents, NO_generations):
             if pareto_names[0] == title:
                 #Then we have the thing we want first (eg need to swap the x and y coordinates as we want to plot the f function on the y axis!)
                 xs2, ys2 = ys2, xs2
-                
 
-                title_index
+                row, col = plot_layout[title_index]
+
+                # Yay let make pretty picture
+                axs[row, col].plot(xs2, ys2, color='red')
+                axs[row, col].set_title(subtitles[index])
+                axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
+
+
+
+            elif pareto_names[2] == title:
+                #The the data is the right way around for plotting!
+
+                row, col = plot_layout[title_index]
 
                 # Yay let make pretty picture
                 axs[row, col].plot(xs2, ys2, color='red')
