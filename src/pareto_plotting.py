@@ -37,39 +37,39 @@ def add_to_pareto_set(pareto_set, parents):
         #f_scores= (f_tsu, f_cflood, f_rflood, f_liq, f_dist, f_dev)
         f_scores = parent.fitness.values
 
-        if (f_scores[0], f_scores[1]) not in pareto_set[0]:
+        if (f_scores[0], f_scores[1]) not in pareto_set[0]: # f_tsu vs f_cflood
             pareto_set[0].append((f_scores[0], f_scores[1]))
-        if (f_scores[0], f_scores[2]) not in pareto_set[1]:
+        if (f_scores[0], f_scores[2]) not in pareto_set[1]: # f_tsu vs f_rflood
             pareto_set[1].append((f_scores[0], f_scores[2]))
-        if (f_scores[0], f_scores[3]) not in pareto_set[2]:
+        if (f_scores[0], f_scores[3]) not in pareto_set[2]: # f_tsu vs f_liq
             pareto_set[2].append((f_scores[0], f_scores[3]))
-        if (f_scores[0], f_scores[4]) not in pareto_set[3]:
+        if (f_scores[0], f_scores[4]) not in pareto_set[3]: # f_tsu vs f_dist
             pareto_set[3].append((f_scores[0], f_scores[4]))
-        if (f_scores[0], f_scores[5]) not in pareto_set[4]:
+        if (f_scores[0], f_scores[5]) not in pareto_set[4]: # f_tsu vs f_dev
             pareto_set[4].append((f_scores[0], f_scores[5]))
 
-        if (f_scores[1], f_scores[2]) not in pareto_set[5]:
+        if (f_scores[1], f_scores[2]) not in pareto_set[5]: # f_cflood vs f_rflood
             pareto_set[5].append((f_scores[1], f_scores[2]))
-        if (f_scores[1], f_scores[3]) not in pareto_set[6]:
+        if (f_scores[1], f_scores[3]) not in pareto_set[6]: # f_cflood vs f_liq
             pareto_set[6].append((f_scores[1], f_scores[3]))
-        if (f_scores[1], f_scores[4]) not in pareto_set[7]:
+        if (f_scores[1], f_scores[4]) not in pareto_set[7]: # f_cflood vs f_dist
             pareto_set[7].append((f_scores[1], f_scores[4]))
-        if (f_scores[1], f_scores[5]) not in pareto_set[8]:
+        if (f_scores[1], f_scores[5]) not in pareto_set[8]: # f_cflood vs f_dev
             pareto_set[8].append((f_scores[1], f_scores[5]))
 
-        if (f_scores[2], f_scores[3]) not in pareto_set[9]:
+        if (f_scores[2], f_scores[3]) not in pareto_set[9]: # f_rflood vs f_liq
             pareto_set[9].append((f_scores[2], f_scores[3]))
-        if (f_scores[2], f_scores[4]) not in pareto_set[10]:
+        if (f_scores[2], f_scores[4]) not in pareto_set[10]: # f_rflood vs f_dist
             pareto_set[10].append((f_scores[2], f_scores[4]))
-        if (f_scores[2], f_scores[5]) not in pareto_set[11]:
+        if (f_scores[2], f_scores[5]) not in pareto_set[11]: # f_rflood vs f_dev
             pareto_set[11].append((f_scores[2], f_scores[5]))
 
-        if (f_scores[3], f_scores[4]) not in pareto_set[12]:
+        if (f_scores[3], f_scores[4]) not in pareto_set[12]: # f_liq vs f_dist
             pareto_set[12].append((f_scores[3], f_scores[4]))
-        if (f_scores[3], f_scores[5]) not in pareto_set[13]:
+        if (f_scores[3], f_scores[5]) not in pareto_set[13]: # f_liq vs f_dev
             pareto_set[13].append((f_scores[3], f_scores[5]))
 
-        if (f_scores[4], f_scores[5]) not in pareto_set[14]:
+        if (f_scores[4], f_scores[5]) not in pareto_set[14]: # f_dist vs f_dev
             pareto_set[14].append((f_scores[4], f_scores[5]))
 
     return pareto_set
@@ -83,11 +83,13 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     # set up subplots
     rows = 5 # Number of rows of subplots
     cols = 3 # Number of columns of subplots
-    fig, axs = plt.subplots(rows, cols, figsize=[20, 20])
+    fig, axs = plt.subplots(rows, cols, figsize=[30, 30])
     fig.suptitle('Pareto Plots')
 
-    #set up subplot subtitles
-    subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
+    #set up subplot subtitles and labels
+    # subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
+
+    labels = ['f_tsu',  'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
 
     # Set up plot indexes so we know where to plot each objective pair
     # these will iterate
@@ -117,8 +119,24 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
         # Yay let make pretty picture
         axs[row, col].scatter(xs1, ys1, marker='x')
         axs[row, col].plot(xs2, ys2, color='red')
-        axs[row, col].set_title(subtitles[index])
+        # axs[row, col].set_title(subtitles[index])
         axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
+
+        if index < 5:
+            axs[row, col].set_xlabel(labels[0])
+            axs[row, col].set_ylabel(labels[index+1])
+        elif index < 9:
+            axs[row, col].set_xlabel(labels[1])
+            axs[row, col].set_ylabel(labels[index-4])
+        elif index < 12:
+            axs[row, col].set_xlabel(labels[2])
+            axs[row, col].set_ylabel(labels[index-7])
+        elif index < 14:
+            axs[row, col].set_xlabel(labels[3])
+            axs[row, col].set_ylabel(labels[index-9])
+        else:
+            axs[row, col].set_xlabel(labels[4])
+            axs[row, col].set_ylabel(labels[index-10])
 
         #Logic to keep track of which plot we are up to
         if col < cols-1:
