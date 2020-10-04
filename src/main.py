@@ -202,6 +202,8 @@ def main():
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_plots(pareto_set, NO_parents, NO_generations)
 
+    plot_pareto_fronts(pareto_set, NO_parents, NO_generations)
+
 
 
 
