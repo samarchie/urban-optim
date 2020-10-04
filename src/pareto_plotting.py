@@ -183,3 +183,70 @@ def identify_pareto_front(scores):
     result = [tuple(row) for row in pareto_front]
 
     return result
+
+
+def plot_pareto_fronts(pareto_set, NO_parents, NO_generations):
+
+    # set up subplots
+    rows = 3 # Number of rows of subplots
+    cols = 2 # Number of columns of subplots
+    fig, axs = plt.subplots(rows, cols, figsize=[20, 20])
+    fig.suptitle('Pareto Front Plots')
+
+    #Set up subplot axis titles (y-axis)
+    subtitles = ["f_tsu", "f_cflood", "f_rflood", "f_liq", "f_dist", "f_dev"]
+
+    pareto_set_names = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
+
+    plot_layout = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
+
+
+    # Set up plot indexes so we know where to plot each objective pair these will iterate
+
+    for index in range(0, len(pareto_set)):
+        objective_pair = pareto_set[index]
+
+        pareto_front = identify_pareto_front(objective_pair)
+        pareto_front.sort()
+
+        #Find which points are on objective front, and assign their x and y coordinates in a plotable format
+        xs2 = [x[0] for x in pareto_front]
+        ys2 = [y[1] for y in pareto_front]
+
+        # Normalise plots
+        xs2 = xs2/np.max(xs1)
+        ys2 = ys2/np.max(ys1)
+
+        #Figure out what objectives we have and and put them in the right plot axis and column!
+        pareto_names = pareto_set_names[index].split(" ")
+
+        for title_index in range(0, subtitles):
+
+            title = subtitles[index]
+
+            if pareto_names[0] == title:
+                #Then we have the thing we want first (eg need to swap the x and y coordinates as we want to plot the f function on the y axis!)
+                xs2, ys2 = ys2, xs2
+
+                row, col = plot_layout[title_index]
+
+                # Yay let make pretty picture
+                axs[row, col].plot(xs2, ys2, color='red')
+                axs[row, col].set_title(subtitles[index])
+                axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
+
+
+
+            elif pareto_names[2] == title:
+                #The the data is the right way around for plotting!
+
+                row, col = plot_layout[title_index]
+
+                # Yay let make pretty picture
+                axs[row, col].plot(xs2, ys2, color='red')
+                axs[row, col].set_title(subtitles[index])
+                axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
+
+
+    # Save figure
+    plt.savefig("fig/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
