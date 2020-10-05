@@ -134,16 +134,16 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
             axs[row, col].set_ylabel(obj_funcs[index+1])
         elif index < 9:
             axs[row, col].set_xlabel(obj_funcs[1])
-            axs[row, col].set_ylabel(obj_funcs[index-4])
+            axs[row, col].set_ylabel(obj_funcs[index-3])
         elif index < 12:
             axs[row, col].set_xlabel(obj_funcs[2])
-            axs[row, col].set_ylabel(obj_funcs[index-7])
+            axs[row, col].set_ylabel(obj_funcs[index-6])
         elif index < 14:
             axs[row, col].set_xlabel(obj_funcs[3])
-            axs[row, col].set_ylabel(obj_funcs[index-9])
+            axs[row, col].set_ylabel(obj_funcs[index-8])
         else:
             axs[row, col].set_xlabel(obj_funcs[4])
-            axs[row, col].set_ylabel(obj_funcs[index-10])
+            axs[row, col].set_ylabel(obj_funcs[index-9])
 
         #Logic to keep track of which plot we are up to
         if col < cols-1:
