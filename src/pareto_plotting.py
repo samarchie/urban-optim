@@ -167,6 +167,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
             axs2[row, col].set(xlabel='f', ylabel='{}'.format(obj_funcs[counter]))
             axs2[row, col].set(xlim=(0, 1), ylim=(0, 1))
             axs2[row, col].legend(obj_funcs)
+            counter += 1
 
     fig2.savefig("fig/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
