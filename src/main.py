@@ -156,7 +156,7 @@ def main():
                 while type(parent) != creator.Individual:
                     parent = parent[0]
 
-                #The child, straight after birth, recieves a vaccination and this causes autism. They then mutate and well...
+                #The child, straight after birth, recieves a vaccination. This causes mutation which leads to autism and well...
                 child = toolbox.mutate(parent)[0]
 
                 #Sometimes the returned child is a list of the DEAP class so lets extract it if thats the case
@@ -176,7 +176,7 @@ def main():
                 # Add the fitness values to the individuals
                 child.fitness.values = toolbox.evaluate(child)
 
-            #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, leads a very happy life and settles down and marries later.
+            #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, is forced into an arranged marraige in its teens.
             if child.valid:
                 children.append(child)
 
