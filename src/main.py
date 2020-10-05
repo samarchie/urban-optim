@@ -207,7 +207,7 @@ def main():
 
     ######### PHASE 4 - ENDING
 
-    print("kachow")
+    logger.info("kachow, plots are all done! thanks for running our code :)")
 
 
 

@@ -93,7 +93,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     fig2.suptitle('Pareto Front Plots')
 
     #Set up subplot axis titles (y-axis)
-    obj_funcs = ["f_tsu", "f_cflood", "f_rflood", "f_liq", "f_dist", "f_dev"]
+    obj_funcs = [r"$f_{tsu}$", r"$f_{cflood}$", r"$f_{rflood}$", r"$f_{liq}$", r"$f_{dist}$", r"$f_{dev}$"]
 
     #set up subplot subtitles
     subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
@@ -130,20 +130,20 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
         axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
 
         if index < 5:
-            axs[row, col].set_xlabel(labels[0])
-            axs[row, col].set_ylabel(labels[index+1])
+            axs[row, col].set_xlabel(obj_funcs[0])
+            axs[row, col].set_ylabel(obj_funcs[index+1])
         elif index < 9:
-            axs[row, col].set_xlabel(labels[1])
-            axs[row, col].set_ylabel(labels[index-4])
+            axs[row, col].set_xlabel(obj_funcs[1])
+            axs[row, col].set_ylabel(obj_funcs[index-4])
         elif index < 12:
-            axs[row, col].set_xlabel(labels[2])
-            axs[row, col].set_ylabel(labels[index-7])
+            axs[row, col].set_xlabel(obj_funcs[2])
+            axs[row, col].set_ylabel(obj_funcs[index-7])
         elif index < 14:
-            axs[row, col].set_xlabel(labels[3])
-            axs[row, col].set_ylabel(labels[index-9])
+            axs[row, col].set_xlabel(obj_funcs[3])
+            axs[row, col].set_ylabel(obj_funcs[index-9])
         else:
-            axs[row, col].set_xlabel(labels[4])
-            axs[row, col].set_ylabel(labels[index-10])
+            axs[row, col].set_xlabel(obj_funcs[4])
+            axs[row, col].set_ylabel(obj_funcs[index-10])
 
         #Logic to keep track of which plot we are up to
         if col < cols-1:
@@ -152,10 +152,10 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
             col = 0
             row += 1
 
-        index += 1
-
         #Now we want to add to the pareto front plots as welL!
         fig2, axs2 = add_to_pareto_fronts_plots((xs2, ys2), fig2, axs2, subtitles[index])
+
+        index += 1
 
     # Save figures
     fig.savefig("fig/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
