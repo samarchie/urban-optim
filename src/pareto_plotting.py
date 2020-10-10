@@ -249,3 +249,8 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
 
 
     return fig2, axs2
+
+
+# def plot_best_locations(parents, gen_number, fig, axs):
+
+    

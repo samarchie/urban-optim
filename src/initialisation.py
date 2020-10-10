@@ -334,12 +334,12 @@ def clip_bad_parcels(constrained_census, boundary):
     constrained_census = constrained_census[good_props]
 
     #Clip out all the zones that are too small around the coastline - these have cropped up because the input Council layers are basically "not great" and think people can build in water lmao... #Tuples are Level_0 and Level_1 labels when data has been exploded.
-    bad_coastal_zones = [(383, 0), (2002, 0), (2004, 0), (462, 0), (1996, 3), (477, 2), (474, 3), (1699, 3)]
+    bad_coastal_zones = [(383, 0), (2002, 0), (2004, 0), (462, 0), (1996, 3), (477, 2), (474, 3), (1699, 3), (1664, 25), (1664, 8), (380, 0), (1999, 0), (1997, 0), (459, 0), (1991, 3), (474, 2), (471, 3), (1694, 3)]
 
     #Get rid of lines and small parcels that crop up!
     exploded_cons_census = constrained_census.explode()
     exploded_cons_census["area_exp"] = exploded_cons_census.area
-    #exploded_cons_census.to_file("sam/explz.shp")
+    exploded_cons_census.to_file("data/processed/exploaded.shp")
 
     #Check each line in the split/exploded geometries and see if it is really small (eg 10% of total size of property) or if it has been manually selected for deletion
     for index, row in exploded_cons_census.iterrows():
