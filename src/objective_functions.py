@@ -234,17 +234,17 @@ def f_liq(liq_data, census_data):
     lick4 = gpd.GeoDataFrame(columns=['geometry'])
     lick5 = gpd.GeoDataFrame(columns=['geometry'])
     for index, row in liq_data.iterrows():
-        if row['Liq_Cat'] == lick_cats[0]:#Liquefaction Damage is Unlikely
+        if row['Liq_Cat'] == lick_cats[0]:  # Liquefaction Damage is Unlikely
             lick0 = lick0.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[1]:#Very Low Liquefaction Vulnerability
+        elif row['Liq_Cat'] == lick_cats[1]:# Very Low Liquefaction Vulnerability
             lick1 = lick1.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[2]:#Low Liquefaction Vulnerability
+        elif row['Liq_Cat'] == lick_cats[2]:# Low Liquefaction Vulnerability
             lick2 = lick2.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[3]:#Liquefaction Damage is Possible
+        elif row['Liq_Cat'] == lick_cats[3]:# Liquefaction Damage is Possible
             lick3 = lick3.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[4]:#Medium Liquefaction Vulnerability
+        elif row['Liq_Cat'] == lick_cats[4]:# Medium Liquefaction Vulnerability
             lick4 = lick4.append({'geometry': row['geometry']}, ignore_index=True)
-        elif row['Liq_Cat'] == lick_cats[5]:#High Liquefaction Vulnerability
+        elif row['Liq_Cat'] == lick_cats[5]:# High Liquefaction Vulnerability
             lick5 = lick5.append({'geometry': row['geometry']}, ignore_index=True)
 
     #Create and fill arrays of sets of boolean values. Each set will be either
@@ -267,52 +267,52 @@ def f_liq(liq_data, census_data):
     #Create the f output array. Give a valeu based on what category each parcel
     #falls into. These values are adjustable
     f = np.zeros(len(census_data))
-    index = 0 #reset to zero at each for loop
+    index = 0 # reset to zero at each for loop
     for cp in in_lick0:
         for loc in cp:
             if loc:
-                f[index] = 0.08 #damage unlikely
+                f[index] = 0.08 # Damage unlikely
         index += 1
 
     index = 0
     for cp in in_lick1:
         for loc in cp:
             if loc:
-                f[index] = 0.01 #very low vulnerability
+                f[index] = 0.01 # Very low vulnerability
         index += 1
 
     index = 0
     for cp in in_lick2:
         for loc in cp:
             if loc:
-                f[index] = 0.1 #low vulnerability
+                f[index] = 0.1  # Low vulnerability
         index += 1
 
     index = 0
     for cp in in_lick3:
         for loc in cp:
             if loc:
-                f[index] = 0.9 #damage possible
+                f[index] = 0.9  # Damage possible
         index += 1
 
     index = 0
     for cp in in_lick4:
         for loc in cp:
             if loc:
-                f[index] = 0.5 #medium vulnerability
+                f[index] = 0.5  # Medium vulnerability
         index += 1
 
     index = 0
     for cp in in_lick5:
         for loc in cp:
             if loc:
-                f[index] = 1 #high vulnerability
+                f[index] = 1    # High vulnerability
         index += 1
 
     index = 0
     for fi in f:
         if fi == 0:
-            f[index] = 0.08 #If parcel is not assigned, look at raw liqufaction hazard data and assign to what is sensible. In this case all cp that are outside the liquefaction hazard data are beside damage unlikely and are on the port hills
+            f[index] = 0.08 # If parcel is not assigned, look at raw liqufaction hazard data and assign to what is sensible. In this case all cp that are outside the liquefaction hazard data are beside damage unlikely and are on the port hills
         index += 1
 
     return f
