@@ -172,20 +172,29 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     fig2.savefig("fig/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
-def identify_pareto_front(scores_raw):
+def identify_pareto_front(objective_pair):
+    """This module evaluates the pareto set of all data points for the two objective functions, and returns a tuple of points that represent the pareto front of the data set.
+
+    Parameters
+    ----------
+    objective_pair : List of tuples
+        The list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points and the parent itself, which indicate an individual parents score against the two objective functions alongside the Individual Class.
+
+    Returns
+    -------
+    pareto_front : List of tuples
+        The list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points and the parent itself, which indicate an individual parents score against the two objective functions alongside the Individual Class.
     """
 
-    """
-    # scores_raw = [(1, 2, 3), (1, 4, .1), (.5, 5, 6), (7, 1, 9)]
-    scores_raw = np.asarray(scores_raw)
+    #Convert the list of tuples of (f_score1, f_score2, parent) into an array of tuples
+    scores_raw = np.asarray(objective_pair)
+    #Only save the (f_score1, f_score2) into a new list instead of modifying the raw list
+    scores_modified = []
+    for score_raw in scores_modified:
+        #copy over the f-score values, and not the parent!
+        final.append(score_raw[:-1])
 
-
-    # Count number of items
-
-    final = []
-    for score in scores_raw:
-        final.append(score[:-1])
-
+    #Turn the list into an array
     scores = np.asarray(final)
     population_size = scores.shape[0]
     # Create a NumPy index for scores on the pareto front (zero indexed)
@@ -209,23 +218,45 @@ def identify_pareto_front(scores_raw):
     pareto_front = scores_raw[pareto_front]
 
     #put output in the same format as the input
-    result = [tuple(row) for row in pareto_front]
+    pareto_front = [tuple(row) for row in pareto_front]
 
-    return result
+    return pareto_front
 
 
 def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
+    """This module adds a pareto plot of two objective functions to the pareto front plot..
+
+    Parameters
+    ----------
+    data : Tuple
+        A tuple of the two f_score values from the pareto set, in the form of (xs2, ys2), where xs2 and xs2 are lists of the same length.
+    fig2 : Figure
+        A matplotlib.pyplot Figure, that contains many subplots that may or may not be empty. This Figure represents that the tradeoff curves of one function .
+    axs2 : axes.Axes
+        A matplotlib.pyplot Axes, that has many sub-axes that may or may not be empty. This Axis represents that spatial variations of specificied generation's parents.
+    pareto_set_names : List of Strings
+        A list of strings of the objective function tradeoffs, in the order of the axis of the plot.
+
+    Returns
+    -------
+    fig2 : Figure
+        A matplotlib.pyplot Figure, that contains many subplots that may or may not be empty. This Figure represents that the tradeoff curves of one function .
+    axs2 : axes.Axes
+        A matplotlib.pyplot Axes, that has many sub-axes that may or may not be empty. This Axis represents that spatial variations of specificied generation's parents.
+
+    """
 
     #Set up subplot axis titles (y-axis)
     obj_funcs = ["f_tsu", "f_cflood", "f_rflood", "f_liq", "f_dist", "f_dev"]
 
+    #Set up how the axis are to be made (what order the axes go in) and what colours lines are each objective function.
     plot_layout = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
     plot_colours = ["#003049", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
 
-    #Figure out what objectives we have and and put them in the right plot axis and column!
-    # print(pareto_set_names)
+    #Figure out what objectives we have and and put them in the right plot axis and column! This will be in the form of ["f_tsu", "vs", "f_cflood"] for example os only need to check the 1st and 3rd item.
     pareto_names = pareto_set_names.split(" ")
 
+    #Go through each objective function name to see to see if [out of the total 6 objective functions] if the pareto_set of two battling objectives is present.
     for title_index in range(0, len(obj_funcs)):
 
         title = obj_funcs[title_index]
@@ -234,8 +265,10 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
             #Then we have the thing we want first (eg need to swap the x and y coordinates as we want to plot the f function on the y axis!)
             ys2, xs2 = data
 
+            #grab the right place to put the plot
             row, col = plot_layout[title_index]
 
+            #and we also need to find which colour to make the line (as its based on the other objective function)
             other_index = obj_funcs.index(pareto_names[2])
             color = plot_colours[other_index]
 
@@ -248,8 +281,10 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
             #The the data is the right way around for plotting!
             xs2, ys2 = data
 
+            #grab the right place to put the plot
             row, col = plot_layout[title_index]
 
+            #and we also need to find which colour to make the line (as its based on the other objective function)
             other_index = obj_funcs.index(pareto_names[0])
             color = plot_colours[other_index]
 
@@ -261,7 +296,7 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
 
 
 def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatial=None, axs_spatial=None):
-    """Short summary.
+    """This modules takes a set of parents at a specified generation number, and adds it spatial development plan (d's) to a figure. This is used to showcase how the genetic algorithm should converge on superior sites.
 
     Parameters
     ----------
