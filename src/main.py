@@ -48,7 +48,7 @@ weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objec
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 max_density_possible = 11.0 #As our crossover/mutation seciton will change densities, we need an upper bound that
-when_to_plot = range(0, NO_generations + 1, 10) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+when_to_plot = range(0, NO_generations + 1, 1) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
 
 
 def main():
@@ -208,11 +208,13 @@ def main():
 
         logger.info('Generation {} complete'.format(gen_number))
 
-    logger.info('Genetic algorithm complete, exiting for-loop now')
+    logger.info('Genetic algorithm complete')
 
 
 
     ########### PHASE 3 - PARETO FRONTS AND OTHER PLOTS
+
+    logger.info('Started plotting results from the genetic algorithm')
 
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_plots(pareto_set, NO_parents, NO_generations)
@@ -220,7 +222,7 @@ def main():
     #Plot the parents (for the generation selected by the user) and show their averge spatial plan! hahaha you got pranked bro. they got saved automatically in the last generation of the GA loop!
 
     #Take the pareto set of the final parents and plot a spatial plan of ranked developement sites
-    # plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations)
+    plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations)
 
 
     ######### PHASE 4 - ENDING

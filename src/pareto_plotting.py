@@ -7,6 +7,7 @@ beep boop here some pretty graphs
 """
 
 import geopandas as gpd
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -76,9 +77,23 @@ def add_to_pareto_set(pareto_set, parents):
 
 
 def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
+    """This module plots both the pareto plots and the pareto-front plots.
+
+    Parameters
+    ----------
+    paretofront_set : List
+        A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
+    NO_parents : Integer
+        User specified parameter for how many parents are in a generation.
+    NO_generations : Integer
+        User specified parameter for hor many generations occur as part of the gentic algorithm.
+
+    Returns
+    -------
+    None
+
     """
-    pretty self explanatory tbh
-    """
+
 
     # set up subplots for pareto plots (all markers and front)
     rows = 5 # Number of rows of subplots
@@ -93,7 +108,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     fig2.suptitle('Pareto Front Plots')
 
     #Set up subplot axis titles (y-axis)
-    obj_funcs = [r"$f_{tsu}$", r"$f_{cflood}$", r"$f_{rflood}$", r"$f_{liq}$", r"$f_{dist}$", r"$f_{dev}$"]
+    obj_funcs = [r"$normalised f_{tsu}$", r"$normalised f_{cflood}$", r"$normalised f_{rflood}$", r"$normalised f_{liq}$", r"$normalised f_{dist}$", r"$normalised f_{dev}$"]
 
     #set up subplot subtitles
     subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
@@ -190,12 +205,12 @@ def identify_pareto_front(objective_pair):
     scores_raw = np.asarray(objective_pair)
     #Only save the (f_score1, f_score2) into a new list instead of modifying the raw list
     scores_modified = []
-    for score_raw in scores_modified:
+    for score_raw in scores_raw:
         #copy over the f-score values, and not the parent!
-        final.append(score_raw[:-1])
+        scores_modified.append(score_raw[:-1])
 
     #Turn the list into an array
-    scores = np.asarray(final)
+    scores = np.asarray(scores_modified)
     population_size = scores.shape[0]
     # Create a NumPy index for scores on the pareto front (zero indexed)
     population_ids = np.arange(population_size)
@@ -373,7 +388,58 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
     #create the figure and axes
     fig, ax = plt.subplots(1, 1, figsize=[20, 20])
 
+    #create a blank list, to where we will put all the parents on the pareto front curve in
+    pareto_front_parents = []
 
+    #Go through each pareto plot one at a time
+    for objective_pair in pareto_set:
+        #Find all the points (and associated parents) on the pareto-front curve
+        pareto_front = identify_pareto_front(objective_pair)
+
+        for point in pareto_front:
+            #Extract the parent from that point and add it to the list of pareto parents if it is not already in there
+            if point[-1] not in pareto_front_parents:
+                pareto_front_parents.append(point[-1])
+
+    percentage_allocation = [0] * len(census)
+    #Now we want to go through each parent on the pareto_front and calculate the percentge allocation of buildings to each statistical area
+    for parent in pareto_front_parents:
+        dwellings_sum = sum(parent)
+
+        for prop_index in range(0, len(census)):
+            dwellings = parent[prop_index]
+            percentage_allocation[prop_index] += 100*dwellings/dwellings_sum
+
+    percentage_allocation = percentage_allocation/len(pareto_front_parents)
+    
+    #Add the percentage to the census dataframe as a column
+    census = add_column_to_census(census, percentage_allocation, "% allocation")
+
+    #Plot the percentages againsgt the statistical areas
+    census.plot(ax=ax, column='% allocation', cmap='binary')
+    #Tidy up the figure and save it
     ax.set_title('Ranked Pareto-Optimal Development Sites after {} generations'.format(NO_generations))
     plt.tight_layout()
     plt.savefig("fig/pareto_development_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+
+
+def add_column_to_census(census, data_to_add, column_name):
+    #Convert the census array to a dictionary so that we can add values
+    census_array = census.to_numpy()
+    census_list = np.ndarray.tolist(census_array)
+    census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
+
+    #Add the f-function values to the dictionary of the parcels
+    index = 0
+    for key, value in census_dict.items():
+        value.append(float(data_to_add[index]))
+        index += 1
+
+    #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
+    proc_census = gpd.GeoDataFrame(df)
+    proc_census.columns = pd.Index(['index', 'Density', 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev', "F_score" , 'geometry'] + [column_name])
+    proc_census.set_geometry(col='geometry', inplace=True)
+    proc_census.set_crs("EPSG:2193", inplace=True)
+
+    return proc_census
