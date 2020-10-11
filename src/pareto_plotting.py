@@ -11,7 +11,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-
+import matplotlib.colors as colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import math
 
 def add_to_pareto_set(pareto_set, parents):
     """This module adds the parents from each generation to the pareto set. Takes all Development plans for this generation, and adds all parents to the pareto_set to be plotted later.
@@ -401,23 +403,32 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
             if point[-1] not in pareto_front_parents:
                 pareto_front_parents.append(point[-1])
 
-    percentage_allocation = [0] * len(census)
+    sum_percentage_allocation = [0] * len(census)
+    percentage_allocation = []
     #Now we want to go through each parent on the pareto_front and calculate the percentge allocation of buildings to each statistical area
     for parent in pareto_front_parents:
         dwellings_sum = sum(parent)
 
         for prop_index in range(0, len(census)):
             dwellings = parent[prop_index]
-            percentage_allocation[prop_index] += 100*dwellings/dwellings_sum
+            sum_percentage_allocation[prop_index] += 100*dwellings/dwellings_sum
 
-    percentage_allocation = percentage_allocation/len(pareto_front_parents)
-    
+    percentage_allocation[:] = [x / len(pareto_front_parents) for x in sum_percentage_allocation]
+
+    norm = colors.Normalize(vmin=0, vmax=math.ceil(max(percentage_allocation)))
+
+    cbar = plt.cm.ScalarMappable(norm=norm, cmap='Greys')
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+
     #Add the percentage to the census dataframe as a column
     census = add_column_to_census(census, percentage_allocation, "% allocation")
 
-    #Plot the percentages againsgt the statistical areas
-    census.plot(ax=ax, column='% allocation', cmap='binary')
+    #Plot the percentages againgst the statistical areas
+    census.plot(column='% allocation', cmap="Greys", legend=False, ax=ax)
+
     #Tidy up the figure and save it
+    ax_cbr = fig.colorbar(cbar, ax=ax, cax=cax, label="Percentage Allocation")
     ax.set_title('Ranked Pareto-Optimal Development Sites after {} generations'.format(NO_generations))
     plt.tight_layout()
     plt.savefig("fig/pareto_development_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)

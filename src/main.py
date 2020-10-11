@@ -48,7 +48,7 @@ weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objec
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 max_density_possible = 11.0 #As our crossover/mutation seciton will change densities, we need an upper bound that
-when_to_plot = range(0, NO_generations + 1, 1) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+when_to_plot = range(0, NO_generations + 1, 100) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
 
 
 def main():
