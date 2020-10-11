@@ -19,6 +19,7 @@ import sys
 from deap import tools, base, creator
 import operator
 import array
+import math
 
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
@@ -40,6 +41,9 @@ NO_generations = int(input("How many generations? : NO_generations = ")) #how ma
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
+
+assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
+
 weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
@@ -215,6 +219,8 @@ def main():
 
     #Plot the parents (for the generation selected by the user) and show their averge spatial plan! hahaha you got pranked bro. they got saved automatically in the last generation of the GA loop!
 
+    #Take the pareto set of the final parents and plot a spatial plan of ranked developement sites
+    # plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations)
 
 
     ######### PHASE 4 - ENDING

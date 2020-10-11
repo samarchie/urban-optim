@@ -19,14 +19,14 @@ def add_to_pareto_set(pareto_set, parents):
     Parameters
     ----------
     paretofront_set : List
-        A list of 15 nested lists. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions.
+        A list of 15 nested lists. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points and the parent itself, which indicate an individual parents score against the two objective functions alongside the Individual Class.
     parents : List
         A list of NO_parent amounts of lists. Each list contains an index value and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.The third nested list represents the scores of the parent against each objective function and the overall F-score.
 
     Returns
     -------
     paretofront_set : List
-        A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions.
+        A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
 
     """
 
@@ -38,39 +38,39 @@ def add_to_pareto_set(pareto_set, parents):
         f_scores = parent.fitness.values
 
         if (f_scores[0], f_scores[1]) not in pareto_set[0]:
-            pareto_set[0].append((f_scores[0], f_scores[1]))
+            pareto_set[0].append((f_scores[0], f_scores[1], parent))
         if (f_scores[0], f_scores[2]) not in pareto_set[1]:
-            pareto_set[1].append((f_scores[0], f_scores[2]))
+            pareto_set[1].append((f_scores[0], f_scores[2], parent))
         if (f_scores[0], f_scores[3]) not in pareto_set[2]:
-            pareto_set[2].append((f_scores[0], f_scores[3]))
+            pareto_set[2].append((f_scores[0], f_scores[3], parent))
         if (f_scores[0], f_scores[4]) not in pareto_set[3]:
-            pareto_set[3].append((f_scores[0], f_scores[4]))
+            pareto_set[3].append((f_scores[0], f_scores[4], parent))
         if (f_scores[0], f_scores[5]) not in pareto_set[4]:
-            pareto_set[4].append((f_scores[0], f_scores[5]))
+            pareto_set[4].append((f_scores[0], f_scores[5], parent))
 
         if (f_scores[1], f_scores[2]) not in pareto_set[5]:
-            pareto_set[5].append((f_scores[1], f_scores[2]))
+            pareto_set[5].append((f_scores[1], f_scores[2], parent))
         if (f_scores[1], f_scores[3]) not in pareto_set[6]:
-            pareto_set[6].append((f_scores[1], f_scores[3]))
+            pareto_set[6].append((f_scores[1], f_scores[3], parent))
         if (f_scores[1], f_scores[4]) not in pareto_set[7]:
-            pareto_set[7].append((f_scores[1], f_scores[4]))
+            pareto_set[7].append((f_scores[1], f_scores[4], parent))
         if (f_scores[1], f_scores[5]) not in pareto_set[8]:
-            pareto_set[8].append((f_scores[1], f_scores[5]))
+            pareto_set[8].append((f_scores[1], f_scores[5], parent))
 
         if (f_scores[2], f_scores[3]) not in pareto_set[9]:
-            pareto_set[9].append((f_scores[2], f_scores[3]))
+            pareto_set[9].append((f_scores[2], f_scores[3], parent))
         if (f_scores[2], f_scores[4]) not in pareto_set[10]:
-            pareto_set[10].append((f_scores[2], f_scores[4]))
+            pareto_set[10].append((f_scores[2], f_scores[4], parent))
         if (f_scores[2], f_scores[5]) not in pareto_set[11]:
-            pareto_set[11].append((f_scores[2], f_scores[5]))
+            pareto_set[11].append((f_scores[2], f_scores[5], parent))
 
         if (f_scores[3], f_scores[4]) not in pareto_set[12]:
-            pareto_set[12].append((f_scores[3], f_scores[4]))
+            pareto_set[12].append((f_scores[3], f_scores[4], parent))
         if (f_scores[3], f_scores[5]) not in pareto_set[13]:
-            pareto_set[13].append((f_scores[3], f_scores[5]))
+            pareto_set[13].append((f_scores[3], f_scores[5], parent))
 
         if (f_scores[4], f_scores[5]) not in pareto_set[14]:
-            pareto_set[14].append((f_scores[4], f_scores[5]))
+            pareto_set[14].append((f_scores[4], f_scores[5], parent))
 
     return pareto_set
 
@@ -172,12 +172,21 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     fig2.savefig("fig/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
-def identify_pareto_front(scores):
+def identify_pareto_front(scores_raw):
     """
 
     """
+    # scores_raw = [(1, 2, 3), (1, 4, .1), (.5, 5, 6), (7, 1, 9)]
+    scores_raw = np.asarray(scores_raw)
+
+
     # Count number of items
-    scores = np.asarray(scores)
+
+    final = []
+    for score in scores_raw:
+        final.append(score[:-1])
+
+    scores = np.asarray(final)
     population_size = scores.shape[0]
     # Create a NumPy index for scores on the pareto front (zero indexed)
     population_ids = np.arange(population_size)
@@ -197,7 +206,7 @@ def identify_pareto_front(scores):
 
     # update pareto_front to contain only the coordinate pairs of points on the pareto front
     pareto_front = population_ids[on_pareto_front]
-    pareto_front = scores[pareto_front]
+    pareto_front = scores_raw[pareto_front]
 
     #put output in the same format as the input
     result = [tuple(row) for row in pareto_front]
@@ -251,7 +260,6 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
     return fig2, axs2
 
 
-
 def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatial=None, axs_spatial=None):
     """Short summary.
 
@@ -285,7 +293,7 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
         number_of_subplots = len(when_to_plot)
 
         # set up subplots for pareto plots (all markers and front)
-        fig_spatial, axs_spatial = plt.subplots(number_of_subplots, figsize=[20, 20])
+        fig_spatial, axs_spatial = plt.subplots(number_of_subplots, 1, figsize=[20, 20])
         fig_spatial.suptitle('Development Sites representing selected parents sets')
 
     #Create an array where each index represents the original census (in order) and is assigned a True or False Value based on if one of the parents develops on it. Assume all properties are not built on, and check to see if they are.
@@ -304,14 +312,33 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
 
     #Now we want to plot which development sites have been built on!
     sites_built_on = census[is_developed]
-    #Find which plot to put it on (eg axis) by finding how far through we are of the ploting
-    row_number = list(when_to_plot).index(gen_number)
-    #Plot the development sites on the axis
-    sites_built_on.plot(ax=axs_spatial[row_number])
-    axs_spatial[row_number].set_title('Generation {}'.format(gen_number))
+
+    if len(when_to_plot) > 1:
+        #Then there are mutiple times that the user has specified to plot, and hence it is a multi axis figure
+        #Find which plot to put it on (eg axis) by finding how far through we are of the ploting
+        row_number = list(when_to_plot).index(gen_number)
+        #Plot the development sites on the axis
+        sites_built_on.plot(ax=axs_spatial[row_number])
+        axs_spatial[row_number].set_title('Generation {}'.format(gen_number))
+    else:
+        #Then the user has specified only this one generation to plot!
+        #Plot the development sites on the axis
+        sites_built_on.plot(ax=axs_spatial)
+        axs_spatial.set(title='Generation {}'.format(gen_number))
 
     #if this is the last generation to plot, then we shall save the figure appropiately!
     if gen_number == when_to_plot[-1]:
         plt.savefig("fig/all_development_sites_par={}_gens={}.png".format(len(parents), gen_number), transparent=False, dpi=600)
 
     return fig_spatial, axs_spatial
+
+
+def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
+
+    #create the figure and axes
+    fig, ax = plt.subplots(1, 1, figsize=[20, 20])
+
+
+    ax.set_title('Ranked Pareto-Optimal Development Sites after {} generations'.format(NO_generations))
+    plt.tight_layout()
+    plt.savefig("fig/pareto_development_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
