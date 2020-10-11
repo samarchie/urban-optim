@@ -309,6 +309,12 @@ def f_liq(liq_data, census_data):
                 f[index] = 1 #high vulnerability
         index += 1
 
+    index = 0
+    for fi in f:
+        if fi == 0:
+            f[index] = 0.08 #If parcel is not assigned, look at raw liqufaction hazard data and assign to what is sensible. In this case all cp that are outside the liquefaction hazard data are beside damage unlikely and are on the port hills
+        index += 1
+
     return f
 
 
