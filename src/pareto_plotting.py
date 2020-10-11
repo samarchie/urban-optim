@@ -251,6 +251,67 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
     return fig2, axs2
 
 
-# def plot_best_locations(parents, gen_number, fig, axs):
 
-    
+def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatial=None, axs_spatial=None):
+    """Short summary.
+
+    Parameters
+    ----------
+    parents : List of Individuals
+        A list of the best Individuals at the end of a generation.
+    gen_number : Integer
+        Integer of the generation number that has just occured.
+    when_to_plot : Generator/Range/List
+        List of intergers, that represent when to halt the genetic algorithm and plot the spatial development of the current parents.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    fig_spatial : Figure
+        A matplotlib.pyplot Figure, that contains many subplots that may or may not be empty. This Figure represents that spatial variations of specificied generation's parents.
+    axs_spatial : axes.Axes
+        A matplotlib.pyplot Axes, that has many sub-axes that may or may not be empty. This Axis represents that spatial variations of specificied generation's parents.
+
+    Returns
+    -------
+    fig_spatial : Figure
+        A matplotlib.pyplot Figure, that contains many subplots that may or may not be empty. This Figure represents that spatial variations of specificied generation's parents.
+    axs_spatial : axes.Axes
+        A matplotlib.pyplot Axes, that has many sub-axes that may or may not be empty. This Axis represents that spatial variations of specificied generation's parents.
+
+    """
+
+    #Check to see if we have made a blank plot or not!
+    if fig_spatial == None and axs_spatial == None:
+        #Then we have not set up our subplots yet, and hence we should do so!
+        number_of_subplots = len(when_to_plot)
+
+        # set up subplots for pareto plots (all markers and front)
+        fig_spatial, axs_spatial = plt.subplots(number_of_subplots, figsize=[20, 20])
+        fig_spatial.suptitle('Development Sites representing selected parents sets')
+
+    #Create an array where each index represents the original census (in order) and is assigned a True or False Value based on if one of the parents develops on it. Assume all properties are not built on, and check to see if they are.
+    is_developed = np.zeros(len(parents[0]), dtype=np.bool)
+    for parent in parents:
+        #Got through each property one by one in each parent, and see if its developed
+        for prop_index in range(0, len(is_developed)):
+
+            if is_developed[prop_index]:
+                #Then the property we are looking at has already been developed on by a previous parent
+                break
+
+            else:
+                #Then the propety we are looking at has NOT been developed on by previous parents. Check to see if this parent does build on the site and update the master list with the answer found!
+                is_developed[prop_index] = parent[prop_index] != 0
+
+    #Now we want to plot which development sites have been built on!
+    sites_built_on = census[is_developed]
+    #Find which plot to put it on (eg axis) by finding how far through we are of the ploting
+    row_number = list(when_to_plot).index(gen_number)
+    #Plot the development sites on the axis
+    sites_built_on.plot(ax=axs_spatial[row_number])
+    axs_spatial[row_number].set_title('Generation {}'.format(gen_number))
+
+    #if this is the last generation to plot, then we shall save the figure appropiately!
+    if gen_number == when_to_plot[-1]:
+        plt.savefig("fig/all_development_sites_par={}_gens={}.png".format(len(parents), gen_number), transparent=False, dpi=600)
+
+    return fig_spatial, axs_spatial

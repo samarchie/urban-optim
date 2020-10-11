@@ -44,7 +44,8 @@ weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objec
 required_dwellings = 20000 #amount of required dwellings over entire region
 density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 max_density_possible = 11.0 #As our crossover/mutation seciton will change densities, we need an upper bound that
-when_to_plot = range(0, NO_generations, 100) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+when_to_plot = range(0, NO_generations + 1, 10) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+
 
 def main():
     """Now this is where the magic happens!"""
@@ -126,6 +127,12 @@ def main():
     #Update the MOPO list to see if we have any new superior solutions!
     MOPO_List = update_MOPO(MOPO_List, parents, empty=True)
 
+    if 0 in when_to_plot:
+        #Then the user has specified that the intial parents spatial plans shall be plotted!
+        fig_spatial, axs_spatial = plot_development_sites(parents=parents, gen_number=0, when_to_plot=when_to_plot, census=census)
+
+
+
     logger.info('Initial population created and entering GA loop now')
 
 
@@ -190,6 +197,11 @@ def main():
         #Update the MOPO list to see if we have any new superior solutions!
         MOPO_List = update_MOPO(MOPO_List, parents)
 
+        if gen_number in when_to_plot:
+            #Then the user has specified that these parents spatial plans shall be plotted!
+            fig_spatial, axs_spatial = plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatial, axs_spatial)
+
+
         logger.info('Generation {} complete'.format(gen_number))
 
     logger.info('Genetic algorithm complete, exiting for-loop now')
@@ -201,7 +213,7 @@ def main():
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_plots(pareto_set, NO_parents, NO_generations)
 
-
+    #Plot the parents (for the generation selected by the user) and show their averge spatial plan! hahaha you got pranked bro. they got saved automatically in the last generation of the GA loop!
 
 
 
