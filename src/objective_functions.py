@@ -264,7 +264,7 @@ def f_liq(liq_data, census_data):
         in_lick4.append(lick4['geometry'].contains(row['geometry'].centroid))
         in_lick5.append(lick5['geometry'].contains(row['geometry'].centroid))
 
-    #Create the f output array. Give a valeu based on what category each parcel
+    #Create the f output array. Give a value based on what category each parcel
     #falls into. These values are adjustable
     f = np.zeros(len(census_data))
     index = 0 # reset to zero at each for loop
