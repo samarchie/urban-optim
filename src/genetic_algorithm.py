@@ -50,8 +50,8 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
         Number of parent (inital) develeopment plans to be created.
     required_dwellings : Integer
         The forecasted amount of dwellings to be constructed in the city district.
-    density_total : Floating Point Number
-        The acceptable maximum densities for new areas (in dwelling/hecatres) for sustainable urabn development.
+    density_total : List of Floating Point Number
+        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
     Returns
@@ -75,8 +75,11 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
         area_of_property = property_data.area.values[0] / 10000 #in hectares
         already_added_density = development_plan_of_densities[prop_index] #added from this module
 
+        #Pick a sustainable density at random to assign to this statistical area
+        density_random = random.choice(density_total)
+
         #Pick a density (under the sustainable threshold) that shall be used to densify this statistical area
-        density_add = random.uniform(0, density_total - existing_density - already_added_density)
+        density_add = random.uniform(0, density_random - existing_density - already_added_density)
         #and convert to dwellings (round down to nearest integer as you cant have half houses hahahaha)
         dwellings_to_add = np.floor(density_add * area_of_property)
         #Update the density due to the rounding down of dwellings added

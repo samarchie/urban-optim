@@ -183,9 +183,9 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
 
             axs2[row, col].set(xlabel='f', ylabel='{}'.format(obj_funcs[counter]))
             axs2[row, col].set(xlim=(0, 1), ylim=(0, 1))
-            axs2[row, col].legend(obj_funcs)
             counter += 1
 
+    axs2[0, 1].legend(obj_funcs, bbox_to_anchor=(-0.8, 1.25, 1.5, 1.5), loc='lower left', ncol=6, mode="expand", borderaxespad=0.)
     fig2.savefig("fig/pareto/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
@@ -289,9 +289,13 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
             other_index = obj_funcs.index(pareto_names[2])
             color = plot_colours[other_index]
 
-            # Yay let make pretty picture
-            axs2[row, col].plot(xs2, ys2, color=color)
+            if plot_layout[title_index] == (1, 1):
+                # Yay let make pretty picture
+                axs2[row, col].plot(xs2, ys2, color=color, label=pareto_names[2])
 
+            else:
+                # Yay let make pretty picture
+                axs2[row, col].plot(xs2, ys2, color=color)
 
 
         elif pareto_names[2] == title:
@@ -305,8 +309,13 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
             other_index = obj_funcs.index(pareto_names[0])
             color = plot_colours[other_index]
 
-            # Yay let make pretty picture
-            axs2[row, col].plot(xs2, ys2, color=color)
+            if plot_layout[title_index] == (1, 1):
+                # Yay let make pretty picture
+                axs2[row, col].plot(xs2, ys2, color=color, label=pareto_names[0])
+
+            else:
+                # Yay let make pretty picture
+                axs2[row, col].plot(xs2, ys2, color=color)
 
 
     return fig2, axs2
@@ -371,15 +380,18 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
         row_number = list(when_to_plot).index(gen_number)
         #Plot the development sites on the axis
         sites_built_on.plot(ax=axs_spatial[row_number])
+        census.boundary.plot(ax=axs_spatial[row_number], color='black', linewidth=1, alpha=0.20)
         axs_spatial[row_number].set_title('Generation {}'.format(gen_number))
     else:
         #Then the user has specified only this one generation to plot!
         #Plot the development sites on the axis
         sites_built_on.plot(ax=axs_spatial)
+        census.boundary.plot(ax=axs_spatial, color='black', linewidth=1, alpha=0.20)
         axs_spatial.set(title='Generation {}'.format(gen_number))
 
     #if this is the last generation to plot, then we shall save the figure appropiately!
     if gen_number == when_to_plot[-1]:
+        plt.tight_layout()
         plt.savefig("fig/all_development_sites_par={}_gens={}.png".format(len(parents), gen_number), transparent=False, dpi=600)
 
     return fig_spatial, axs_spatial
@@ -426,7 +438,7 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
 
     #Plot the percentages againgst the statistical areas
     census.plot(column='% allocation', cmap="Blues", legend=False, ax=ax)
-    census.boundary.plot(ax=ax, color='black')
+    census.boundary.plot(ax=ax, color='black', linewidth=1, alpha=0.20)
 
     #Tidy up the figure and save it
     ax_cbr = fig.colorbar(cbar, ax=ax, cax=cax, label="Percentage Allocation")
@@ -460,19 +472,24 @@ def add_column_to_census(census, data_to_add, column_name):
 def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
 
     #set up plot that has overlapping lines of the f_score values of each MOPO parent
-    fig, axs = plt.subplots(1, 1, figsize=[20, 20])
+    fig, axs = plt.subplots(1, 1, figsize=[20, 10])
     fig.suptitle('Performance of the best Pareto-optimal spatial plans across the range of objectives')
 
     #set up plot that will contain the spatial layout of each MOPO parent
-    fig2, axs2 = plt.subplots(1, 3, figsize=[20, 20])
+    fig2, axs2 = plt.subplots(2, 3, figsize=[20, 20])
     fig2.suptitle('Best Pareto-optimal spatial plans across the range of objectives')
 
     #Set up subplot axis titles (y-axis)
     obj_funcs = [r"$f_{tsu}$", r"$f_{cflood}$", r"$f_{rflood}$", r"$f_{liq}$", r"$f_{dist}$", r"$f_{dev}$"]
 
+    #Set up subplot axis titles (y-axis)
+    obj_funcs_min = [r"$min f_{tsu}$", r"$min f_{cflood}$", r"$min f_{rflood}$", r"$min f_{liq}$", r"$min f_{dist}$", r"$min f_{dev}$"]
+
+
     plot_layout = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
     plot_colours = ["#003049", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
 
+    max_score_seen = 0
     #go through each of the superior developments plans for each objective functions
     for index in range(0, len(MOPO_List) - 1):
 
@@ -483,20 +500,28 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
 
         #f_scores= (f_tsu, f_cflood, f_rflood, f_liq, f_dist, f_dev)
         f_scores = best_parent.fitness.values
-        # f_scores = list(f_scores) + [sum(f_scores)]
-        #f_scores= (f_tsu, f_cflood, f_rflood, f_liq, f_dist, f_dev, F_score)
+        if max(f_scores) > max_score_seen:
+            max_score_seen = max(f_scores)
 
         #Plot MOPO line againgst the objective functions
-        axs.plot([0, 1, 2, 3, 4, 5], f_scores, color=plot_colours[index])
+        axs.plot([0, 1, 2, 3, 4, 5], f_scores, color=plot_colours[index], label=obj_funcs[index])
 
         bool_array = np.asarray(best_parent) != 0
+        props_developed_on = census[list(bool_array)]
+
         placement = plot_layout[index]
-        census[list(bool_array)].plot(ax=axs2[placement])
+        props_developed_on.plot(ax=axs2[placement])
+        census.boundary.plot(ax=axs2[placement], color='black', linewidth=1, alpha=0.20)
+
         axs2[placement].set_title("min " + obj_funcs[index])
 
-    axs.set_xticklabels(obj_funcs[0] + obj_funcs, fontdict=None, minor=False)
-    fig.legend(obj_funcs)
-    axs.set_ylabel("Objective score")
+
+    axs.set_xticklabels([obj_funcs[0]] + obj_funcs, fontdict=None, minor=False)
+    axs.set_yticks(np.arange(0, 1.1*max_score_seen, step=1000))
+    axs.legend(obj_funcs_min, loc="best")
+    axs.set_ylabel("Total Objective Score")
+    fig.tight_layout()
     fig.savefig("fig/MOPO/mopo_tradeoffs_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
+    fig2.tight_layout()
     fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)

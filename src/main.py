@@ -33,11 +33,12 @@ logger = logging.getLogger(__name__)
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
-from pareto_plotting import *
+from plotting import *
 
 #Define the parameters that can be changed by the user
 NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
 NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
+
 prob_crossover = 0.7 #probability of having 2 development plans cross over
 prob_mutation = 0.2 #probability of an element in a development plan mutating
 prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
@@ -45,9 +46,12 @@ prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
 
 weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
-required_dwellings = 20000 #amount of required dwellings over entire region
-density_total = 10.0 #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
-max_density_possible = 11.0 #As our crossover/mutation seciton will change densities, we need an upper bound that
+required_dwellings = 30000 #amount of required dwellings over entire region
+density_total = [42, 55, 66, 83, 92, 111, 133] #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
+max_density_possible = 140 #As our crossover/mutation seciton will change densities, we need an upper bound that
+
+assert max_density_possible >= max(density_total), ("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities.")
+
 when_to_plot = range(0, NO_generations + 1, 100) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
 
 
@@ -117,6 +121,8 @@ def main():
     #Add the other attributes to the individuals before finding the fitness values
     parents = add_attributes(pop, toolbox, creator, census, max_density_possible)
 
+    configurations_assessed = NO_parents
+
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
     #             1   2   3   4   5   6   7   8   9   10  11  12  13  14  15
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
@@ -134,8 +140,6 @@ def main():
     if 0 in when_to_plot:
         #Then the user has specified that the intial parents spatial plans shall be plotted!
         fig_spatial, axs_spatial = plot_development_sites(parents=parents, gen_number=0, when_to_plot=when_to_plot, census=census)
-
-
 
     logger.info('Initial population created and entering GA loop now')
 
@@ -187,6 +191,8 @@ def main():
                 # Add the fitness values to the individuals
                 child.fitness.values = toolbox.evaluate(child)
 
+                configurations_assessed += 1
+
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, is forced into an arranged marraige in its teens.
             if child.valid:
                 children.append(child)
@@ -214,8 +220,9 @@ def main():
 
     ########### PHASE 3 - PARETO FRONTS AND OTHER PLOTS
 
-    logger.info('Started plotting results from the genetic algorithm')
+    logger.info('Started plotting pareto results from the genetic algorithm')
 
+    #check to see if a directory for pareto plots already exists, and create it if not
     if not os.path.exists("fig/pareto"):
         os.mkdir("fig/pareto")
 
@@ -224,12 +231,16 @@ def main():
 
     #Plot the parents (for the generation selected by the user) and show their averge spatial plan! hahaha you got pranked bro. they got saved automatically in the last generation of the GA loop!
 
+    logger.info('Now plotting ranked optimal-pareto results from the genetic algorithm')
+
     #Take the pareto set of the final parents and plot a spatial plan of ranked developement sites
     plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations)
 
+    #check to see if a directory for mopo plots already exists, and create it if not
+    if not os.path.exists("fig/mopo"):
+        os.mkdir("fig/mopo")
 
-    if not os.path.exists("fig/MOPO"):
-        os.mkdir("fig/MOPO")
+    logger.info('Now plotting MOPO results from the genetic algorithm')
 
     #Now we want to showcase how each of the superior plans (from the MOPO list) actually have tradeoffs!
     plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations)
@@ -237,7 +248,29 @@ def main():
 
     ######### PHASE 4 - ENDING
 
-    logger.info("kachow, plots are all done! thanks for running our code :)")
+    logger.info("Kachow, all plots are done! thanks for running our code :)")
+
+    #Print summary information of parameters used
+    print(" ")
+    logger.info("-----Summary of the parameters that were used in the algorithm:-----")
+    print("Number of parents: {}".format(NO_parents))
+    print("Number of generations: {}".format(NO_generations))
+    print("User defined weightings of each objective function: {}".format(weightings))
+    print("Amount of dwellings needed: {} dwellings".format(required_dwellings))
+    print("Recommended sustainable density used: {} dwellings/hectare".format(density_total))
+    print("Maximum sustainable density used: {} dwellings/hectare".format(max_density_possible))
+
+    print("Probability of applying a crossover to two D's: {}%".format(prob_crossover*100))
+    print("Probability of mutating a D: {}%".format(prob_mutation*100))
+    print("Probability of mutating an element (d) wihtin a D: {}%".format(prob_mutation*100))
+
+    print("Total spatial plans/configuraitons assessed: {} ------------".format(configurations_assessed))
+
+    MOPO_sol_found = 0
+    for obj_funct_MOPO in MOPO_List:
+        MOPO_sol_found += len(obj_funct_MOPO)
+
+    print("Total MOPO solutions found: {}".format(MOPO_sol_found))
 
 
 
