@@ -216,6 +216,9 @@ def main():
 
     logger.info('Started plotting results from the genetic algorithm')
 
+    if not os.path.exists("fig/pareto"):
+        os.mkdir("fig/pareto")
+
     #Plot the pareto plots so we do our discussion and view the results
     plot_pareto_plots(pareto_set, NO_parents, NO_generations)
 
@@ -223,6 +226,13 @@ def main():
 
     #Take the pareto set of the final parents and plot a spatial plan of ranked developement sites
     plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations)
+
+
+    if not os.path.exists("fig/MOPO"):
+        os.mkdir("fig/MOPO")
+
+    #Now we want to showcase how each of the superior plans (from the MOPO list) actually have tradeoffs!
+    plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations)
 
 
     ######### PHASE 4 - ENDING
