@@ -417,7 +417,7 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
 
     norm = colors.Normalize(vmin=0, vmax=math.ceil(max(percentage_allocation)))
 
-    cbar = plt.cm.ScalarMappable(norm=norm, cmap='Greys')
+    cbar = plt.cm.ScalarMappable(norm=norm, cmap='Blues')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
 
@@ -425,7 +425,8 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
     census = add_column_to_census(census, percentage_allocation, "% allocation")
 
     #Plot the percentages againgst the statistical areas
-    census.plot(column='% allocation', cmap="Greys", legend=False, ax=ax)
+    census.plot(column='% allocation', cmap="Blues", legend=False, ax=ax)
+    census.boundary.plot(ax=ax, color='black')
 
     #Tidy up the figure and save it
     ax_cbr = fig.colorbar(cbar, ax=ax, cax=cax, label="Percentage Allocation")
