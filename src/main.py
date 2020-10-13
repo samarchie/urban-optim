@@ -9,17 +9,11 @@ This should be the only program that will be run, and it will import and call up
 Good luck
 """
 
-import os
+import os, warnings, random, sys, operator, array, math
 import geopandas as gpd
-import warnings
 import matplotlib.pyplot as plt
 import numpy as np
-import random
-import sys
 from deap import tools, base, creator
-import operator
-import array
-import math
 
 # insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
 sys.path.insert(0, str(sys.path[0]) + '/src')
@@ -119,8 +113,18 @@ def main():
     pop = toolbox.population(n=NO_parents)
 
     #Add the other attributes to the individuals before finding the fitness values
-    parents = add_attributes(pop, toolbox, creator, census, max_density_possible)
+    for ind in pop:
+        #Populate two of its attributes
+        ind.densities = get_densities(ind, census)
+        ind.valid = child_is_good(ind, max_density_possible, census)
 
+    # Add the fitness values to the individuals by mappaing each individual with it fitness score
+    fitnesses = list(map(toolbox.evaluate, pop))
+    for ind, fit in zip(pop, fitnesses):
+        #As the fitness attribute is currently 'None' as this is a blank random child, then we pass it the fitness values
+        ind.fitness.values = fit
+
+    #Keep a running total of how many unique development plans have been created
     configurations_assessed = NO_parents
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
@@ -135,7 +139,7 @@ def main():
     MOPO_List = [[],      [],     [],      [],    [],      [],    []]
 
     #Update the MOPO list to see if we have any new superior solutions!
-    MOPO_List = update_MOPO(MOPO_List, parents, empty=True)
+    MOPO_List = update_MOPO(MOPO_List, parents)
 
     if 0 in when_to_plot:
         #Then the user has specified that the intial parents spatial plans shall be plotted!
@@ -191,6 +195,7 @@ def main():
                 # Add the fitness values to the individuals
                 child.fitness.values = toolbox.evaluate(child)
 
+                #As this was a completely new child that has not been seen before, then we shall add it to the running total
                 configurations_assessed += 1
 
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, is forced into an arranged marraige in its teens.

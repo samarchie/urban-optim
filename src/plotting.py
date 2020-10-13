@@ -10,10 +10,10 @@ import geopandas as gpd
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+import os, math
 import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import math
+
 
 def add_to_pareto_set(pareto_set, parents):
     """This module adds the parents from each generation to the pareto set. Takes all Development plans for this generation, and adds all parents to the pareto_set to be plotted later.
@@ -21,14 +21,14 @@ def add_to_pareto_set(pareto_set, parents):
 
     Parameters
     ----------
-    paretofront_set : List
+    pareto_set : List
         A list of 15 nested lists. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points and the parent itself, which indicate an individual parents score against the two objective functions alongside the Individual Class.
     parents : List
         A list of NO_parent amounts of lists. Each list contains an index value and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.The third nested list represents the scores of the parent against each objective function and the overall F-score.
 
     Returns
     -------
-    paretofront_set : List
+    pareto_set : List
         A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
 
     """
@@ -96,7 +96,6 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
 
     """
 
-
     # set up subplots for pareto plots (all markers and front)
     rows = 5 # Number of rows of subplots
     cols = 3 # Number of columns of subplots
@@ -123,6 +122,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
 
     for objective_pair in pareto_set:
 
+        #Find the Individuals that are on the pareto-front, which are the optimal parents as they dominate in one of the objectives
         pareto_front = identify_pareto_front(objective_pair)
         pareto_front.sort()
 
@@ -134,18 +134,20 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
         xs2 = [x[0] for x in pareto_front]
         ys2 = [y[1] for y in pareto_front]
 
-        # Normalise plots
+        # Normalise plots by the maximum seen
         xs2 = xs2/np.max(xs1)
         ys2 = ys2/np.max(ys1)
         xs1 = xs1/np.max(xs1)
         ys1 = ys1/np.max(ys1)
 
-        # Yay let make pretty picture
+        #Plot a marker representing each Individual
         axs[row, col].scatter(xs1, ys1, marker='x')
+        #Plot a curve linking the Individuals on the pareto-front
         axs[row, col].plot(xs2, ys2, color='red')
-        # axs[row, col].set_title(subtitles[index])
+        #Set the axis limits from 0 to 1, as we have normalised the data
         axs[row, col].set(xlim=(0, 1), ylim=(0, 1))
 
+        #Set x and y axis labels based on what subplot we are currently in
         if index < 5:
             axs[row, col].set_xlabel(obj_funcs[0])
             axs[row, col].set_ylabel(obj_funcs[index+1])
@@ -174,18 +176,20 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
 
         index += 1
 
-    # Save figures
+    # Save the figure detailing all Inidividals and the pareto front
     fig.savefig("fig/pareto/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
+    #Assign axis labels and limits for each of the subplots
     counter = 0
     for row in range(0, rows2):
         for col in range(0, cols2):
-
             axs2[row, col].set(xlabel='f', ylabel='{}'.format(obj_funcs[counter]))
             axs2[row, col].set(xlim=(0, 1), ylim=(0, 1))
             counter += 1
 
-    axs2[0, 1].legend(obj_funcs, bbox_to_anchor=(-0.8, 1.25, 1.5, 1.5), loc='lower left', ncol=6, mode="expand", borderaxespad=0.)
+    #Position the legend at the top center of the figure, using the bbox command, and this will save there being a legend for each of the 6 subplots!
+    axs2[0, 1].legend(obj_funcs, bbox_to_anchor=(-0.8, 1.15, 1.5, 1.5), loc='lower left', ncol=6, mode="expand", borderaxespad=0.)
+    # Save the figure detailing all Inidividals and the pareto front
     fig2.savefig("fig/pareto/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
@@ -398,56 +402,97 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
 
 
 def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
+    """This module creates a plot that showcases the average percentage of dwellings that are associated with a statistical area over the entire pareto set (which is the suprerior parents).
 
-    #create the figure and axes
+    Parameters
+    ----------
+    pareto_set : List
+        A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    NO_parents : Integer
+        User specified parameter for how many parents are in a generation.
+    NO_generations : Integer
+        User specified parameter for hor many generations occur as part of the gentic algorithm.
+
+    Returns
+    -------
+    None
+
+    """
+
+    #Firstly, create the figure and axes to whihc we will plot on
     fig, ax = plt.subplots(1, 1, figsize=[20, 20])
 
-    #create a blank list, to where we will put all the parents on the pareto front curve in
+    #Create a blank list, to where we will put all the parents on the pareto front curve in
     pareto_front_parents = []
 
-    #Go through each pareto plot one at a time
+    #Go through each objective pair (eg f_dist vd f_dev) in the pareto plot one at a time
     for objective_pair in pareto_set:
         #Find all the points (and associated parents) on the pareto-front curve
         pareto_front = identify_pareto_front(objective_pair)
 
         for point in pareto_front:
-            #Extract the parent from that point and add it to the list of pareto parents if it is not already in there
+            #Extract the parent from each point on the paretofront curve and add it to the list of pareto parents if it is not already in there
             if point[-1] not in pareto_front_parents:
                 pareto_front_parents.append(point[-1])
 
+    #We want to keep track of the rolling sum of percentage allocations in each ststaistical area, so we have to zero the list to start with
     sum_percentage_allocation = [0] * len(census)
-    percentage_allocation = []
+
     #Now we want to go through each parent on the pareto_front and calculate the percentge allocation of buildings to each statistical area
     for parent in pareto_front_parents:
+
+        #The amount of dwellings might not actaully be bang on 30,000 (or whatever was inputted) as the cross-over & mutation operators could have changed that.
         dwellings_sum = sum(parent)
 
+        #wWork out the associated percentage allocation for each statistical area, and add it to the rolling sums list in the right spot
         for prop_index in range(0, len(census)):
             dwellings = parent[prop_index]
             sum_percentage_allocation[prop_index] += 100*dwellings/dwellings_sum
 
-    percentage_allocation[:] = [x / len(pareto_front_parents) for x in sum_percentage_allocation]
+    #Take the rolling sums list of percentages and average/normalise it, such that the highest allocation is now 100%.
+    percentage_allocation = [x / len(pareto_front_parents) for x in sum_percentage_allocation]
 
+    #We want to have a colourbar that indicates a sclae of the allocation proprtion in each statistical area. The following code makes it all happen!
     norm = colors.Normalize(vmin=0, vmax=math.ceil(max(percentage_allocation)))
-
     cbar = plt.cm.ScalarMappable(norm=norm, cmap='Blues')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
+    ax_cbr = fig.colorbar(cbar, ax=ax, cax=cax, label="Percentage Allocation")
 
     #Add the percentage to the census dataframe as a column
     census = add_column_to_census(census, percentage_allocation, "% allocation")
 
-    #Plot the percentages againgst the statistical areas
+    #Plot the percentages againgst the statistical areas (which are thin opaque boundary lines)
     census.plot(column='% allocation', cmap="Blues", legend=False, ax=ax)
     census.boundary.plot(ax=ax, color='black', linewidth=1, alpha=0.20)
 
     #Tidy up the figure and save it
-    ax_cbr = fig.colorbar(cbar, ax=ax, cax=cax, label="Percentage Allocation")
     ax.set_title('Ranked Pareto-Optimal Development Sites after {} generations'.format(NO_generations))
     plt.tight_layout()
     plt.savefig("fig/pareto/pareto_development_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def add_column_to_census(census, data_to_add, column_name):
+    """Ths module creates a new column to GeoDataFrame and append data to it in the same order.
+
+    Parameters
+    ----------
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    data_to_add : List
+        A list of floating point numbers which are in the same order as the GeoDataFrame from top to bottom.
+    column_name : String
+        The title of the column to be created.
+
+    Returns
+    -------
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score. An extra column exists with the newly inputted data as well.
+
+    """
+
     #Convert the census array to a dictionary so that we can add values
     census_array = census.to_numpy()
     census_list = np.ndarray.tolist(census_array)
@@ -462,6 +507,8 @@ def add_column_to_census(census, data_to_add, column_name):
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
+
+    #clean up the GeoDataFrame and we're good to go!
     proc_census.columns = pd.Index(['index', 'Density', 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev', "F_score" , 'geometry'] + [column_name])
     proc_census.set_geometry(col='geometry', inplace=True)
     proc_census.set_crs("EPSG:2193", inplace=True)
@@ -470,12 +517,30 @@ def add_column_to_census(census, data_to_add, column_name):
 
 
 def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
+    """This module creates plots that showcase the spatially optimal locations to build when addressing each individual objective function seperately, and another plot showing the tradeoffs between these individually superior Individuals.
+
+    Parameters
+    ----------
+    MOPO_List : List of Lists
+        A list of6 lists, where each nested list represents an objective functions, such as f_dist. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time. It is not replaced when a better Individual is found, but rather the new and better one is appended to the back of the list.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score. An extra column exists with the newly inputted data as well.
+    NO_parents : Integer
+        User specified parameter for how many parents are in a generation.
+    NO_generations : Integer
+        User specified parameter for hor many generations occur as part of the gentic algorithm.
+
+    Returns
+    -------
+    None
+
+    """
 
     #set up plot that has overlapping lines of the f_score values of each MOPO parent
     fig, axs = plt.subplots(1, 1, figsize=[20, 10])
     fig.suptitle('Performance of the best Pareto-optimal spatial plans across the range of objectives')
 
-    #set up plot that will contain the spatial layout of each MOPO parent
+    #Set up plot that will contain the spatial layout of each MOPO parent
     fig2, axs2 = plt.subplots(2, 3, figsize=[20, 20])
     fig2.suptitle('Best Pareto-optimal spatial plans across the range of objectives')
 
@@ -485,14 +550,16 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
     #Set up subplot axis titles (y-axis)
     obj_funcs_min = [r"$min f_{tsu}$", r"$min f_{cflood}$", r"$min f_{rflood}$", r"$min f_{liq}$", r"$min f_{dist}$", r"$min f_{dev}$"]
 
-
+    #List in what order the plot shall be in (eg left to right in this case)
     plot_layout = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
     plot_colours = ["#003049", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
 
+    #When we specify the axis limits at the end, we will need to know the highest f score seen (y max limit)
     max_score_seen = 0
-    #go through each of the superior developments plans for each objective functions
-    for index in range(0, len(MOPO_List) - 1):
 
+    #Go through each of the superior developments plans for each objective functions
+    for index in range(0, len(MOPO_List) - 1):
+        #Extract the superior developments plans in question
         obj_fnc_MOPOs = MOPO_List[index]
 
         #The best parent seen is the last one in the list!
@@ -500,28 +567,39 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
 
         #f_scores= (f_tsu, f_cflood, f_rflood, f_liq, f_dist, f_dev)
         f_scores = best_parent.fitness.values
+
+        #Check to see if it contains a new highest f_score value!
         if max(f_scores) > max_score_seen:
             max_score_seen = max(f_scores)
 
         #Plot MOPO line againgst the objective functions
         axs.plot([0, 1, 2, 3, 4, 5], f_scores, color=plot_colours[index], label=obj_funcs[index])
 
+        #Create a of Trues and Falses which indicate for which statistical areas are built on (in the same order as the census)
         bool_array = np.asarray(best_parent) != 0
+        #Extract only the staistical areas that are to densified
         props_developed_on = census[list(bool_array)]
 
+        #Figure out what subplot we should plot on!
         placement = plot_layout[index]
+
+        #Plot the staistical areas that are to densified, and also the bondaries of all statistical areas as well
         props_developed_on.plot(ax=axs2[placement])
         census.boundary.plot(ax=axs2[placement], color='black', linewidth=1, alpha=0.20)
 
+        #Set th subplots title to tell ther viewer which objective function this is for!
         axs2[placement].set_title("min " + obj_funcs[index])
 
-
+    #Format the axes of the MOPO tradeoff plot (the one with 6 squiggly overlapping lines) to actually be strings of the objetive funcation names instead of values between 0 and 6
     axs.set_xticklabels([obj_funcs[0]] + obj_funcs, fontdict=None, minor=False)
+
+    #Tidy up the plot and then save the figure
     axs.set_yticks(np.arange(0, 1.1*max_score_seen, step=1000))
     axs.legend(obj_funcs_min, loc="best")
     axs.set_ylabel("Total Objective Score")
     fig.tight_layout()
     fig.savefig("fig/MOPO/mopo_tradeoffs_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
+    #And for the best MOPO sites plot, just tidy it up a bit and save it!
     fig2.tight_layout()
     fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)

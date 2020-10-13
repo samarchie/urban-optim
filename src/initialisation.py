@@ -20,7 +20,7 @@ from objective_functions import *
 
 
 def get_data():
-    """This module gets the files from the user, and returns them opened..
+    """This module gets the files from the user, and returns them opened.
 
     Returns
     -------

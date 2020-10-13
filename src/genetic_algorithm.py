@@ -8,13 +8,34 @@ This module/script shall contain multiple definitions that will complete Phase 2
 """
 
 from deap import tools, base, creator
-import os
-import random
 import numpy as np
-import array
+import os, random, array
 
 
 def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_mut_indiv, max_density_possible):
+    """This module creates the toolbox that is used for the Genetic Algorithm, and provides links to caller functions oh how to create, modify and evaluate development plans.
+
+    Parameters
+    ----------
+    required_dwellings : Integer
+        Description of parameter `required_dwellings`.
+    density_total : List of Floating Point Number
+        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    NO_parents : Integer
+        User specified parameter for how many parents are in a generation.
+    prob_mut_indiv : Floating Point Number
+        A number between 0 and 1 that represents the probability of mutating an element (d) wihtin an individual (D).
+    max_density_possible : Floating Point Number
+        Maximum sustainable density in dwellings per hectare.
+
+    Returns
+    -------
+    toolbox : deap.base.ToolBox Class
+        A toolbox for evolution that contains the evolutionary operators, and how to apply them.
+
+    """
 
     #Set up the DEAP class called an individual, and apply the weights to the Fitness class as well
     creator.create("FitnessMulti", base.Fitness, weights=(-1,)*6)
@@ -44,6 +65,7 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
 
 def create_initial_development_plan(ind_class, required_dwellings, density_total, census):
     """This module created the inital set of parents, which are lists of randomised development at randomised statistical areas.
+
     Parameters
     ----------
     NO_parents : Integer
@@ -54,12 +76,15 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
         The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+
     Returns
     -------
-    development_plans : List
-        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+    ind : deap.class.Individual Class
+         The list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. However, it is no ordinary list - it is a DEAP Individual, so it looks like a list when you print it out (or iterate through) but in fact it also has attributes such as fitness, validity and densities. These attributes are blank still.
+
     """
 
+    #Create rolling lists that we will use, so we should make them empty first
     development_plan_of_densities = [0] * len(census)
     assoc_addition_of_dwellings = [0] * len(census)
 
@@ -111,15 +136,15 @@ def get_densities(ind, census):
 
     Parameters
     ----------
-    children_created : Tuple
-        A list of 1 or 2 lists. In each list, there is one nested list that represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame. This represents the new child dvelopment plan.
+    ind : deap.base.Individual Class
+         The list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. However, it is no ordinary list - it is a DEAP Individual, so it looks like a list when you print it out (or iterate through) but in fact it also has attributes such as fitness, validity and densities. These attributes are blank still.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
     Returns
     -------
-    children_plans : List
-        A list of NO_parent amounts of lists. Each list contains two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+    densities : array.array
+        An array represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. T
 
     """
     #Get the areas of the statistical areas
@@ -130,35 +155,34 @@ def get_densities(ind, census):
 
     #Update each statistical area's density by using the index number (as every lists is in the same order as the GeoDataFrame Census)
     for prop_index in range(0, len(areas)):
-        prop_area = areas[prop_index]
-        try:
-            new_dwellings = ind[prop_index]
-        except:
-            print(ind)
+
+        prop_area = areas[prop_index] #area of statistical area
+        new_dwellings = ind[prop_index] #dwellings to add, taken from the Individual
 
         #Calculate the added density (from new dwellings)
         densities[prop_index] = (new_dwellings / prop_area)
 
+    #Return the densities as an array for code efficieny (arrays are shown to be quicker as part of the genetic algorithm compared to lists!)
     densities = array.array("d", densities)
 
     return densities
 
 
-def child_is_good(self, max_density_possible, census):
+def child_is_good(child, max_density_possible, census):
     """This module evaluate whether a child satisfies the constraint of a specified density limit.
 
     Parameters
     ----------
-    child : List
-        A list of 2 amounts of lists. The first list represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
-    max_density_possible : Float
-        The upper bound threshold of sustainable densities in each statistical area.
+    child : deap.base.Individual Class
+         The list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. However, it is no ordinary list - it is a DEAP Individual, so it looks like a list when you print it out (or iterate through) but in fact it also has attributes such as fitness, validity and densities. Only the densities attribute has been filled in.
+    max_density_possible : Floating Point Number
+        Maximum sustainable density in dwellings per hectare.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
 
     Returns
     -------
-    Bool
+    is_good_child : Bool
         Returns True if the all statiscal areas have a density less than the threshold. Otherwise, it returns False.
 
     """
@@ -179,19 +203,23 @@ def child_is_good(self, max_density_possible, census):
     return is_good_child
 
 
-def evaluate_development_plan(self, census):
+def evaluate_development_plan(child, census):
     """This module evaluates and scores each individual development plan with f scores, that incorporates how many houses are developed in which bad statistical areas.
+
     Parameters
     ----------
-    development_plans : List
-        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and two nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well.
+    child : deap.base.Individual Class
+         The list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. However, it is no ordinary list - it is a DEAP Individual, so it looks like a list when you print it out (or iterate through) but in fact it also has attributes such as fitness, validity and densities. The densities and validities attribute has been filled in.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 columns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+
     Returns
     -------
-    development_plans : Tuple
-        A list of NO_parents amount of lists. Each list contains an index value (representing which development plan number it is) and three nested lists. The first lists represents the modelled increase in density (dwellings per hectare) for each statistical area - in the order of the inputted census GeoDataFrame. The second nested list represents the modelled increase in dwellings for each statistical area - in the order of the inputted census GeoDataFrame as well. The third nested list contains floating point numbers which is the scores against each of the 6 objective functions!
+    f_scores : Tuple
+        A tuple of 6 floating point numbers, which represents the scores against each of the 6 objective functions of the development plan ("child").
+
     """
+
     #State the column names of the objectiv functions
     obj_funcs = ['f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev']
 
@@ -207,48 +235,46 @@ def evaluate_development_plan(self, census):
             #Find the objective scores for each f-function and use the weightings! Add it to the rolling sums list!
             obj_counter = 0
             for obj_func in obj_funcs:
+
+                #Extract the f score for the property
                 f_prop_score = census.loc[prop_index, obj_func]
+                #Use a weighting scheme that is proportional to the amount of houses that are to be built on that site
                 f_scores_running_total[obj_counter] += f_prop_score * houses_added
                 obj_counter += 1
 
+    #Now make the list immutable by converting it to a tuple
     f_scores = tuple(f_scores_running_total)
 
     return f_scores
 
 
-def add_attributes(pop, toolbox, creator, census, max_density_possible):
+def update_MOPO(MOPO_List, parents):
+    """This module checks the new set of parents against the MOPO set from the previous generation, and updates the MOPO set if any new development plan has a better result in any of the objective functions.
 
-    #Look at each individual at a time
-    for ind in pop:
-        ind.densities = get_densities(ind, census)
-        ind.valid = child_is_good(ind, max_density_possible, census)
+    Parameters
+    ----------
+    MOPO_List : List of Lists
+        A list of 7 lists, where each nested list represents an objective functions, such as f_dist, and the sum of the 6 objective functions. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time.
+    parents : List of deap.class.Individuals
+         A list of NO_parents amount of DEAP individuals that represents Individuals at the end of a generation.
 
-    # Add the fitness values to the individuals
-    fitnesses = list(map(toolbox.evaluate, pop))
-    for ind, fit in zip(pop, fitnesses):
-        #As the fitness attribute is currently 'None', then we give it the Fitness function and then pass it the fitness values
-        # ind.fitness = creator.FitnessMulti()
-        ind.fitness.values = fit
+    Returns
+    -------
+    MOPO_List : List of Lists
+        A list of6 lists, where each nested list represents an objective functions, such as f_dist. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time. It is not replaced when a better Individual is found, but rather the new and better one is appended to the back of the list.
 
-    return pop
-
-
-def update_MOPO(MOPO_List, parents, empty=False):
-    """
-    checks the new set of parents (g+1) against the MOPO set, and updates the MOPO set if the new development plan has a better result in any of the objective functions
-    parents_gplus1 is a list of tuples, containing an identifying index and a list F_scores for each D
     """
 
     #if the list is empty, then we need to add the initial parents to it
-    if empty:
+    if MOPO_List == [[], [], [], [], [], [], []]:
 
         for obj_num in range(0, 6):
-            #sort by the objectoive function
+            #Sort by the objective function that we are looking at, and then add the best Individual to the MOPO list in the right spot.
             parents.sort(key=lambda x: x.fitness.values[obj_num])
             #Add the best one to the MOPO list
             MOPO_List[obj_num].append(parents[0])
 
-        #Overall objective function - F-score
+        #Sort by the sum of the objective functions ("F-score") and the best one is added to the MOPO list
         parents.sort(key=lambda x: sum(x.fitness.values))
         MOPO_List[6].append(parents[0])
 
@@ -288,6 +314,5 @@ def update_MOPO(MOPO_List, parents, empty=False):
         parents.sort(key=lambda x: sum(x.fitness.values))
         if sum(parents[0].fitness.values) < sum(MOPO_List[6][-1].fitness.values):
             MOPO_List[6].append(parents[0])
-
 
     return MOPO_List
