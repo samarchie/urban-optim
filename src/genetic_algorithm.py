@@ -190,10 +190,10 @@ def child_is_good(child, max_density_possible, census):
     is_good_child = True
 
     #Check each statistical area to make sure it is under the threshold amount
-    for prop_index in range(len(self.densities)):
+    for prop_index in range(len(child.densities)):
         #Extract the current density from the GeoDataFrame
         existing_density = float(census.loc[prop_index, "Density"])
-        density_to_add = float(self.densities[prop_index])
+        density_to_add = float(child.densities[prop_index])
 
         if density_to_add + existing_density > max_density_possible:
             #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
