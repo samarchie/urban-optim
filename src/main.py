@@ -132,22 +132,22 @@ def main():
     pareto_set = [[], [], [], [], [], [], [], [], [], [], [] ,[] ,[], [] ,[]]
 
     #For each successful generation, add the parents to the pareto set so that they can be plotted out
-    pareto_set = add_to_pareto_set(pareto_set, parents)
+    pareto_set = add_to_pareto_set(pareto_set, pop)
 
     #Create a blank MOPO list where each nested list represents the best case of each objective function (and total F-score) seen
     #           f_tsu  f_cflood  f_rflood f_liq,  f_dist  f_dev,  F-score
     MOPO_List = [[],      [],     [],      [],    [],      [],    []]
 
     #Update the MOPO list to see if we have any new superior solutions!
-    MOPO_List = update_MOPO(MOPO_List, parents)
+    MOPO_List = update_MOPO(MOPO_List, pop)
 
     if 0 in when_to_plot:
         #Then the user has specified that the intial parents spatial plans shall be plotted!
-        fig_spatial, axs_spatial = plot_development_sites(parents=parents, gen_number=0, when_to_plot=when_to_plot, census=census)
+        fig_spatial, axs_spatial = plot_development_sites(parents=pop, gen_number=0, when_to_plot=when_to_plot, census=census)
 
     logger.info('Initial population created and entering GA loop now')
 
-
+    parents = pop
 
     ###ITERATION PROCEDURE:
     for gen_number in range(1, NO_generations + 1):
