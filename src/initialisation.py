@@ -445,7 +445,7 @@ def add_planning_zones(constrained_census, planning_zones):
 
         #Find the locations that overlap the residential zone with the census, and determine the size (area) of those polygons
         res_props = gpd.overlay(constrained_census, res_zone, how='intersection')
-        areas = res_props.area
+        areas = res_props.area #in m2
 
         for index, prop in res_props.iterrows():
             prop_number = prop[0]
@@ -497,10 +497,10 @@ def add_density(zoned_census):
 
     #Change the columns from strings to floating point numbers
     zoned_census["Dwellings"] = zoned_census["Dwellings"].astype(float)
-    zoned_census["AREA_SQ_KM"] = zoned_census["AREA_SQ_KM"].astype(float)
+    zoned_census["AREA_HECTARES"] = zoned_census.area/10000
 
     #Add the density column, and update its value with its calculation
-    zoned_census["Density"] = zoned_census["Dwellings"] / 100*zoned_census["AREA_SQ_KM"]
+    zoned_census["Density"] = zoned_census["Dwellings"] / zoned_census["AREA_HECTARES"]
 
     #Save the census file to the file structure so we can validify the module works as expected
     zoned_census.to_file("data/processed/census_with_density.shp")
