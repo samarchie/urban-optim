@@ -40,13 +40,13 @@ prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
 
 weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
-required_dwellings = 30000 #amount of required dwellings over entire region
+required_dwellings = 50000 #amount of required dwellings over entire region
 density_total = [42, 55, 66, 83, 92, 111, 133] #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 max_density_possible = 140 #As our crossover/mutation seciton will change densities, we need an upper bound that
 
 assert max_density_possible >= max(density_total), ("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities.")
 
-when_to_plot = range(0, NO_generations + 1, 100) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+when_to_plot = range(0, NO_generations + 1, 50) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
 
 
 def main():
@@ -269,14 +269,14 @@ def main():
     print("Probability of mutating a D: {}%".format(prob_mutation*100))
     print("Probability of mutating an element (d) wihtin a D: {}%".format(prob_mutation*100))
 
-    print("Total spatial plans/configuraitons assessed: {} ------------".format(configurations_assessed))
+    print("Total spatial plans/configuraitons assessed: {}".format(configurations_assessed))
 
     MOPO_sol_found = 0
     for obj_funct_MOPO in MOPO_List:
         MOPO_sol_found += len(obj_funct_MOPO)
 
     print("Total MOPO solutions found: {}".format(MOPO_sol_found))
-
+    logger.info("---------- End of summary ----------")
 
 
 

@@ -367,11 +367,7 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
         #Got through each property one by one in each parent, and see if its developed
         for prop_index in range(0, len(is_developed)):
 
-            if is_developed[prop_index]:
-                #Then the property we are looking at has already been developed on by a previous parent
-                break
-
-            else:
+            if not is_developed[prop_index]:
                 #Then the propety we are looking at has NOT been developed on by previous parents. Check to see if this parent does build on the site and update the master list with the answer found!
                 is_developed[prop_index] = parent[prop_index] != 0
 
@@ -386,6 +382,7 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
         sites_built_on.plot(ax=axs_spatial[row_number])
         census.boundary.plot(ax=axs_spatial[row_number], color='black', linewidth=1, alpha=0.20)
         axs_spatial[row_number].set_title('Generation {}'.format(gen_number))
+
     else:
         #Then the user has specified only this one generation to plot!
         #Plot the development sites on the axis
@@ -433,6 +430,7 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
         pareto_front = identify_pareto_front(objective_pair)
 
         for point in pareto_front:
+            #point = (f_score1, f_score2, parent_Individual)
             #Extract the parent from each point on the paretofront curve and add it to the list of pareto parents if it is not already in there
             if point[-1] not in pareto_front_parents:
                 pareto_front_parents.append(point[-1])
