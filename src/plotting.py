@@ -177,7 +177,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
         index += 1
 
     # Save the figure detailing all Inidividals and the pareto front
-    fig.savefig("fig/pareto/pareto_plots_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig.savefig("fig/pareto/pareto_plots_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
     #Assign axis labels and limits for each of the subplots
     counter = 0
@@ -190,7 +190,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     #Position the legend at the top center of the figure, using the bbox command, and this will save there being a legend for each of the 6 subplots!
     axs2[0, 1].legend(obj_funcs, bbox_to_anchor=(-0.8, 1.15, 1.5, 1.5), loc='lower left', ncol=6, mode="expand", borderaxespad=0.)
     # Save the figure detailing all Inidividals and the pareto front
-    fig2.savefig("fig/pareto/pareto_fronts_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig2.savefig("fig/pareto/pareto_fronts_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def identify_pareto_front(objective_pair):
@@ -396,7 +396,7 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
     #if this is the last generation to plot, then we shall save the figure appropiately!
     if gen_number == when_to_plot[-1]:
         plt.tight_layout()
-        plt.savefig("fig/all_development_sites_par={}_gens={}.png".format(len(parents), gen_number), transparent=False, dpi=600)
+        plt.savefig("fig/all_development_sites_par={}_gens={}.pdf".format(len(parents), gen_number), transparent=False, dpi=600)
 
     return fig_spatial, axs_spatial
 
@@ -471,7 +471,7 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
     #Tidy up the figure and save it
     ax.set_title('Ranked Pareto-Optimal Development Sites after {} generations'.format(NO_generations))
     plt.tight_layout()
-    plt.savefig("fig/pareto/pareto_development_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    plt.savefig("fig/pareto/pareto_development_sites_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def add_column_to_census(census, data_to_add, column_name):
@@ -522,7 +522,7 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
     Parameters
     ----------
     MOPO_List : List of Lists
-        A list of6 lists, where each nested list represents an objective functions, such as f_dist. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time. It is not replaced when a better Individual is found, but rather the new and better one is appended to the back of the list.
+        A list of 6 lists, where each nested list represents an objective functions, such as f_dist. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time. It is not replaced when a better Individual is found, but rather the new and better one is appended to the back of the list.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score. An extra column exists with the newly inputted data as well.
     NO_parents : Integer
@@ -598,8 +598,8 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
     axs.legend(obj_funcs_min, loc="best")
     axs.set_ylabel("Total Objective Score")
     fig.tight_layout()
-    fig.savefig("fig/MOPO/mopo_tradeoffs_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig.savefig("fig/MOPO/mopo_tradeoffs_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
     #And for the best MOPO sites plot, just tidy it up a bit and save it!
     fig2.tight_layout()
-    fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.png".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)

@@ -497,7 +497,8 @@ def add_density(zoned_census):
 
     #Change the columns from strings to floating point numbers
     zoned_census["Dwellings"] = zoned_census["Dwellings"].astype(float)
-    zoned_census["AREA_HECTARES"] = zoned_census.area/10000
+    zoned_census["AREA_SQ_KM"] = zoned_census.area/10000 #lol its actually in hecatres but dont worry - changing the column name creates more naughty errors down the line :(
+    zoned_census.rename(columns={'AREA_SQ_KM': 'AREA_HECTARES'})
 
     #Add the density column, and update its value with its calculation
     zoned_census["Density"] = zoned_census["Dwellings"] / zoned_census["AREA_HECTARES"]
@@ -569,7 +570,7 @@ def add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances):
     #Convert the merged dictionry back to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
-    proc_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'Res %', 'Mixed %', "Rural %", "Comm %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
+    proc_census.columns = pd.Index(["Dwellings", 'AREA_HECTARES', 'Res %', 'Mixed %', "Rural %", "Comm %", "Density", "geometry", 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev'])
     proc_census.set_geometry(col='geometry', inplace=True)
     proc_census.set_crs("EPSG:2193", inplace=True)
 
@@ -696,10 +697,10 @@ def plot_intialised_data(census_final, weightings):
         os.mkdir("fig")
 
     plt.tight_layout()
-    plt.savefig("fig/objective_functions.png", transparent=False, dpi=600)
+    plt.savefig("fig/objective_functions.pdf", transparent=False, dpi=600)
 
     fig, ax = plt.subplots(1, 1, figsize=(15,15))
     census_final.plot(ax=ax, column='F_score', cmap='Reds')
     ax.set_title('Overall Score against the 6 objective functions, using a {} weighting scheme'.format(weightings))
     plt.tight_layout()
-    plt.savefig("fig/F_scores.png", dpi=600)
+    plt.savefig("fig/F_scores.pdf", dpi=600)
