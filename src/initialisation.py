@@ -497,8 +497,8 @@ def add_density(zoned_census):
 
     #Change the columns from strings to floating point numbers
     zoned_census["Dwellings"] = zoned_census["Dwellings"].astype(float)
-    zoned_census["AREA_SQ_KM"] = zoned_census.area/10000 #lol its actually in hecatres but dont worry - changing the column name creates more naughty errors down the line :(
-    zoned_census.rename(columns={'AREA_SQ_KM': 'AREA_HECTARES'})
+    zoned_census["AREA_SQ_KM"] = zoned_census.area/10000 #lol its actually in hectares but dont worry - adding a new column name creates more naughty errors down the line, so we'll just change the name of it :(
+    zoned_census.rename(columns={'AREA_SQ_KM': 'AREA_HECTARES'}, inplace=True)
 
     #Add the density column, and update its value with its calculation
     zoned_census["Density"] = zoned_census["Dwellings"] / zoned_census["AREA_HECTARES"]
