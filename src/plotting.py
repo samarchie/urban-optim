@@ -507,8 +507,17 @@ def add_column_to_census(census, data_to_add, column_name):
     df = pd.DataFrame.from_dict(census_dict, orient='index', dtype=object)
     proc_census = gpd.GeoDataFrame(df)
 
+    #Add the statistical area mesh area number to a columns
+    proc_census["SA index"] = proc_census.index
+
     #clean up the GeoDataFrame and we're good to go!
-    proc_census.columns = pd.Index(['index', 'Density', 'f_tsu', 'f_cflood', 'f_rflood', 'f_liq', 'f_dist', 'f_dev', "F_score" , 'geometry'] + [column_name])
+    current_columns = census.columns.values.tolist()
+    updated_column_names = current_columns[1:] + [column_name, "SA index"]
+
+    proc_census.columns = pd.Index(updated_column_names)
+
+    proc_census = proc_census[updated_column_names[-1:] + updated_column_names[:-1]]
+
     proc_census.set_geometry(col='geometry', inplace=True)
     proc_census.set_crs("EPSG:2193", inplace=True)
 
@@ -616,10 +625,37 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
     fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
 
-# def save_best_F_score_plan(MOPO_List, census):
-#
-#     best_F_score_parent = MOPO_List[-1][-1]
-#
-#     new_dwellings = list(best_F_score_parent)
-#
-#     census_updated = add_column_to_census(census, new_dwellings, 'New dwellings')
+def save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations):
+
+    best_F_score_parent = MOPO_List[-1][-1]
+
+    new_dwellings = list(best_F_score_parent)
+    print("The dwellings added in total are: {}".format(sum(new_dwellings)))
+    areas = census.area
+
+    added_densities = []
+    total_densities = []
+
+    for prop_index in range(0, len(census)):
+        existing_density = census.loc[prop_index, "Density"]
+        prop_area = areas[prop_index]
+        added_dwellings = best_F_score_parent[prop_index]
+        added_density = added_dwellings/prop_area
+
+        added_densities.append(added_density)
+        total_densities.append(existing_density + added_density)
+
+    census = add_column_to_census(census, new_dwellings, "Added Dwellings")
+    census = add_column_to_census(census, added_densities, "Added Density")
+    census = add_column_to_census(census, total_densities, "Total Density")
+
+    census["Density"] = census["Density"].astype(float)
+    census["Added Dwellings"] = census["Added Dwellings"].astype(int)
+    census["Added Density"] = census["Added Density"].astype(float)
+    census["Total Density"] = census["Total Density"].astype(float)
+
+    #check to see if a directory for pareto plots already exists, and create it if not
+    if not os.path.exists("data/final"):
+        os.mkdir("data/final")
+
+    census.to_file("data/final/census_after_GA_pars={}_gens={}.shp".format(NO_parents, NO_generations))
