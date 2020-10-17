@@ -25,3 +25,5 @@ The objective functions for the Christchurch optimisation study defines the foll
 * [x] descartes
 * [x] rasterstats
 * [x] deap
+* [x] plotly
+* [x] kaleido

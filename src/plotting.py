@@ -13,6 +13,7 @@ import numpy as np
 import os, math
 import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import plotly.graph_objects as go
 
 
 def add_to_pareto_set(pareto_set, parents):
@@ -534,9 +535,12 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
 
     """
 
-    #set up plot that has overlapping lines of the f_score values of each MOPO parent
+    #set up a normal line plot using the overalpping lines of the f_score values of each MOPO parent
     fig, axs = plt.subplots(1, 1, figsize=[20, 10])
     fig.suptitle('Performance of the best Pareto-optimal spatial plans across the range of objectives')
+
+    #set up a radar-chart/spiderweb plot using the Plotly module that has circles of the f_score values of each MOPO parent
+    fig_radial = go.Figure()
 
     #Set up plot that will contain the spatial layout of each MOPO parent
     fig2, axs2 = plt.subplots(2, 3, figsize=[20, 20])
@@ -570,7 +574,10 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
         if max(f_scores) > max_score_seen:
             max_score_seen = max(f_scores)
 
-        #Plot MOPO line againgst the objective functions
+        #Plot MOPO line againgst the objective functions for the radar chart
+        fig_radial.add_trace(go.Scatterpolar(r=list(f_scores), theta=obj_funcs, fill='toself', name=obj_funcs_min[index]))
+
+        #Plot MOPO line againgst the objective functions for the normal line plot
         axs.plot([0, 1, 2, 3, 4, 5], f_scores, color=plot_colours[index], label=obj_funcs[index])
 
         #Create a of Trues and Falses which indicate for which statistical areas are built on (in the same order as the census)
@@ -588,7 +595,7 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
         #Set th subplots title to tell ther viewer which objective function this is for!
         axs2[placement].set_title("min " + obj_funcs[index])
 
-    #Format the axes of the MOPO tradeoff plot (the one with 6 squiggly overlapping lines) to actually be strings of the objetive funcation names instead of values between 0 and 6
+    # Format the axes of the MOPO tradeoff plot (the one with 6 squiggly overlapping lines) to actually be strings of the objetive funcation names instead of values between 0 and 6
     axs.set_xticklabels([obj_funcs[0]] + obj_funcs, fontdict=None, minor=False)
 
     #Tidy up the plot and then save the figure
@@ -598,6 +605,21 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
     fig.tight_layout()
     fig.savefig("fig/MOPO/mopo_tradeoffs_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
 
+    #Set the axis and titles for the radar chart
+    title_settings = {'text': "Performance of the best Pareto-optimal spatial plans"}
+    fig_radial.update_layout(polar=dict(radialaxis=dict(visible=True,range=[0, max_score_seen])), showlegend=True, title=title_settings)
+    #Save the radar chart
+    fig_radial.write_image("fig/MOPO/mopo_tradeoffs_radial_par={}_gens={}.pdf".format(NO_parents, NO_generations))
+
     #And for the best MOPO sites plot, just tidy it up a bit and save it!
     fig2.tight_layout()
     fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
+
+
+# def save_best_F_score_plan(MOPO_List, census):
+#
+#     best_F_score_parent = MOPO_List[-1][-1]
+#
+#     new_dwellings = list(best_F_score_parent)
+#
+#     census_updated = add_column_to_census(census, new_dwellings, 'New dwellings')

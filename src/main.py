@@ -223,6 +223,7 @@ def main():
 
 
 
+
     ########### PHASE 3 - PARETO FRONTS AND OTHER PLOTS
 
     logger.info('Started plotting pareto results from the genetic algorithm')
@@ -249,6 +250,9 @@ def main():
 
     #Now we want to showcase how each of the superior plans (from the MOPO list) actually have tradeoffs!
     plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations)
+
+    #We wish to consider the best plan seen overall, and we want to 3D map the density changes!
+    # save_best_F_score_plan(MOPO_List, census)
 
 
     ######### PHASE 4 - ENDING
