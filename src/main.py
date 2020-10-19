@@ -287,13 +287,26 @@ def main():
     print("Probability of mutating a D: {}%".format(prob_mutation*100))
     print("Probability of mutating an element (d) wihtin a D: {}%".format(prob_mutation*100))
 
-    print("Total spatial plans/configuraitons assessed: {}".format(configurations_assessed))
+    print("Total spatial plans/configuraitons assessed: {} plans".format(configurations_assessed))
 
     MOPO_sol_found = 0
     for obj_funct_MOPO in MOPO_List:
         MOPO_sol_found += len(obj_funct_MOPO)
 
-    print("Total MOPO solutions found: {}".format(MOPO_sol_found))
+    print("Total MOPO solutions found: {} plans".format(MOPO_sol_found))
+
+    #Set a blank list and add individuals to it that are on the front
+    pareto_parents = []
+    for objective_pair in MOPO_List:
+        pareto_front = identify_pareto_front(MOPO_List)
+
+        for point in pareto_front:
+            #Check to make sure there isnt double ups of parents in the set. As one parent could be optimal
+            if point not in pareto_parents:
+                pareto_parents.append(point)
+
+    print("Amount of spatial plans on the pareto-front that are optimal in at least one objective: {} plans".format(len(pareto_parents)))
+
     logger.info("---------- End of summary ----------")
 
 
