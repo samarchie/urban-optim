@@ -229,19 +229,19 @@ def evaluate_development_plan(child, census):
 
     #Check each statistical area in the development plan,
     for prop_index in range(0, len(census)):
-        #Find the amount of houses to built on each statistical area
-        houses_added = child[prop_index]
+        #Find the amount of dwellings to built on each statistical area
+        dwellings_added = child[prop_index]
 
-        #If the site is to be developed, then assign a total F-score, weighted by how many houses are to be built and add to the rolling sum for the development plan
-        if houses_added > 0:
+        #If the site is to be developed, then assign a total F-score, weighted by how many dwellings are to be built and add to the rolling sum for the development plan
+        if dwellings_added > 0:
             #Find the objective scores for each f-function and use the weightings! Add it to the rolling sums list!
             obj_counter = 0
             for obj_func in obj_funcs:
 
                 #Extract the f score for the property
                 f_prop_score = census.loc[prop_index, obj_func]
-                #Use a weighting scheme that is proportional to the amount of houses that are to be built on that site
-                f_scores_running_total[obj_counter] += f_prop_score * houses_added
+                #Use a weighting scheme that is proportional to the amount of dwellings that are to be built on that site
+                f_scores_running_total[obj_counter] += f_prop_score * dwellings_added
                 obj_counter += 1
 
     #Now make the list immutable by converting it to a tuple

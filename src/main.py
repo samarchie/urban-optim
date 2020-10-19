@@ -43,7 +43,7 @@ assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and m
 weightings = [] #user defined weightings of each objective function
 i= True
 while i:
-    input_split = input("give weightings for Tsunami hazard, Coastal Flooding hazard, River Flooding hazard, Liquefaction hazard, minimising urban Sprawl and prioritising Council zoning. Should be six numbers separated by commas").split(",")
+    input_split = input("give weightings for Tsunami hazard, Coastal Flooding hazard, River Flooding hazard, Liquefaction hazard, minimising urban Sprawl and prioritising Council zoning. Should be six numbers separated by commas: ").split(",")
     for item in input_split:
         weightings.append(float(item))
     if len(weightings) == 6:
@@ -78,7 +78,7 @@ def main():
     #Get data from the user
     boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
 
-    #Clip the data 
+    #Clip the data
     if not os.path.exists("data/clipped"):
         os.mkdir("data/clipped")
 
