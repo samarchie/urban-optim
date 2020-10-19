@@ -29,7 +29,8 @@ from initialisation import *
 from genetic_algorithm import *
 from plotting import *
 
-#Define the parameters that can be changed by the user
+######Get the algorithm parameters that can be changed by the user########
+
 NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
 NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
 
@@ -39,14 +40,35 @@ prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 
 assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
 
-weightings = np.array([1, 1, 1, 1, 1, 1]) #user defined weightings of each objective function
-required_dwellings = 50000 #amount of required dwellings over entire region
-density_total = [42, 55, 66, 83, 92, 111, 133] #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
-max_density_possible = 140 #As our crossover/mutation seciton will change densities, we need an upper bound that
+weightings = [] #user defined weightings of each objective function
+i= True
+while i:
+    input_split = input("give weightings for Tsunami hazard, Coastal Flooding hazard, River Flooding hazard, Liquefaction hazard, minimising urban Sprawl and prioritising Council zoning. Should be six numbers separated by commas").split(",")
+    for item in input_split:
+        weightings.append(float(item))
+    if len(weightings) == 6:
+        i = False
+    else:
+        print("u dumb dumb. need six numbers in format 'a, b, c, d, e, f' ")
+weighting_scheme = input("Give a name to your weighting scheme: weighting_scheme = ") # So we can name the plots for each scheme
+
+required_dwellings = int(input("How many dwellings? : required_dwellings = ")) #amount of required dwellings over entire region
+dwelling_scheme = input("Give a name to your dwelling scheme: dwelling_scheme = ") # So we can name the plots for each scheme
+
+scheme = weighting_scheme + ', ' + dwelling_scheme
+
+density_total = []
+input_split = input("Enter up to 8 acceptable densities, seperated with a comma, in units of dwellings per hectare: ").split(',') #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
+for item in input_split:
+    density_total.append(float(item))
+
+# density_total = [42, 55, 66, 83, 92, 111, 133] # Default numbers
+max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
 
 assert max_density_possible >= max(density_total), ("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities.")
 
-when_to_plot = range(0, NO_generations + 1, 50) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+step_size = input("How often (in generations) shall the spatial plans be plotted? : step_size = ")
+when_to_plot = range(0, NO_generations + 1, int(step_size)) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
 
 
 def main():
@@ -56,44 +78,39 @@ def main():
     #Get data from the user
     boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
 
-    #Clip the data if it has not already been clipped
-    if not os.path.isfile("data/clipped/census.shp"):
-        if not os.path.exists("data/clipped"):
-            os.mkdir("data/clipped")
+    #Clip the data 
+    if not os.path.exists("data/clipped"):
+        os.mkdir("data/clipped")
 
-        clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
+    clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
     logger.info('Clipping complete')
 
-    #Process data if it has not already been done
-    if not os.path.isfile("data/processed/census_final.shp"):
-        if not os.path.exists("data/processed"):
-            os.mkdir("data/processed")
+    #Process data
+    if not os.path.exists("data/processed"):
+        os.mkdir("data/processed")
 
-        #Add the District Plan Zones that cant be built on to the constraints list
-        constraints = update_constraints(constraints, boundaries[1])
+    #Add the District Plan Zones that cant be built on to the constraints list
+    constraints = update_constraints(constraints, boundaries[1])
 
-        #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
-        constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
+    #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
+    constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
 
-        #Add the District Planning Zone in the Census GeoDataFrame
-        census_zones = add_planning_zones(constrained_census, boundaries[1])
+    #Add the District Planning Zone in the Census GeoDataFrame
+    census_zones = add_planning_zones(constrained_census, boundaries[1])
 
-        #Calulate current density in each parcel
-        census_dens = add_density(census_zones)
+    #Calulate current density in each parcel
+    census_dens = add_density(census_zones)
 
-        #Now want to pre-process everything!
-        processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
+    #Now want to pre-process everything!
+    processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
 
-        #Clean the data properties up!
-        cleaned_census = clean_processed_data(processed_census)
+    #Clean the data properties up!
+    cleaned_census = clean_processed_data(processed_census)
 
-        #Take the user weightings and find the F score for each statistical area!
-        census = apply_weightings(cleaned_census, weightings)
-
-    else:
-        census = gpd.read_file("data/processed/census_final.shp")
+    #Take the user weightings and find the F score for each statistical area!
+    census = apply_weightings(cleaned_census, weightings)
 
     logger.info('Processing/initialisation complete')
 
@@ -143,7 +160,7 @@ def main():
 
     if 0 in when_to_plot:
         #Then the user has specified that the intial parents spatial plans shall be plotted!
-        fig_spatial, axs_spatial = plot_development_sites(parents=pop, gen_number=0, when_to_plot=when_to_plot, census=census)
+        fig_spatial, axs_spatial = plot_development_sites(parents=pop, gen_number=0, when_to_plot=when_to_plot, census=census, scheme=scheme)
 
     logger.info('Initial population created and entering GA loop now')
 
@@ -214,7 +231,7 @@ def main():
 
         if gen_number in when_to_plot:
             #Then the user has specified that these parents spatial plans shall be plotted!
-            fig_spatial, axs_spatial = plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatial, axs_spatial)
+            fig_spatial, axs_spatial = plot_development_sites(parents, gen_number, when_to_plot, census, scheme, fig_spatial, axs_spatial)
 
 
         logger.info('Generation {} complete'.format(gen_number))
@@ -229,27 +246,23 @@ def main():
     logger.info('Started plotting pareto results from the genetic algorithm')
 
     #check to see if a directory for pareto plots already exists, and create it if not
-    if not os.path.exists("fig/pareto"):
-        os.mkdir("fig/pareto")
+    if not os.path.exists("fig/{}".format(scheme)):
+        os.mkdir("fig/{}".format(scheme))
 
     #Plot the pareto plots so we do our discussion and view the results
-    plot_pareto_plots(pareto_set, NO_parents, NO_generations)
+    plot_pareto_plots(pareto_set, scheme, NO_parents, NO_generations)
 
     #Plot the parents (for the generation selected by the user) and show their averge spatial plan! hahaha you got pranked bro. they got saved automatically in the last generation of the GA loop!
 
     logger.info('Now plotting ranked optimal-pareto results from the genetic algorithm')
 
     #Take the pareto set of the final parents and plot a spatial plan of ranked developement sites
-    plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations)
-
-    #check to see if a directory for mopo plots already exists, and create it if not
-    if not os.path.exists("fig/mopo"):
-        os.mkdir("fig/mopo")
+    plot_ranked_pareto_sites(pareto_set, census, scheme, NO_parents, NO_generations)
 
     logger.info('Now plotting MOPO results from the genetic algorithm')
 
     #Now we want to showcase how each of the superior plans (from the MOPO list) actually have tradeoffs!
-    plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations)
+    plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations)
 
     #We wish to consider the best plan seen overall, and we want to 3D map the density changes!
     save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations)
@@ -265,6 +278,7 @@ def main():
     print("Number of parents: {}".format(NO_parents))
     print("Number of generations: {}".format(NO_generations))
     print("User defined weightings of each objective function: {}".format(weightings))
+    print("User defined weighting scheme: {}".format(scheme))
     print("Amount of dwellings needed: {} dwellings".format(required_dwellings))
     print("Recommended sustainable density used: {} dwellings/hectare".format(density_total))
     print("Maximum sustainable density used: {} dwellings/hectare".format(max_density_possible))

@@ -79,7 +79,7 @@ def add_to_pareto_set(pareto_set, parents):
     return pareto_set
 
 
-def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
+def plot_pareto_plots(pareto_set, scheme, NO_parents, NO_generations):
     """This module plots both the pareto plots and the pareto-front plots.
 
     Parameters
@@ -178,7 +178,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
         index += 1
 
     # Save the figure detailing all Inidividals and the pareto front
-    fig.savefig("fig/pareto/pareto_plots_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig.savefig("fig/{}/pareto_plots_par={}_gens={}.pdf".format(scheme ,NO_parents, NO_generations), transparent=False, dpi=600)
 
     #Assign axis labels and limits for each of the subplots
     counter = 0
@@ -191,7 +191,7 @@ def plot_pareto_plots(pareto_set, NO_parents, NO_generations):
     #Position the legend at the top center of the figure, using the bbox command, and this will save there being a legend for each of the 6 subplots!
     axs2[0, 1].legend(obj_funcs, bbox_to_anchor=(-0.8, 1.15, 1.5, 1.5), loc='lower left', ncol=6, mode="expand", borderaxespad=0.)
     # Save the figure detailing all Inidividals and the pareto front
-    fig2.savefig("fig/pareto/pareto_fronts_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig2.savefig("fig/{}/pareto_fronts_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def identify_pareto_front(objective_pair):
@@ -326,7 +326,7 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
     return fig2, axs2
 
 
-def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatial=None, axs_spatial=None):
+def plot_development_sites(parents, gen_number, when_to_plot, census, scheme, fig_spatial=None, axs_spatial=None):
     """This modules takes a set of parents at a specified generation number, and adds it spatial development plan (d's) to a figure. This is used to showcase how the genetic algorithm should converge on superior sites.
 
     Parameters
@@ -394,12 +394,12 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, fig_spatia
     #if this is the last generation to plot, then we shall save the figure appropiately!
     if gen_number == when_to_plot[-1]:
         plt.tight_layout()
-        plt.savefig("fig/all_development_sites_par={}_gens={}.pdf".format(len(parents), gen_number), transparent=False, dpi=600)
+        plt.savefig("fig/{}/all_development_sites_par={}_gens={}.pdf".format(scheme, len(parents), gen_number), transparent=False, dpi=600)
 
     return fig_spatial, axs_spatial
 
 
-def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
+def plot_ranked_pareto_sites(pareto_set, census, scheme, NO_parents, NO_generations):
     """This module creates a plot that showcases the average percentage of dwellings that are associated with a statistical area over the entire pareto set (which is the suprerior parents).
 
     Parameters
@@ -470,7 +470,7 @@ def plot_ranked_pareto_sites(pareto_set, census, NO_parents, NO_generations):
     #Tidy up the figure and save it
     ax.set_title('Ranked Pareto-Optimal Development Sites after {} generations'.format(NO_generations))
     plt.tight_layout()
-    plt.savefig("fig/pareto/pareto_development_sites_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    plt.savefig("fig/{}/pareto_development_sites_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def add_column_to_census(census, data_to_add, column_name):
@@ -524,7 +524,7 @@ def add_column_to_census(census, data_to_add, column_name):
     return proc_census
 
 
-def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
+def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
     """This module creates plots that showcase the spatially optimal locations to build when addressing each individual objective function seperately, and another plot showing the tradeoffs between these individually superior Individuals.
 
     Parameters
@@ -612,7 +612,7 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
     axs.legend(obj_funcs_min, loc="best")
     axs.set_ylabel("Total Objective Score")
     fig.tight_layout()
-    fig.savefig("fig/MOPO/mopo_tradeoffs_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig.savefig("fig/{}/mopo_tradeoffs_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
     #Set the axis and titles for the radar chart
     title_settings = {'text': "Performance of the best Pareto-optimal spatial plans"}
@@ -622,7 +622,7 @@ def plot_MOPO_plots(MOPO_List, census, NO_parents, NO_generations):
 
     #And for the best MOPO sites plot, just tidy it up a bit and save it!
     fig2.tight_layout()
-    fig2.savefig("fig/MOPO/best_mopo_sites_par={}_gens={}.pdf".format(NO_parents, NO_generations), transparent=False, dpi=600)
+    fig2.savefig("fig/{}/best_mopo_sites_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
 
 def save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations):
