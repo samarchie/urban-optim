@@ -695,6 +695,8 @@ def plot_intialised_data(census_final, scheme, weightings):
 
     if not os.path.exists("fig"):
         os.mkdir("fig")
+    if not os.path.exists("fig/{}".format(scheme)):
+        os.mkdir("fig/{}".format(scheme))
 
     plt.tight_layout()
     plt.savefig("fig/{}/objective_functions.pdf".format(scheme), transparent=False, dpi=600)
