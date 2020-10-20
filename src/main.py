@@ -57,10 +57,6 @@ dwelling_scheme = input("Give a name to your dwelling scheme: dwelling_scheme = 
 
 scheme = weighting_scheme + ', ' + dwelling_scheme
 
-#check to see if a directory scheme already exists, and create it if not
-if not os.path.exists("fig/{}".format(scheme)):
-    os.mkdir("fig/{}".format(scheme))
-
 density_total = []
 input_split = input("Enter up to 8 acceptable densities, seperated with a comma, in units of dwellings per hectare: ").split(',') #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
 for item in input_split:
