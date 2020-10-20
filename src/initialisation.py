@@ -663,7 +663,7 @@ def apply_weightings(cleaned_census, weightings):
     return census_final
 
 
-def plot_intialised_data(census_final, weightings):
+def plot_intialised_data(census_final, scheme, weightings):
     """This module plots the objective functions of the processed data to check validity of the prcoessing/initialisation phase.
 
     Parameters
@@ -697,10 +697,10 @@ def plot_intialised_data(census_final, weightings):
         os.mkdir("fig")
 
     plt.tight_layout()
-    plt.savefig("fig/objective_functions.pdf", transparent=False, dpi=600)
+    plt.savefig("fig/{}/objective_functions.pdf".format(scheme), transparent=False, dpi=600)
 
     fig, ax = plt.subplots(1, 1, figsize=(15,15))
     census_final.plot(ax=ax, column='F_score', cmap='Reds')
-    ax.set_title('Overall Score against the 6 objective functions, using a {} weighting scheme'.format(weightings))
+    ax.set_title('Overall Score against the 6 objective functions, using a {}({}) weighting scheme'.format(scheme.split(',')[0], weightings))
     plt.tight_layout()
-    plt.savefig("fig/F_scores.pdf", dpi=600)
+    plt.savefig("fig/{}/F_scores.pdf".format(scheme), dpi=600)

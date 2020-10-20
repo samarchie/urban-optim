@@ -115,7 +115,7 @@ def main():
     logger.info('Processing/initialisation complete')
 
     # Plot the processed census data and check the objective functions are working as expected!
-    plot_intialised_data(census, weightings)
+    plot_intialised_data(census, scheme, weightings)
     logger.info('f_functions and F-scores plotted and saved')
 
 
