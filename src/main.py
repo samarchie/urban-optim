@@ -295,7 +295,7 @@ def main():
     #Set a blank list and add individuals to it that are on the front
     pareto_parents = []
     for objective_pair in MOPO_List:
-        pareto_front = identify_pareto_front(MOPO_List)
+        pareto_front = identify_pareto_front(objective_pair)
 
         for point in pareto_front:
             #Check to make sure there isnt double ups of parents in the set. As one parent could be optimal
