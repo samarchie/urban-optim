@@ -105,10 +105,8 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
 
         #there might be a case where the existing density of a statistical area is greater than one of the chosen sustainable densities. hence, we need to make sure in the next line we dont add a negative number!
         density_to_add = max(0, density_random - existing_density - already_added_density)
-        #Pick a density (under the sustainable threshold) that shall be used to densify this statistical area.
-        density_add = random.uniform(0, density_to_add)
         #and convert to dwellings (round down to nearest integer as you cant have half houses hahahaha)
-        dwellings_to_add = np.floor(density_add * area_of_property)
+        dwellings_to_add = np.floor(density_to_add * area_of_property)
         #Update the density due to the rounding down of dwellings added
         density = dwellings_to_add / area_of_property
 
