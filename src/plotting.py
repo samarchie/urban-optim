@@ -110,7 +110,7 @@ def plot_pareto_plots(pareto_set, scheme, NO_parents, NO_generations):
     fig2.suptitle('Pareto Front Plots')
 
     #Set up subplot axis titles (y-axis)
-    obj_funcs = [r"$normalised f_{tsu}$", r"$normalised f_{cflood}$", r"$normalised f_{rflood}$", r"$normalised f_{liq}$", r"$normalised f_{dist}$", r"$normalised f_{dev}$"]
+    obj_funcs = [r"$normalised  f_{tsu}$", r"$normalised  f_{cflood}$", r"$normalised  f_{rflood}$", r"$normalised  f_{liq}$", r"$normalised  f_{dist}$", r"$normalised  f_{dev}$"]
 
     #set up subplot subtitles
     subtitles = ['f_tsu vs f_cflood', 'f_tsu vs f_rflood', 'f_tsu vs f_liq', 'f_tsu vs f_dist', 'f_tsu vs f_dev', 'f_cflood vs f_rflood', 'f_cflood vs f_liq', 'f_cflood vs f_dist', 'f_cflood vs f_dev', 'f_rflood vs f_liq', 'f_rflood vs f_dist', 'f_rflood vs f_dev', 'f_liq vs f_dist', 'f_liq vs f_dev', 'f_dist vs f_dev']
@@ -189,8 +189,8 @@ def plot_pareto_plots(pareto_set, scheme, NO_parents, NO_generations):
             counter += 1
 
     #Position the legend at the top center of the figure, using the bbox command, and this will save there being a legend for each of the 6 subplots!
-    axs2[0, 1].legend(obj_funcs, bbox_to_anchor=(-0.8, 1.15, 1.5, 1.5), loc='lower left', ncol=6, mode="expand", borderaxespad=0.)
-    # Save the figure detailing all Inidividals and the pareto front
+    labels = obj_funcs[1:] + obj_funcs[:1]
+    fig2.legend(labels=labels, loc='upper center', ncol=6, mode="expand", borderaxespad=12)    # Save the figure detailing all Inidividals and the pareto front
     fig2.savefig("fig/{}/pareto_fronts_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
 
@@ -273,7 +273,7 @@ def add_to_pareto_fronts_plots(data, fig2, axs2, pareto_set_names):
 
     #Set up how the axis are to be made (what order the axes go in) and what colours lines are each objective function.
     plot_layout = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
-    plot_colours = ["#003049", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
+    plot_colours = ["#85d4ff", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
 
     #Figure out what objectives we have and and put them in the right plot axis and column! This will be in the form of ["f_tsu", "vs", "f_cflood"] for example os only need to check the 1st and 3rd item.
     pareto_names = pareto_set_names.split(" ")
@@ -552,7 +552,7 @@ def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
     fig_radial = go.Figure()
 
     #Set up plot that will contain the spatial layout of each MOPO parent
-    fig2, axs2 = plt.subplots(2, 3, figsize=[20, 20])
+    fig2, axs2 = plt.subplots(3, 2, figsize=[20, 20])
     fig2.suptitle('Best Pareto-optimal spatial plans across the range of objectives')
 
     #Set up subplot axis titles (y-axis)
@@ -562,7 +562,7 @@ def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
     obj_funcs_min = [r"$min f_{tsu}$", r"$min f_{cflood}$", r"$min f_{rflood}$", r"$min f_{liq}$", r"$min f_{dist}$", r"$min f_{dev}$"]
 
     #List in what order the plot shall be in (eg left to right in this case)
-    plot_layout = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+    plot_layout = [(0, 0), (0, 1), (1, 0), (1, 1), (2, 0), (2, 1)]
     plot_colours = ["#003049", "#540b0e", "#d62828", "#f77f00", "#fcbf49", "#eae2b7"]
 
     #When we specify the axis limits at the end, we will need to know the highest f score seen (y max limit)

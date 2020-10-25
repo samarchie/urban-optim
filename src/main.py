@@ -43,7 +43,7 @@ assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and m
 weightings = [] #user defined weightings of each objective function
 i= True
 while i:
-    input_split = input("give weightings for Tsunami hazard, Coastal Flooding hazard, River Flooding hazard, Liquefaction hazard, minimising urban Sprawl and prioritising Council zoning. Should be six numbers separated by commas: ").split(",")
+    input_split = input("Please give weightings for Tsunami hazard, Coastal Flooding hazard, River Flooding hazard, Liquefaction hazard, minimising urban Sprawl and prioritising Council zoning. Should be six numbers separated by commas: ").split(",")
     for item in input_split:
         weightings.append(float(item))
     if len(weightings) == 6:
@@ -62,7 +62,7 @@ input_split = input("Enter up to 8 acceptable densities, seperated with a comma,
 for item in input_split:
     density_total.append(float(item))
 
-# density_total = [42, 55, 66, 83, 92, 111, 133] # Default numbers
+# density_total = [83, 92, 111, 133] # Default numbers
 max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
 
 assert max_density_possible >= max(density_total), ("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities.")
@@ -82,35 +82,37 @@ def main():
     if not os.path.exists("data/clipped"):
         os.mkdir("data/clipped")
 
-    clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
+    # clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
+
     logger.info('Clipping complete')
 
     #Process data
     if not os.path.exists("data/processed"):
         os.mkdir("data/processed")
 
-    #Add the District Plan Zones that cant be built on to the constraints list
-    constraints = update_constraints(constraints, boundaries[1])
-
-    #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
-    constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
-
-    #Add the District Planning Zone in the Census GeoDataFrame
-    census_zones = add_planning_zones(constrained_census, boundaries[1])
-
-    #Calulate current density in each parcel
-    census_dens = add_density(census_zones)
-
-    #Now want to pre-process everything!
-    processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
-
-    #Clean the data properties up!
-    cleaned_census = clean_processed_data(processed_census)
-
-    #Take the user weightings and find the F score for each statistical area!
-    census = apply_weightings(cleaned_census, weightings)
+    # #Add the District Plan Zones that cant be built on to the constraints list
+    # constraints = update_constraints(constraints, boundaries[1])
+    #
+    # #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
+    # constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
+    #
+    # #Add the District Planning Zone in the Census GeoDataFrame
+    # census_zones = add_planning_zones(constrained_census, boundaries[1])
+    #
+    # #Calulate current density in each parcel
+    # census_dens = add_density(census_zones)
+    #
+    # #Now want to pre-process everything!
+    # processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
+    #
+    # #Clean the data properties up!
+    # cleaned_census = clean_processed_data(processed_census)
+    #
+    # #Take the user weightings and find the F score for each statistical area!
+    # census = apply_weightings(cleaned_census, weightings)
+    census = gpd.read_file("data/processed/census_final.shp")
 
     logger.info('Processing/initialisation complete')
 
@@ -282,7 +284,7 @@ def main():
 
     print("Probability of applying a crossover to two D's: {}%".format(prob_crossover*100))
     print("Probability of mutating a D: {}%".format(prob_mutation*100))
-    print("Probability of mutating an element (d) wihtin a D: {}%".format(prob_mutation*100))
+    print("Probability of mutating an element (d) within a D: {}%".format(0.05*100))
 
     print("Total spatial plans/configuraitons assessed: {} plans".format(configurations_assessed))
 
