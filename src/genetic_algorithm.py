@@ -99,7 +99,7 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
         existing_density = property_data["Density"].values[0]
         area_of_property = property_data.area.values[0] / 10000 #in hectares
         already_added_density = development_plan_of_densities[prop_index] #added from this module
-
+        
         #Pick a sustainable density at random to assign to this statistical area
         density_random = random.choice(density_total)
 
@@ -148,7 +148,7 @@ def get_densities(ind, census):
 
     """
     #Get the areas of the statistical areas
-    areas = census.area
+    areas = census.area / 10000 # in hectares
 
     #Find out how many statistical areas there are to begin with, and create a blank list
     densities = [0] * len(areas)
