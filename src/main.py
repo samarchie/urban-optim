@@ -112,8 +112,8 @@ def main():
     #
     # #Take the user weightings and find the F score for each statistical area!
     # census = apply_weightings(cleaned_census, weightings)
-    census = gpd.read_file("data/processed/census_final.shp")
 
+    census = gpd.read_file("data/processed/census_final.shp")
     logger.info('Processing/initialisation complete')
 
     # Plot the processed census data and check the objective functions are working as expected!
@@ -256,7 +256,7 @@ def main():
     logger.info('Now plotting ranked optimal-pareto results from the genetic algorithm')
 
     #Take the pareto set of the final parents and plot a spatial plan of ranked developement sites
-    plot_ranked_pareto_sites(pareto_set, census, scheme, NO_parents, NO_generations)
+    plot_ranked_pareto_sites(pareto_set, census, MOPO_List, scheme, NO_parents, NO_generations)
 
     logger.info('Now plotting MOPO results from the genetic algorithm')
 
@@ -296,7 +296,7 @@ def main():
 
     #Set a blank list and add individuals to it that are on the front
     pareto_parents = []
-    for objective_pair in MOPO_List:
+    for objective_pair in pareto_set:
         pareto_front = identify_pareto_front(objective_pair)
 
         for point in pareto_front:

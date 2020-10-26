@@ -99,7 +99,7 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
         existing_density = property_data["Density"].values[0]
         area_of_property = property_data.area.values[0] / 10000 #in hectares
         already_added_density = development_plan_of_densities[prop_index] #added from this module
-        
+
         #Pick a sustainable density at random to assign to this statistical area
         density_random = random.choice(density_total)
 
@@ -282,37 +282,37 @@ def update_MOPO(MOPO_List, parents):
     else:
         #1st objective function - f_tsunami
         parents.sort(key=lambda x: x.fitness.values[0])
-        if parents[0].fitness.values[0] < MOPO_List[0][-1].fitness.values[0]:
+        if parents[0].fitness.values[0] <= MOPO_List[0][-1].fitness.values[0]:
             MOPO_List[0].append(parents[0])
 
         #2nd objective function - f_coastal_flooding
         parents.sort(key=lambda x: x.fitness.values[1])
-        if parents[0].fitness.values[1] < MOPO_List[1][-1].fitness.values[1]:
+        if parents[0].fitness.values[1] <= MOPO_List[1][-1].fitness.values[1]:
             MOPO_List[1].append(parents[0])
 
         #3rd objective function - f_river_flooding
         parents.sort(key=lambda x: x.fitness.values[2])
-        if parents[0].fitness.values[2] < MOPO_List[2][-1].fitness.values[2]:
+        if parents[0].fitness.values[2] <= MOPO_List[2][-1].fitness.values[2]:
             MOPO_List[2].append(parents[0])
 
         #4th objective function - f_liquefaction_vulnerability
         parents.sort(key=lambda x: x.fitness.values[3])
-        if parents[0].fitness.values[3] < MOPO_List[3][-1].fitness.values[3]:
+        if parents[0].fitness.values[3] <= MOPO_List[3][-1].fitness.values[3]:
             MOPO_List[3].append(parents[0])
 
         #5th objective function - f_distance
         parents.sort(key=lambda x: x.fitness.values[4])
-        if parents[0].fitness.values[4] < MOPO_List[4][-1].fitness.values[4]:
+        if parents[0].fitness.values[4] <= MOPO_List[4][-1].fitness.values[4]:
             MOPO_List[4].append(parents[0])
 
         #6th objective function - f_district_planning
         parents.sort(key=lambda x: x.fitness.values[5])
-        if parents[0].fitness.values[5] < MOPO_List[5][-1].fitness.values[5]:
+        if parents[0].fitness.values[5] <= MOPO_List[5][-1].fitness.values[5]:
             MOPO_List[5].append(parents[0])
 
         #Overall objective function - F-score
         parents.sort(key=lambda x: sum(x.fitness.values))
-        if sum(parents[0].fitness.values) < sum(MOPO_List[6][-1].fitness.values):
+        if sum(parents[0].fitness.values) <= sum(MOPO_List[6][-1].fitness.values):
             MOPO_List[6].append(parents[0])
 
     return MOPO_List

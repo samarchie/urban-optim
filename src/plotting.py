@@ -399,7 +399,7 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, scheme, fi
     return fig_spatial, axs_spatial
 
 
-def plot_ranked_pareto_sites(pareto_set, census, scheme, NO_parents, NO_generations):
+def plot_ranked_pareto_sites(pareto_set, census, MOPO_List, scheme, NO_parents, NO_generations):
     """This module creates a plot that showcases the average percentage of dwellings that are associated with a statistical area over the entire pareto set (which is the suprerior parents).
 
     Parameters
@@ -436,25 +436,33 @@ def plot_ranked_pareto_sites(pareto_set, census, scheme, NO_parents, NO_generati
             if point[-1] not in pareto_front_parents:
                 pareto_front_parents.append(point[-1])
 
-    #We want to keep track of the rolling sum of percentage allocations in each ststaistical area, so we have to zero the list to start with
-    sum_percentage_allocation = [0] * len(census)
+    #Now we have all the parents on the pareto fronts!
+    #We want to keep track of the rolling sum of  allocations in each ststaistical area, so we have to zero the list to start with
+    sum_allocation = [0] * len(census)
+    MOPO_sols_found = 0
 
     #Now we want to go through each parent on the pareto_front and calculate the percentge allocation of buildings to each statistical area
     for parent in pareto_front_parents:
 
-        #The amount of dwellings might not actaully be bang on 30,000 (or whatever was inputted) as the cross-over & mutation operators could have changed that.
-        dwellings_sum = sum(parent)
+        # #The amount of dwellings might not actaully be bang on 30,000 (or whatever was inputted) as the cross-over & mutation operators could have changed that.
+        # dwellings_sum = sum(parent)
+        for obj_function_list in MOPO_List:
+            MOPO_sols_found += len(obj_function_list)
 
-        #wWork out the associated percentage allocation for each statistical area, and add it to the rolling sums list in the right spot
-        for prop_index in range(0, len(census)):
-            dwellings = parent[prop_index]
-            sum_percentage_allocation[prop_index] += 100*dwellings/dwellings_sum
+            if parent in obj_function_list:
+
+                for index in range(0, len(parent)):
+                    prop = parent[index]
+
+                    if prop != 0:
+
+                        sum_allocation[index] += 1
 
     #Take the rolling sums list of percentages and average/normalise it, such that the highest allocation is now 100%.
-    percentage_allocation = [x / len(pareto_front_parents) for x in sum_percentage_allocation]
+    percentage_allocation = [x / MOPO_sols_found for x in sum_allocation]
 
     #We want to have a colourbar that indicates a sclae of the allocation proprtion in each statistical area. The following code makes it all happen!
-    norm = colors.Normalize(vmin=0, vmax=math.ceil(max(percentage_allocation)))
+    norm = colors.Normalize(vmin=0, vmax=100)
     cbar = plt.cm.ScalarMappable(norm=norm, cmap='Blues')
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
