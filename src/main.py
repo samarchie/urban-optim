@@ -264,7 +264,10 @@ def main():
     plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations)
 
     #We wish to consider the best plan seen overall, and we want to 3D map the density changes!
-    save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations)
+    # save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations)
+    logger.info('Now plotting best F_score results from the genetic algorithm')
+
+    save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_generations)
 
 
     ######### PHASE 4 - ENDING

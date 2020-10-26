@@ -14,6 +14,7 @@ import os, math
 import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import plotly.graph_objects as go
+from copy import copy
 
 
 def add_to_pareto_set(pareto_set, parents):
@@ -633,37 +634,70 @@ def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
     fig2.savefig("fig/{}/best_mopo_sites_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
 
-def save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations):
+def save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_generations):
+    """This module creates a plot that showcases the average percentage of dwellings that are associated with a statistical area over the entire pareto set (which is the suprerior parents).
 
-    best_F_score_parent = MOPO_List[-1][-1]
+    Parameters
+    ----------
+    pareto_set : List
+        A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    NO_parents : Integer
+        User specified parameter for how many parents are in a generation.
+    NO_generations : Integer
+        User specified parameter for how many generations occur as part of the gentic algorithm.
 
-    new_dwellings = list(best_F_score_parent)
-    print("The dwellings added in total are: {}".format(sum(new_dwellings)))
-    areas = census.area
+    Returns
+    -------
+    None
 
-    added_densities = []
-    total_densities = []
+    """
 
-    for prop_index in range(0, len(census)):
-        existing_density = census.loc[prop_index, "Density"]
-        prop_area = areas[prop_index]
-        added_dwellings = best_F_score_parent[prop_index]
-        added_density = added_dwellings/prop_area
+    #Firstly, create the figure and axes to whihc we will plot on
+    fig, ax = plt.subplots(1, 1, figsize=[20, 20])
 
-        added_densities.append(added_density)
-        total_densities.append(existing_density + added_density)
+    solutions = copy(parents)
+    solutions.sort(key=lambda x: x.fitness.values[-1])
 
-    census = add_column_to_census(census, new_dwellings, "Added Dwellings")
-    census = add_column_to_census(census, added_densities, "Added Density")
-    census = add_column_to_census(census, total_densities, "Total Density")
 
-    census["Density"] = census["Density"].astype(float)
-    census["Added Dwellings"] = census["Added Dwellings"].astype(int)
-    census["Added Density"] = census["Added Density"].astype(float)
-    census["Total Density"] = census["Total Density"].astype(float)
+    threshold = 0.01 #takes the top 1 per cent
+    number_to_pick = math.ceil(threshold * len(parents))
 
-    #check to see if a directory for pareto plots already exists, and create it if not
-    if not os.path.exists("data/final"):
-        os.mkdir("data/final")
+    best_parents = solutions[:number_to_pick]
 
-    census.to_file("data/final/census_after_GA_pars={}_gens={}.shp".format(NO_parents, NO_generations))
+    #We want to keep track of the rolling sum of  allocations in each ststaistical area, so we have to zero the list to start with
+    sum_allocation = [0] * len(census)
+
+    #Now we want to go through each parent on the pareto_front and calculate the percentge allocation of buildings to each statistical area
+    for parent in best_parents:
+
+        for index in range(0, len(parent)):
+
+            prop = parent[index]
+            if prop != 0:
+                sum_allocation[index] += 1
+
+    #Take the rolling sums list of percentages and average/normalise it, such that the highest allocation is now 100%.
+    percentage_allocation = [x / len(best_parents) for x in sum_allocation]
+
+    #We want to have a colourbar that indicates a sclae of the allocation proprtion in each statistical area. The following code makes it all happen!
+    norm = colors.Normalize(vmin=0, vmax=100)
+    cbar = plt.cm.ScalarMappable(norm=norm, cmap='Blues')
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    ax_cbr = fig.colorbar(cbar, ax=ax, cax=cax, label="Percentage Allocation")
+
+    #Add the percentage to the census dataframe as a column
+    census = add_column_to_census(census, percentage_allocation, "F score %")
+
+    #Plot the percentages againgst the statistical areas (which are thin opaque boundary lines)
+    census.plot(column='F score %', cmap="Blues", legend=False, ax=ax)
+    census.boundary.plot(ax=ax, color='black', linewidth=1, alpha=0.20)
+
+    census.to_file("data/final/{}, {} parents and {} generations".format(scheme, NO_parents, NO_generations))
+
+    #Tidy up the figure and save it
+    ax.set_title('Averaged Top {}% of Development Sites after {} generations'.format(threshold*100, NO_generations))
+    plt.tight_layout()
+    plt.savefig("fig/{}/top_F_score_development_sites_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
