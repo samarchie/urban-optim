@@ -660,7 +660,6 @@ def save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_g
     solutions = copy(parents)
     solutions.sort(key=lambda x: x.fitness.values[-1])
 
-
     threshold = 0.01 #takes the top 1 per cent
     number_to_pick = math.ceil(threshold * len(parents))
 
@@ -668,18 +667,29 @@ def save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_g
 
     #We want to keep track of the rolling sum of  allocations in each ststaistical area, so we have to zero the list to start with
     sum_allocation = [0] * len(census)
+    sum_new_dwellings = [0] * len(census)
+    sum_buildings_added = 0
+    sum_densities_added = [0] * len(census)
 
     #Now we want to go through each parent on the pareto_front and calculate the percentge allocation of buildings to each statistical area
     for parent in best_parents:
+        sum_buildings_added += sum(parent)
 
         for index in range(0, len(parent)):
 
             prop = parent[index]
             if prop != 0:
                 sum_allocation[index] += 1
+                sum_new_dwellings[index] += parent[index]
+                sum_densities_added[index] += parent.densities[index]
 
     #Take the rolling sums list of percentages and average/normalise it, such that the highest allocation is now 100%.
     percentage_allocation = [x / len(best_parents) for x in sum_allocation]
+    avg_new_dwellings = [x / len(best_parents) for x in sum_new_dwellings]
+    avg_added_density = [x / len(best_parents) for x in sum_densities_added]
+
+    existing_density = census.loc[:, "Density"]
+    avg_new_density = [avg_added_density[index] + existing_density[index] for index in range(len(census))]
 
     #We want to have a colourbar that indicates a sclae of the allocation proprtion in each statistical area. The following code makes it all happen!
     norm = colors.Normalize(vmin=0, vmax=100)
@@ -690,6 +700,14 @@ def save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_g
 
     #Add the percentage to the census dataframe as a column
     census = add_column_to_census(census, percentage_allocation, "F score %")
+    census = add_column_to_census(census, avg_new_dwellings, "Avg Added Dwellings")
+    census = add_column_to_census(census, avg_added_density, "Avg Added Density")
+    census = add_column_to_census(census, avg_new_density, "Avg Total Density")
+
+    census["Density"] = census["Density"].astype(float)
+    census["Avg Added Dwellings"] = census["Avg Added Dwellings"].astype(int)
+    census["Avg Added Density"] = census["Avg Added Density"].astype(float)
+    census["Avg Total Density"] = census["Avg Total Density"].astype(float)
 
     #Plot the percentages againgst the statistical areas (which are thin opaque boundary lines)
     census.plot(column='F score %', cmap="Blues", legend=False, ax=ax)

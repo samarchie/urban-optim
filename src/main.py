@@ -264,7 +264,6 @@ def main():
     plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations)
 
     #We wish to consider the best plan seen overall, and we want to 3D map the density changes!
-    # save_best_F_score_plan(MOPO_List, census, NO_parents, NO_generations)
     logger.info('Now plotting best F_score results from the genetic algorithm')
 
     save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_generations)
@@ -304,8 +303,8 @@ def main():
 
         for point in pareto_front:
             #Check to make sure there isnt double ups of parents in the set. As one parent could be optimal
-            if point not in pareto_parents:
-                pareto_parents.append(point)
+            if point[-1] not in pareto_parents:
+                pareto_parents.append(point[-1])
 
     print("Amount of spatial plans on the pareto-front that are optimal in at least one objective: {} plans".format(len(pareto_parents)))
 
