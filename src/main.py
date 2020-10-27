@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
-from plotting import *
+from plotty_bois import *
 
 ######Get the algorithm parameters that can be changed by the user########
 
@@ -266,7 +266,7 @@ def main():
     #We wish to consider the best plan seen overall, and we want to 3D map the density changes!
     logger.info('Now plotting best F_score results from the genetic algorithm')
 
-    save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_generations)
+    save_ranked_F_score_sites(parents, census, scheme, NO_parents, NO_generations)
 
 
     ######### PHASE 4 - ENDING

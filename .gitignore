@@ -10,3 +10,5 @@ report
 test
 logging.log
 src/caparros-midwood
+src/tom.py
+src/bee.py
