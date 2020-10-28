@@ -11,7 +11,7 @@ The objectives of this study are to locate appropriate areas for urban developme
 The objective functions for the Christchurch optimisation study defines the following:
 1. f<sub>tsu</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise exposure to inundation from a tsunami
 2. f<sub>cflood</sub>: &nbsp;&nbsp;Minimise exposure to a 1 in 100-year coastal flooding surge, including sea level rise
-3. f<sub>rflood</sub>: &nbsp;&nbsp;&nbsp;Minimise exposure to future river flooding risk
+3. f<sub>rflood</sub>: &nbsp;&nbsp;Minimise exposure to future river flooding risk
 4. f<sub>liq</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise exposure to future liquefaction risk
 5. f<sub>dist</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise the distance of new development to town centres to minimise travel
 6. f<sub>dev</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise expansion of urban sprawl in rural zones
