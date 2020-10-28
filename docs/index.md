@@ -16,7 +16,6 @@ The objective functions for the Christchurch optimisation study defines the foll
 5. f<sub>dist</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise the distance of new development to town centres to minimise travel
 6. f<sub>dev</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise expansion of urban sprawl in rural zones
 
-<!-- {% include vis3dex.html %} -->
 
 ### Markdown
 
