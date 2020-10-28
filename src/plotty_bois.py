@@ -634,7 +634,7 @@ def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
     fig2.savefig("fig/{}/best_mopo_sites_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
 
-def save_ranked_F_score_sites(parents, census, toolbox, scheme, NO_parents, NO_generations):
+def save_ranked_F_score_sites(parents, census, scheme, NO_parents, NO_generations):
     """This module creates a plot that showcases the average percentage of dwellings that are associated with a statistical area over the entire pareto set (which is the suprerior parents).
 
     Parameters
