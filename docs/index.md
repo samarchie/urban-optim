@@ -6,7 +6,7 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 
 <br>
 
-##### Background
+#### Background
 
 The sustainable development of cities has recently been identified as an important way for us to adapt to and help solve climate change. In response, the National Policy Statement on Urban Development requires urban-planners to design future urban areas in New Zealand strategically for the next generations, primarily through intensification of existing residential areas. Local authorities are currently unequipped to assess areas for future development through a quantitive lens, whilst considering the tradeoffs between multiple planning objectives. This paper continues the development of a multi-criteria spatial optimisation framework from previous researchers through the use of a genetic algorithm. The framework is applied to the case study of Ōtautahi Christchurch to identify areas of priority for urban intensification, to aid decision-makers where to guide future growth whilst taking into account multiple hazard adaption and sustainability objectives.
 
@@ -16,7 +16,7 @@ The objectives of this study are to locate appropriate areas for urban developme
 
 <br>
 
-##### Planning Goals Implemented
+#### Planning Goals Implemented
 The objective functions for the Christchurch optimisation study defines the following:
 1. f<sub>tsu</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise exposure to inundation from a tsunami
 2. f<sub>cflood</sub>: &nbsp;&nbsp;Minimise exposure to a 1 in 100-year coastal flooding surge, including sea level rise
