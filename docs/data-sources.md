@@ -1,3 +1,7 @@
+layout: page
+title: "Data Sources"
+permalink: /data-srouces/
+
 ## Data Sources Used in the Analysis for Ōtautahi Christchurch
 
 Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
