@@ -2,11 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Spatial variability of urban densities of Christchurch in 2018, by statistical area, where the height and colour of the extruded statistical areas indicate relative urban density. </title>
+<title>Spatial variability of urban densities of Christchurch in 2018, by statistical area</title>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
 <script src="./threejs/three.min.js"></script>
 <script src="./threejs/OrbitControls.js"></script>
+<script src="./proj4js/proj4.js"></script>
 <script src="./Qgis2threejs.js"></script>
 <script src="./dat-gui/dat.gui.min.js"></script>
 <script src="./dat-gui_panel.js"></script>
@@ -88,8 +89,8 @@
 <div id="progress"><div id="bar"></div></div>
 
 <!-- header and footer -->
-<div id="header"></div>
-<div id="footer"></div>
+<div id="header">Spatial variation of urban densities of Ōtautahi Christchurch (New Zealand) in 2018, by statistical area (SA1)</div>
+<div id="footer">The height and colour of the extruded statistical areas indicate the relative urban densities.</div>
 
 <script>
 Q3D.Config.localMode = true;
