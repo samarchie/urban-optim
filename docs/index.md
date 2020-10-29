@@ -12,7 +12,7 @@ The sustainable development of cities has recently been identified as an importa
 
 The objectives of this study are to locate appropriate areas for urban development in Ōtautahi Christchurch based on the method used by Caparros-Midwood. The focus of the research is to design an open-ended multi-objective spatial optimisation program that can be applied to any given city with a set of hazards and constraints. The results of the multi-objective spatial optimisation case study of Ōtautahi Christchurch are recommended to form part of an evidence base to showcase and deliver risk management of proposed developments to Christchurch City Council urban planners and other relevant stakeholders.
 
-##### This genetic algorithm package aims to find an optimal, or a series of optimal, scenarios that are better for a range of attributes (known as objective functions). Although the algorithm is currently programmed for Ōtautahi Christchurch, it is possible for this code to be adapted for other cities in New Zealand.
+**This genetic algorithm package aims to find an optimal, or a series of optimal, scenarios that are better for a range of attributes (known as objective functions). Although the algorithm is currently programmed for Ōtautahi Christchurch, it is possible for this code to be adapted for other cities in New Zealand.**
 
 <br>
 
