@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>3D visualtion of existing density</title>
+<title>Spatial variability of urban densities of Christchurch in 2018, by statistical area, where the height and colour of the extruded statistical areas indicate relative urban density. </title>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
 <script src="./threejs/three.min.js"></script>
@@ -112,7 +112,7 @@ app.addEventListener("sceneLoaded", function () {
 });
 
 // load the scene
-app.loadSceneFile("./data/vis3dex/scene.js", function () {
+app.loadSceneFile("./data/chch-existing-density/scene.js", function () {
   app.start();
 
   Q3D.gui.init();   // initialize dat-gui panel
