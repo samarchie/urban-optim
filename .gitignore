@@ -3,7 +3,6 @@ sam
 zJamie
 **/__pycache__
 venv
-data
 report
 .DS_Store
 test
@@ -12,3 +11,9 @@ src/caparros-midwood
 src/tom.py
 src/bee.py
 src/shrek.py
+data/boundary
+data/clipped
+data/final
+data/processed
+data/raw
+data/ss
