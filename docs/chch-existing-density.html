@@ -5,12 +5,12 @@
 <title>Spatial variability of urban densities of Christchurch in 2018, by statistical area</title>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <link rel="stylesheet" type="text/css" href="./docs/Qgis2threejs.css">
-<script src="./docs/threejs/three.min.js"></script>
-<script src="./docs/threejs/OrbitControls.js"></script>
-<script src="./docs/proj4js/proj4.js"></script>
-<script src="./docs/Qgis2threejs.js"></script>
-<script src="./docs/dat-gui/dat.gui.min.js"></script>
-<script src="./docs/dat-gui_panel.js"></script>
+<script src="threejs/three.min.js"></script>
+<script src="threejs/OrbitControls.js"></script>
+<script src="proj4js/proj4.js"></script>
+<script src="/Qgis2threejs.js"></script>
+<script src="dat-gui/dat.gui.min.js"></script>
+<script src="dat-gui_panel.js"></script>
 </head>
 <body>
 <div id="view">
@@ -113,7 +113,7 @@ app.addEventListener("sceneLoaded", function () {
 });
 
 // load the scene
-app.loadSceneFile("./docs/data/chch-existing-density/scene.js", function () {
+app.loadSceneFile("data/chch-existing-density/scene.js", function () {
   app.start();
 
   Q3D.gui.init();   // initialize dat-gui panel
