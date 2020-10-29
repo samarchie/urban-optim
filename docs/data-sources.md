@@ -1,6 +1,6 @@
 layout: page
-title: "PAGE TITLE"
-permalink: /URL-PATH/
+title: "Data Sources"
+permalink: /data-srouces/
 
 ## Data Sources Used in the Analysis for Ōtautahi Christchurch
 
