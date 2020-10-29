@@ -93,7 +93,7 @@
 
 <script>
 Q3D.Config.northArrow.visible = true;
-Q3D.Config.northArrow.color = 0x666666;
+Q3D.Config.northArrow.color = 0xffffff;
 if (typeof proj4 === "undefined") document.getElementById("lib_proj4js").style.display = "none";
 
 var app = Q3D.application,
