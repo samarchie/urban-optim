@@ -1,3 +1,7 @@
+layout: page
+title: "PAGE TITLE"
+permalink: /URL-PATH/
+
 ## Data Sources Used in the Analysis for Ōtautahi Christchurch
 
 Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
