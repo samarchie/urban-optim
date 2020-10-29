@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <title>Christchurch's urban densities in 2018</title>
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
-<script src="./threejs/three.min.js"></script>
-<script src="./threejs/OrbitControls.js"></script>
-<script src="./Qgis2threejs.js"></script>
-<script src="./dat-gui/dat.gui.min.js"></script>
-<script src="./dat-gui_panel.js"></script>
+<link rel="stylesheet" type="text/css" href="./_includes/Qgis2threejs.css">
+<script src="./_includes/threejs/three.min.js"></script>
+<script src="./_includes/threejs/OrbitControls.js"></script>
+<script src="./_includes/Qgis2threejs.js"></script>
+<script src="./_includes/dat-gui/dat.gui.min.js"></script>
+<script src="./_includes/dat-gui_panel.js"></script>
 </head>
 <body>
 <div id="view">
@@ -75,7 +75,7 @@
       <div id="about">
         This page was made with <a href="https://www.qgis.org/" target="_blank">QGIS</a> and <a href="https://github.com/minorua/Qgis2threejs" target="_blank">Qgis2threejs</a> plugin.
         Dependent JavaScript libraries are
-        <a href="https://threejs.org/" target="_blank">three.js</a>, 
+        <a href="https://threejs.org/" target="_blank">three.js</a>,
         <a href="https://code.google.com/p/dat-gui/" target="_blank">dat-gui</a>
         <span id="lib_proj4js"> and <a href="https://trac.osgeo.org/proj4js/" target="_blank">Proj4js</a></span>
         .
@@ -89,7 +89,7 @@
 
 <!-- header and footer -->
 <div id="header">Spatial variation of urban densities of Ōtautahi Christchurch (New Zealand) in 2018, by statistical area (SA1)</div>
-<div id="footer">The height and colour of the extruded statistical areas indicate the relative urban densities.</div>
+<div id="footer">Units of density are in number of dwellings per hectare. The height and colour of the extruded statistical areas indicate the relative urban densities.</div>
 
 <script>
 Q3D.Config.northArrow.visible = true;
@@ -111,7 +111,7 @@ app.addEventListener("sceneLoaded", function () {
 });
 
 // load the scene
-app.loadSceneFile("./data/chch-existing-density/scene.json", function () {
+app.loadSceneFile("./_includes/data/chch-existing-density/scene.json", function () {
   app.start();
 
   Q3D.gui.init();   // initialize dat-gui panel
