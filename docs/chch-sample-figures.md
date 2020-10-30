@@ -40,6 +40,13 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 **Figure 6.** Spatial variability of urban densities of Ōtautahi Christchurch, by statistical area, where the height and colour of the extruded statistical areas indicate relative urban density. (top) 2018 density, (middle) added average added density of top 1% of development plans ranked by combined objective functions and (bottom) combination of the two above spatial plans, which envisions a more sustainable urban environment of Ōtautahi Christchurch.
 
 <br>
+
+![Image](./sample-figs/all_development_sites_par=250_gens=250-1.png)
+
+**Figure 6.** All development sites for parent sets at selected generations for the Ōtautahi Christchurch case study (Parents = 250, Generations = 250, Balanced weightings, High dwelling projection)
+
+
+<br>
 <br>
 Further figures not included in the report can be found [here](https://samarchie.github.io/urban-optim/chch-supplementary-figs)
 
