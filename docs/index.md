@@ -22,11 +22,10 @@ The objective functions for the Christchurch optimisation study defines the foll
 5. f<sub>dist</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise the distance of new development to town centres to minimise travel
 6. f<sub>dev</sub>: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Minimise expansion of urban sprawl in rural zones
 
-The implementation (parameterisation) of each GIS layer to a quantitive function can be found [here](URL) or by clicking the "Parameterisation". Moreover, the source of each data layer to form the objectives are accessible by clicking the 'Data Sources' button below.
+The implementation (parameterisation) of each GIS layer to a quantitive function can be found by clicking the "Parameterisation" button below. Likewise, the source of each data layer to form the objectives are accessible by clicking the 'Data Sources' button below.
 
 {% include button.html button_name="Parameterisation" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-parameterisation" %} {% include button.html button_name="Data Sources" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/data-sources" %}
 
-<br>
 
 ## Results
 
@@ -34,15 +33,10 @@ The results of the analysis are presented and further discussed in the report, *
 
 {% include button.html button_name="Report" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/report.pdf" %}
 
-High-quality figures and plots are reproduced on this website by clicking the "Figures" button.
+High-quality figures and plots form the report on Ōtautahi Christchurch are reproduced on this website by clicking the "Figures" button below.
 
 {% include button.html button_name="Figures" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-sample-figures" %}
 
-Interactive 3D plots are also accessible by clicking the appropiate
+Interactive 3D plots are also accessible by clicking the appropiate button below. The first showcase the urban densities in each statistical area as of the 2018 census. The second interactive 3D plot indicates the statistical areas that were located to be priority areas for intensification as found by the genetic algorithm. Lastly, the third interactive 3D plot indicates what the genetic algorithm envisions how Ōtautahi Christchurch would look if the priority areas were developed on.
 
-{% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-existing-density.html" %} {% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-results-density.html" %}
-
-<br>
-<br>
-<br>
-If at anytime you find yourself lost, click [here](https://samarchie.github.io/urban-optim/) to go home
+{% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-existing-density.html" %} {% include button.html button_name="3D Visualisation of Priority Areas" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-priority-density.html" %} {% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-results-density.html" %}
