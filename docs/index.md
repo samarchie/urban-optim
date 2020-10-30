@@ -1,8 +1,7 @@
 ## Multi-Criterion Spatial Optimization of Christchurch's Urban Development
 
-Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
+Sam Archie (@samarchie) & Jamie Fleming (@Fleming171), supervised by Tom Logan (@tommlogan); (2020)
 
-{% include button.html button_name="Report" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/report.pdf" %}
 
 ## Background
 
@@ -31,17 +30,19 @@ The implementation (parameterisation) of each GIS layer to a quantitive function
 
 ## Results
 
-The results of the analysis are presented and further discussed in the report, *Multi-Criterion Spatial Optimization of Christchurch’s Urban Development* by Sam Archie (@samarchie) and Jamie Fleming(@Fleming171) with supervision from Tom Logan (@tommlogan).
+The results of the analysis are presented and further discussed in the report, *Multi-Criterion Spatial Optimization of Christchurch’s Urban Development* by Sam Archie and Jamie Fleming with supervision from Tom Logan.
+
+{% include button.html button_name="Report" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/report.pdf" %}
 
 High-quality figures and plots are reproduced on this website by clicking the "Figures" button.
 
-Interactive 3D plots are also accessible by clicking the appropiate
-
 {% include button.html button_name="Figures" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-sample-figures" %}
 
+Interactive 3D plots are also accessible by clicking the appropiate
 
 {% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-existing-density.html" %} {% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-results-density.html" %}
 
-
-[Link](url) and ![Image](src)
-```
+<br>
+<br>
+<br>
+If at anytime you find yourself lost, click [here](https://samarchie.github.io/urban-optim/) to go home

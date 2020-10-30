@@ -33,3 +33,8 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 | Data Provider | Data Type | Data Date | Description| Source |
 |---------------|-----------|-----------|------------|--------|
 |Statistics New Zealand (Stats NZ) | Polygon | 2018 | Occupied dwellings, unoccupied dwellings, and dwellings under construction, for private and non-private dwellings, 2006, 2013, and 2018 Censuses (RC, TA, SA2, DHB) | DataFinder, commissioned by Stats NZ [here](https://datafinder.stats.govt.nz/layer/104628-2018-census-dwelling-total-new-zealand-by-statistical-area-1/metadata/) |
+
+<br>
+<br>
+<br>
+If at anytime you find yourself lost, click [here](https://samarchie.github.io/urban-optim/) to go home

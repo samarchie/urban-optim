@@ -14,3 +14,8 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 | f<sub>liq</sub> | Minimise exposure to future liquefaction risk | Assigned a value in the range 0-1 based on liquefaction susceptibility and judgement |
 | f<sub>dis</sub>t | Minimise the distance of new development to town centres to minimise travel | Normalised by the maximum distance for the centroid of any SA from a town centre |
 | f<sub>dev</sub> | Minimise expansion of urban sprawl in rural zones | Objective function scores each SA based on the percentage of the area which is zoned be developed on (residential, mixed) |
+
+<br>
+<br>
+<br>
+If at anytime you find yourself lost, click [here](https://samarchie.github.io/urban-optim/) to go home
