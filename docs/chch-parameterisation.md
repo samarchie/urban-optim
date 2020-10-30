@@ -5,6 +5,7 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 <br>
 
 #### Description and parameterisation of each objective function used
+
 | Objective name | Description | Parameterisation |
 |----------------|-------------|------------------|
 | f<sub>tsu</sub> | Minimise exposure to inundation from a tsunami | Normalised by the maximum inundation depth in any SA |

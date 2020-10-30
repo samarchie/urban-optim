@@ -25,7 +25,7 @@ The objective functions for the Christchurch optimisation study defines the foll
 
 The implementation (parameterisation) of each GIS layer to a quantitive function can be found [here](URL) or by clicking the "Parameterisation". Moreover, the source of each data layer to form the objectives are accessible by clicking the 'Data Sources' button below.
 
-{% include button.html button_name="Data Sources" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-parameterisation" %} {% include button.html button_name="Data Sources" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/data-sources" %}
+{% include button.html button_name="Parameterisation" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-parameterisation" %} {% include button.html button_name="Data Sources" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/data-sources" %}
 
 <br>
 
