@@ -2,7 +2,7 @@
 
 Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 
-{% include button.html button_name="Report" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/report.pdf" %} {% include button.html button_name="Data Sources" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/data-sources" %} {% include button.html button_name="Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-existing-density.html" %} {% include button.html button_name="Existing Density Visualisation" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-results-density.html" %}
+{% include button.html button_name="Report" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/report.pdf" %} {% include button.html button_name="Data Sources" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/data-sources" %} {% include button.html button_name="Figures" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-sample-figures" %} {% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-existing-density.html" %} {% include button.html button_name="3D Visualisation of Existing Density" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-results-density.html" %}
 
 <br>
 
