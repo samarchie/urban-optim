@@ -33,9 +33,9 @@ The results of the analysis are presented and further discussed in the report, *
 
 {% include button.html button_name="Report" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/report.pdf" %}
 
-High-quality figures and plots from the report on Ōtautahi Christchurch are reproduced on this website by clicking the "Figures" button below.
+High-quality figures and plots from the report on Ōtautahi Christchurch are reproduced on this website by clicking the "Figures" button below. Figure that were not included in the report, but still showcase important topics as attached as 'Supplementary Figures'.
 
-{% include button.html button_name="Figures" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-sample-figures" %}
+{% include button.html button_name="Figures" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-sample-figures" %} {% include button.html button_name="Supplementary Figures" button_class="outline-primary" url="https://samarchie.github.io/urban-optim/chch-supplementary-figs" %}
 
 Interactive 3D plots are also accessible by clicking the appropiate button below. The first showcase the urban densities in each statistical area as of the 2018 census. The second interactive 3D plot indicates the statistical areas that were located to be priority areas for intensification as found by the genetic algorithm. Lastly, the third interactive 3D plot indicates what the genetic algorithm envisions how Ōtautahi Christchurch would look if the priority areas were developed on.
 
