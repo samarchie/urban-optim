@@ -18,7 +18,7 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     Parameters
     ----------
     required_dwellings : Integer
-        Description of parameter `required_dwellings`.
+        Number of projected dwellings required to house future residents in the urban area.
     density_total : List of Floating Point Number
         The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
     census : GeoDataFrame
@@ -27,8 +27,8 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
         User specified parameter for how many parents are in a generation.
     prob_mut_indiv : Floating Point Number
         A number between 0 and 1 that represents the probability of mutating an element (d) wihtin an individual (D).
-    max_density_possible : Floating Point Number
-        Maximum sustainable density in dwellings per hectare.
+    density_total : List of Floating Point Number
+        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
 
     Returns
     -------

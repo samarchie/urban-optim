@@ -87,6 +87,8 @@ def plot_pareto_plots(pareto_set, scheme, NO_parents, NO_generations):
     ----------
     paretofront_set : List
         A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
     NO_parents : Integer
         User specified parameter for how many parents are in a generation.
     NO_generations : Integer
@@ -340,6 +342,8 @@ def plot_development_sites(parents, gen_number, when_to_plot, census, scheme, fi
         List of intergers, that represent when to halt the genetic algorithm and plot the spatial development of the current parents.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
     fig_spatial : Figure
         A matplotlib.pyplot Figure, that contains many subplots that may or may not be empty. This Figure represents that spatial variations of specificied generation's parents.
     axs_spatial : axes.Axes
@@ -409,6 +413,10 @@ def plot_ranked_pareto_sites(pareto_set, census, MOPO_List, scheme, NO_parents, 
         A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    MOPO_List : List of Lists
+        A list of 6 lists, where each nested list represents an objective functions, such as f_dist. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time. It is not replaced when a better Individual is found, but rather the new and better one is appended to the back of the list.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
     NO_parents : Integer
         User specified parameter for how many parents are in a generation.
     NO_generations : Integer
@@ -542,6 +550,8 @@ def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
         A list of 6 lists, where each nested list represents an objective functions, such as f_dist. In each of these nested lists is Individuals which have been evaliated to be the best seen for that objective at the present time. It is not replaced when a better Individual is found, but rather the new and better one is appended to the back of the list.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score. An extra column exists with the newly inputted data as well.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
     NO_parents : Integer
         User specified parameter for how many parents are in a generation.
     NO_generations : Integer
@@ -643,6 +653,8 @@ def save_ranked_F_score_sites(parents, census, scheme, NO_parents, NO_generation
         A list of 15 nested lists, updated with parents from a generation. Each list represents a tradeoff between two individual objective functions, such as flooding vs distance. The list for each tradeoff contains a tuple of points, which indicate an individual parents score against the two objective functions alongside the Individual Class.
     census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
     NO_parents : Integer
         User specified parameter for how many parents are in a generation.
     NO_generations : Integer

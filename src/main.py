@@ -9,80 +9,138 @@ This should be the only program that will be run, and it will import and call up
 Good luck
 """
 
+#Import all necessary modules from external sources
 import os, warnings, random, sys, operator, array, math
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 from deap import tools, base, creator
 
-# insert at 0 which is the script path. thus we can import the necessary modules while staying in the same directory
+#This all us to run the code from the urban-optim directory (for ease of opening and saving data) whilst looking for further code/modules in the src folder by adding the filepath to the system path
 sys.path.insert(0, str(sys.path[0]) + '/src')
 
-warnings.simplefilter("ignore") #Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
-
-#Set up the logging software so we can track efficieny of the genetic algortihm and see where code breaks
-from logger_config import *
-logger = logging.getLogger(__name__)
+#Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
+warnings.simplefilter("ignore")
 
 #Import our home-made modules
 from initialisation import *
 from genetic_algorithm import *
 from plotty_bois import *
+from logger_config import *
 
-######Get the algorithm parameters that can be changed by the user########
+#Set up the logging software so we can track efficieny of the genetic algortihm and see where code breaks
+logger = logging.getLogger(__name__)
 
-NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
-NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
 
-prob_crossover = 0.7 #probability of having 2 development plans cross over
-prob_mutation = 0.2 #probability of an element in a development plan mutating
-prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
+def get_parameters():
+    """This modules contains (or asks the user if not already defined) the pararmeters for the spatial optimisation framework.
 
-assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
+    Returns
+    -------
+    NO_parents : Integer
+        User specified parameter for how many parents are in a generation.
+    NO_generations : Integer
+        User specified parameter for hor many generations occur as part of the gentic algorithm.
+    prob_crossover : Floating Point Number
+        A number between 0 and 1 that represents the probability of two indiviuduals (D) within the population, swapping certian attributes (d) using a 2-point crossover technique.
+    prob_mutation : Floating Point Number
+        A number between 0 and 1 that represents the probability of an indiviudual (D) within the population, mutating its attributes (d) through an shuffling of attributes.
+    prob_mut_indiv : Floating Point Number
+        A number between 0 and 1 that represents the probability of mutating an element (d) wihtin an individual (D).
+    weightings : List
+        List of normalised weightings for each objective function in order.
+    required_dwellings : Integer
+        Number of projected dwellings required to house future residents in the urban area.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
+    density_total : List of Floating Point Number
+        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
+    density_total : List of Floating Point Number
+        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
+    when_to_plot : Generator/Range/List
+        List of intergers, that represent when to halt the genetic algorithm and plot the spatial development of the current parents.
+    """
 
-weightings = [] #user defined weightings of each objective function
-i= True
-while i:
-    input_split = input("Please give weightings for Tsunami hazard, Coastal Flooding hazard, River Flooding hazard, Liquefaction hazard, minimising urban Sprawl and prioritising Council zoning. Should be six numbers separated by commas: ").split(",")
-    for item in input_split:
-        weightings.append(float(item))
-    if len(weightings) == 6:
-        i = False
-    else:
-        print("u dumb dumb. need six numbers in format 'a, b, c, d, e, f' ")
-weighting_scheme = input("Give a name to your weighting scheme: weighting_scheme = ") # So we can name the plots for each scheme
+    NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
+    NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
 
-required_dwellings = int(input("How many dwellings? : required_dwellings = ")) #amount of required dwellings over entire region
-dwelling_scheme = input("Give a name to your dwelling scheme: dwelling_scheme = ") # So we can name the plots for each scheme
+    #Get the parameter thrresholds for the mu-plus-lambda evolutionary strategy, and make sure they are valid! It has been set up for lines 71-73 to be changed to user-inputs, but are currently still set on values recommedend by literature.
+    probs_valid = False
+    while not probs_valid:
 
-scheme = weighting_scheme + ', ' + dwelling_scheme
+        prob_crossover = 0.7 #probability of having 2 development plans cross over
+        prob_mutation = 0.2 #probability of an element in a development plan mutating
+        prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
 
-density_total = []
-input_split = input("Enter up to 8 acceptable densities, seperated with a comma, in units of dwellings per hectare: ").split(',') #Define what are acceptable maximum densities for new areas (in dwelling/hecatres)
-for item in input_split:
-    density_total.append(float(item))
+        if (prob_crossover + prob_mutation) <= 1.0:
+            probs_valid = True
+        else:
+            print("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0. Please try again."")
 
-# density_total = [83, 92, 111, 133] # Default numbers
-max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
+    #Now, we require the weightings that the user feels about each of the objective functions. This is coded so that the user inputs 6 numbers (as there are 6 objecive functions), and it is checked to ensure the
+    weightings_valid = False
+    weightings = []
+    while not weightings_valid:
 
-assert max_density_possible >= max(density_total), ("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities.")
+        input_split = input("Please give weightings for (1) Tsunami hazard, (2) Coastal Flooding hazard, (3) River Flooding hazard, (4) Liquefaction hazard, (5) Minimising urban Sprawl and (6) Prioritising Council zoning. The six values should be separated by commas: ").split(",")
+        for item in input_split:
+            weightings.append(float(item))
 
-step_size = input("How often (in generations) shall the spatial plans be plotted? : step_size = ")
-when_to_plot = range(0, NO_generations + 1, int(step_size)) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+        if len(weightings) == 6:
+            weightings_valid = True
+        else:
+            print("Please try again. Six numbers in the format 'a, b, c, d, e, f' are needed.")
+
+    weighting_scheme = input("Give a name to your weighting scheme: weighting_scheme = ") # So we can name the plots for each scheme
+
+    required_dwellings = int(input("How many dwellings are projected for future growth? : required_dwellings = ")) #amount of required dwellings over entire region
+
+    dwelling_scheme = input("Give a name to your dwelling scheme: dwelling_scheme = ") # So we can name the plots for each scheme
+
+    #Create a string detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name". This is used to create the correct folder in to store results
+    scheme = weighting_scheme + ', ' + dwelling_scheme
+
+    #Get the densities (in dwellings per hectare) that each region can be developed up to.
+    density_total = []
+    input_split = input("Enter up to 8 acceptable densities, seperated with a comma, in units of dwellings per hectare. Leave empty to use default numbers. ").split(',')
+    try:
+        for item in input_split:
+            density_total.append(float(item))
+    except:
+        density_total = [83, 92, 111, 133] # Default numbers
+        print("Default density numbers of 83, 92, 111, 133 dwellings per hecatre used")
+
+    max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
+    #Check to make sure that upper limit actually includes all sustainable densitied defined from before.
+    while max_density_possible >= max(density_total):
+
+        print("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities. Please try again.")
+
+        max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
+
+    step_size = input("How often (in generations) shall the spatial plans be plotted? : step_size = ")
+    when_to_plot = range(0, NO_generations + 1, int(step_size)) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
+
+    return NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, max_density_possible, when_to_plot
 
 
 def main():
     """Now this is where the magic happens!"""
     ####### PHASE 1 - INTIALISATION
 
-    #Get data from the user
-    boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
+    #Get the algorithm parameters that can be changed by the user
+    NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, max_density_possible, when_to_plot = get_parameters()
+    logger.info('Parameters for the algortihm are defined')
 
-    #Clip the data
+    #Get geospatial data (shapefiles) from the user
+    boundaries, constraints, census_raw, hazards, coastal_flood, distances = get_data()
+    logger.info('Data files for the algortihm are defined')
+
+    #Clip the data files to the extend of the boundary, if it has not alreadyy taken place before
     if not os.path.exists("data/clipped"):
         os.mkdir("data/clipped")
 
-    # clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
+        clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
     clipped_census, clipped_hazards, clipped_coastal = open_clipped_data(hazards)
 
@@ -92,32 +150,35 @@ def main():
     if not os.path.exists("data/processed"):
         os.mkdir("data/processed")
 
-    # #Add the District Plan Zones that cant be built on to the constraints list
-    # constraints = update_constraints(constraints, boundaries[1])
-    #
-    # #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
-    # constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
-    #
-    # #Add the District Planning Zone in the Census GeoDataFrame
-    # census_zones = add_planning_zones(constrained_census, boundaries[1])
-    #
-    # #Calulate current density in each parcel
-    # census_dens = add_density(census_zones)
-    #
-    # #Now want to pre-process everything!
-    # processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
-    #
-    # #Clean the data properties up!
-    # cleaned_census = clean_processed_data(processed_census)
-    #
-    # #Take the user weightings and find the F score for each statistical area!
-    # census = apply_weightings(cleaned_census, weightings)
+        #Add the District Plan Zones that cant be built on to the constraints list
+        constraints = update_constraints(constraints, boundaries[1])
 
-    census = gpd.read_file("data/processed/census_final.shp")
+        #Update the real parcel size by subtracting the parks and red zones (uninhabitable areas)
+        constrained_census = apply_constraints(clipped_census, constraints, boundaries[0])
+
+        #Add the District Planning Zone in the Census GeoDataFrame
+        census_zones = add_planning_zones(constrained_census, boundaries[1])
+
+        #Calulate current density in each parcel
+        census_dens = add_density(census_zones)
+
+        #Now want to pre-process everything!
+        processed_census = add_f_scores(census_dens, clipped_hazards, clipped_coastal, distances)
+
+        #Clean the data properties up!
+        cleaned_census = clean_processed_data(processed_census)
+
+        #Take the user weightings and find the F score for each statistical area!
+        census = apply_weightings(cleaned_census, weightings)
+
+    else:
+        census = gpd.read_file("data/processed/census_final.shp")
+
     logger.info('Processing/initialisation complete')
 
     # Plot the processed census data and check the objective functions are working as expected!
     plot_intialised_data(census, scheme, weightings)
+
     logger.info('f_functions and F-scores plotted and saved')
 
 
@@ -140,11 +201,8 @@ def main():
     # Add the fitness values to the individuals by mappaing each individual with it fitness score
     fitnesses = list(map(toolbox.evaluate, pop))
     for ind, fit in zip(pop, fitnesses):
-        #As the fitness attribute is currently 'None' as this is a blank random child, then we pass it the fitness values
+        #We pass it the fitness values to populate the attributes field!
         ind.fitness.values = fit
-
-    #Keep a running total of how many unique development plans have been created
-    configurations_assessed = NO_parents
 
     #As we are to create 15 differnet pots of objective functions against another objetcive function, we shall have a list wih 15 lists to store the data points
     #             1   2   3   4   5   6   7   8   9   10  11  12  13  14  15
@@ -171,23 +229,20 @@ def main():
     ###ITERATION PROCEDURE:
     for gen_number in range(1, NO_generations + 1):
 
-        #We must make sure that we follow the rules of the GA method
-        assert (prob_crossover + prob_mutation) <= 1.0, ("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0.")
-
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
         while len(children) < NO_parents:
-            #Generate a random number between 0 and 1, and use this to test HoW we will create a new child!
+            #Generate a random number between 0 and 1, and use this to test HoW we will create a new child! This is all based on the mu-plus-lambda evolution strategy
             op_choice = random.random()
 
-            #Apply cross-over
+            #Apply cross-over to two parents
             if op_choice < prob_crossover:
                 #Select two parents via Roulette Selection to create a child
                 parent1, parent2 = list(map(toolbox.clone, toolbox.select(individuals=parents, k=2)))
                 #Perform a love-making ritual that binds the two parents till death do them part <3
                 child = toolbox.mate(parent1, parent2)[0]
 
-            #Apply mutation
+            #Apply mutation to one parent
             elif op_choice < prob_crossover + prob_mutation:
                 #Select 1 parent via Roulette Selection to create a child
                 parent = toolbox.clone(toolbox.select(individuals=parents, k=1))
@@ -201,7 +256,7 @@ def main():
                 while type(child) != creator.Individual:
                     child = child[0]
 
-            #Apply reproduction (random parent unchanged)
+            #Apply cloning/reproduction (random parent unchanged)
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
@@ -213,9 +268,6 @@ def main():
 
                 # Add the fitness values to the individuals
                 child.fitness.values = toolbox.evaluate(child)
-
-                #As this was a completely new child that has not been seen before, then we shall add it to the running total
-                configurations_assessed += 1
 
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, is forced into an arranged marraige in its teens.
             if child.valid:
@@ -242,8 +294,7 @@ def main():
 
 
 
-
-    ########### PHASE 3 - PARETO FRONTS AND OTHER PLOTS
+    ########### PHASE 3 - PLOTTING AND OUTPUTS
 
     logger.info('Started plotting pareto results from the genetic algorithm')
 
@@ -288,12 +339,9 @@ def main():
     print("Probability of mutating a D: {}%".format(prob_mutation*100))
     print("Probability of mutating an element (d) within a D: {}%".format(0.05*100))
 
-    print("Total spatial plans/configuraitons assessed: {} plans".format(configurations_assessed))
-
     MOPO_sol_found = 0
     for obj_funct_MOPO in MOPO_List:
         MOPO_sol_found += len(obj_funct_MOPO)
-
     print("Total MOPO solutions found: {} plans".format(MOPO_sol_found))
 
     #Set a blank list and add individuals to it that are on the front

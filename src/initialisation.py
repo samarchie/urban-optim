@@ -37,27 +37,32 @@ def get_data():
     distances : DataFrame
         A DataFrame of each distances (in kilometres) from each statistical area to a select amount of key activity areas.
     """
-
+    #Read the boundary files, and then add them to a seperate list
     boundary = gpd.read_file("data/boundary/urban_extent.shp")
     planning_zones = gpd.read_file("data/boundary/planning_zones.shp")
     boundaries = [boundary, planning_zones]
 
+    #Read the imposed constriant files, and then add them to a seperate list
     tech_cats = gpd.read_file("data/raw/hazards/lique_red.shp")
-    #Extract only the red zone polygons as these are the constrints
+    #Extract only the red zone polygons as these are the constraints
     red_zone_boundary = tech_cats.loc[tech_cats["DBH_TC"] == 'Red Zone']
+
     parks = gpd.read_file("data/raw/infrastructure/parks.shp")
     parks["geometry"] = parks.geometry.buffer(0) #Used to simplify the geometry as some errors occur (ring intersection)
     constraints = [red_zone_boundary, parks]
 
+    #Read the dwelling count files
     census = gpd.read_file("data/raw/socioeconomic/census-dwellings.shp")
 
+    #Through use of Dai Kiddle and Mitchell Anderson's project, the distances from each region to each key activity area is collated into a csv file, which is read below.
     distances = pd.read_csv('data/raw/socioeconomic/distances_from_SA1.csv', header=0)
 
+    #Read each datafile on coastal flooding with each increment of sea level rise, and add it to its own list as it has 30 increments!
     coastal_flood = []
     for slr in range(0, 310, 10):
         coastal_flood.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
-    #Enter hazards here that are not SLR coastal flood projections
+    #Enter hazards here that are not SLR coastal flood projections. If the data file is a shapefile, enter in the read file (eg: gpd.read_file("data/...") BUT if it is a raster (grid-like) data set, then just enter the filepath instead.)
     hazards = ['data/raw/hazards/tsunami.tif', gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp"), gpd.read_file('data/raw/hazards/flood_1_in_500.shp')]
 
     return boundaries, constraints, census, hazards, coastal_flood, distances
@@ -236,7 +241,7 @@ def update_constraints(constraints, planning_zones):
 
     """
 
-    # This is a list of strings of all planning zones that we believe you cannot build on in the Christchurch City District
+    #This is a list of strings of all planning zones that we believe you cannot build on in the Christchurch City District
     non_building_zones_labels = ['Specific Purpose', 'Transport', 'Open Space']
 
     #Extract only the bad planning zones, and add/apend them to the constraints list
@@ -622,8 +627,8 @@ def apply_weightings(cleaned_census, weightings):
     ----------
     cleaned_census : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions.
-    weightings : Numpy Array
-        Array of normalised weightings for each objective function in order.
+    weightings : List
+        List of normalised weightings for each objective function in order.
 
     Returns
     -------
@@ -670,6 +675,10 @@ def plot_intialised_data(census_final, scheme, weightings):
     ----------
     census_final : GeoDataFrame
         Dwelling/housing 2018 census for dwellings in the Christchurch City Council region of statistical areas that are not covered by a constraint and a part of the area falls within the urban extent. 6 coloumns are also included indictaing the score of each statistical area against the 6 objective functions, and one for the combined objective functions score.
+    scheme : String
+        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
+    weightings : List
+        List of normalised weightings for each objective function in order.
 
     Returns
     -------
