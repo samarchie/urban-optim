@@ -32,3 +32,8 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 ![Image](./figs/mopo radial.png)
 
 **Figure 5.** Performance of Pareto-optimal spatial plans that dominate in one objective across all objectives, visualised in a radar chart. (Parents = 1000, Generations = 200, Balanced weightings, High dwelling projection)
+
+<br>
+<br>
+<br>
+If at anytime you find yourself lost, click [here](https://samarchie.github.io/urban-optim) to go home

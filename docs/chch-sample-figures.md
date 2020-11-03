@@ -17,7 +17,7 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 
 <br>
 
-![Image](./figs/pareto_demo.png)
+![Image](./figs/pareto-demo.png)
 
 **Figure 3.** Demonstration of the Pareto front for two objectives. (Reproduced from Wang et al., 2015).
 
