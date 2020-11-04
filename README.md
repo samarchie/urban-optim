@@ -39,10 +39,10 @@
 
 > Archie, S. W,. Fleming, J. N., & Logan, T. M. (2020).  Multi-Criterion Spatial Optimisation of Christchurch's Urban Development. *Proceedings of the University of Canterbury Civil and Natural Resources Engineering Research Conference 2020*
 
-This package aims to find an optimal, or a series of optimal, scenarios that are better for a range of attributes (known as objective functions).
+This package aims to find an optimal, or a series of optimal, scenarios of urban development plans that are better for a range of attributes (known as objective functions).
 
 ### Built With
-**Python 3.8 in the following modules:**
+**Python 3.8 with the following modules:**
 
 * []() geopandas
 * []() deap
@@ -64,13 +64,16 @@ git clone https://github.com/samarchie/urban-optim.git
 ```
 2. Download and install [Python 3.7.8](https://www.python.org/downloads/release/python-378/)
 
-3. Create a virtual environment and install required modules listed above. Guidance and instructions is available from [the Python Packaging docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
+3. Create a virtual environment and install required modules listed above. Instructions are available from [the Python Packaging docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
 
-4. Collate geo-spatial datasets to represent each of the objective functions required, and place them in the data folder
+4. Collate geo-spatial datasets (if applicable)
+  1. Download relevant geo-spatial datasets in the form of shapefiles of TIFF images.
+  2. Place them in the `/data` folder, or in various sub-folders (up to user)
+  2. Amend the `get_data()` module in `src/initilisation.py` to point to the right filepaths of newly located datasets
 
 5. Define further necessary objective functions in src/objective_functions.py (if applicable)
 
-6. Run code in a virtual environment, and follow guidance and requests for input from the terminal
+6. Run code through calling `main.py` (shown below) in a virtual environment, and follow requests for input from the terminal
 ```sh
 python src/main.py
 ```
