@@ -1,29 +1,119 @@
-## Multi-Criterion Spatial Optimization of Christchurch's Urban Development
+<br />
+<p align="center">
+  <a href="https://github.com/samarchie/urban-optim">
+    <img src="docs/urutau-logo.svg" alt="Logo" width="250" height="80">
+  </a>
 
-Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
+  <h3 align="center">Multi-Criterion Spatial Optimisation</h3>
 
-The District Plan guides where and how future urban development can occur. In its solicitation, the council released analysis showing five potential scenarios: baseline, suburban centres, centralization, natural hazards, and greenfield. The expectation is that the preferred scenario will represent a blend of these.
+  <p align="center">
+    Building a stronger future for all
+    <br />
+    <a href="http://urutau.co.nz/research/spatial_optimization"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://samarchie.github.io/urban-optim">View Demo</a>
+    ·
+    <a href="https://github.com/samarchie/urban-optim/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/samarchie/urban-optim/issues">Request Feature</a>
+  </p>
+</p>
 
-However, there are some things we cannot choose. Natural hazards are going to impact us under any of these scenarios. What will the effect of these hazards be on the other scenarios? Similarly, what are the vehicle emissions resulting from each scenario proposed?
 
-The objectives of this study are to locate appropriate areas for urban development in Ōtautahi Christchurch based on the method used by Caparros-Midwood. The focus of the research is to design an open-ended multiobjective spatial optimisation program that can be applied to any given city with a set of hazards and constraints. The results of the multi-objective spatial optimisation case study of Ōtautahi Christchurch are recommended to form part of an evidence base to showcase and deliver risk management of proposed developments to Christchurch City Council urban planners and other relevant stakeholders.
 
-##### This genetic algorithm package aims to find an optimal, or a series of optimal, scenarios that are better for a range of attributes (known as objective functions). Although the algorithm is currently programmed for Ōtautahi Christchurch, it is possible for this code to be adapted for other cities in New Zealand.
+## Table of Contents
 
-The objective functions for the Christchurch optimisation study defines the following:
-1. f_tsu
-2. f_cflood
-3. f_rflood
-4. f_liq
-5. f_dist
-6. f_dev
+* [About the Project](#about-the-project)
+  * [Built With](#built-with)
+* [Getting Started](#getting-started)
+* [Usage and Workflow](#usage-and-workflow)
+* [Roadmap](#roadmap)
+* [Contributing](#contributing)
+* [Contact](#contact)
+* [Acknowledgements](#acknowledgements)
 
-#### Modules required:
-* [x] geopandas
-* [x] matplotlib
-* [x] rasterIO
-* [x] descartes
-* [x] rasterstats
-* [x] deap
-* [x] plotly
-* [x] kaleido
+
+
+## About The Project
+
+> Archie, S. W,. Fleming, J. N., & Logan, T. M. (2020).  Multi-Criterion Spatial Optimisation of Christchurch's Urban Development. *Proceedings of the University of Canterbury Civil and Natural Resources Engineering Research Conference 2020*
+
+This package aims to find an optimal, or a series of optimal, scenarios that are better for a range of attributes (known as objective functions).
+
+### Built With
+**Python 3.8 in the following modules:**
+
+* []() geopandas
+* []() deap
+* []() matplotlib
+* []() rasterIO
+* []() descartes
+* []() rasterstats
+* []() plotly
+* []() kaleido
+
+
+## Getting Started
+
+To get a local copy up and running to perform your own analysis, follow these simple steps.
+
+1. Clone the repo
+```sh
+git clone https://github.com/samarchie/urban-optim.git
+```
+2. Download and install [Python 3.7.8](https://www.python.org/downloads/release/python-378/)
+
+3. Create a virtual environment and install required modules listed above. Guidance and instructions is available from [the Python Packaging docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
+
+4. Collate geo-spatial datasets to represent each of the objective functions required, and place them in the data folder
+
+5. Define further necessary objective functions in src/objective_functions.py (if applicable)
+
+6. Run code in a virtual environment, and follow guidance and requests for input from the terminal
+```sh
+python src/main.py
+```
+
+## Usage and Workflow
+
+_For examples on how the framework can be used and is implemented, please refer to the case-study  [Documentation of Ōtautahi Christchurch, New Zealand](https://samarchie.github.io/urban-optim)_
+
+The workflow of the code is simply visualised in the flowchart below.
+
+![Image](./docs/figs/flowchart.png)
+
+
+## Roadmap
+Further works are being completed to expand the framework to positive amenity objective function, such that quality of life is maximised while hazard risks are minimised.
+
+Two more case studies are to be developed - Queenstown (NZ) and Tauranga (NZ). Currently, the package only considers six objective functions only for Christchurch. Further work is to make the entire framework open-ended for any urban area - including those outside of New Zealand.
+
+See the [open issues](https://github.com/samarchie/urban-optim/issues) for a list of further proposed features (and known issues).
+
+
+## Contributing
+
+Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
+## Contact
+
+Project Supervisor: [Tom Logan (via email)](mailto:tom.logan@canterbury.ac.nz)
+
+Project Link: [https://github.com/samarchie/urban-optim](https://github.com/samarchie/urban-optim)
+
+Project Documentation: [https://samarchie.github.io/urban-optim](https://samarchie.github.io/urban-optim)
+
+
+## Acknowledgements
+
+We thank Dai Kiddle and Mitchell Anderson (University
+of Canterbury) for their contribution to data manipulation
+and methods.
