@@ -67,14 +67,14 @@ body {
   position: absolute;
   left: 5px;
   top: 5px;
-  background-color: #ffffff;
+  background-color: white;
 }
 
 #footer {
   position: absolute;
   left: 5px;
   bottom: 5px;
-  background-color: #ffffff;
+  background-color: white;
 }
 
 #infobtn {
