@@ -62,7 +62,7 @@ To get a local copy up and running to perform your own analysis, follow these si
 ```sh
 git clone https://github.com/samarchie/urban-optim.git
 ```
-2. Download and install [Python 3.7.8](https://www.python.org/downloads/release/python-378/)
+2. Download and install [Python 3.8.2](https://www.python.org/downloads/release/python-382/)
 
 3. Create a virtual environment and install required modules listed above. Instructions are available from [the Python Packaging docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
 
