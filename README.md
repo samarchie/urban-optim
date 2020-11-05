@@ -44,14 +44,14 @@ This package aims to find an optimal, or a series of optimal, scenarios of urban
 ### Built With
 **Python 3.8 with the following modules:**
 
-* []() geopandas
-* []() deap
-* []() matplotlib
-* []() rasterIO
-* []() descartes
-* []() rasterstats
-* []() plotly
-* []() kaleido
+* []() geopandas (0.8.1)
+* []() deap (1.3.1)
+* []() matplotlib (3.3.1)
+* []() rasterIO (1.1.5)
+* []() descartes (1.1.0)
+* []() rasterstats (0.15.0)
+* []() plotly (4.11.0)
+* []() kaleido (0.0.3.post1)
 
 
 ## Getting Started
