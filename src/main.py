@@ -75,7 +75,7 @@ def get_parameters():
         if (prob_crossover + prob_mutation) <= 1.0:
             probs_valid = True
         else:
-            print("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0. Please try again."")
+            print("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0. Please try again.")
 
     #Now, we require the weightings that the user feels about each of the objective functions. This is coded so that the user inputs 6 numbers (as there are 6 objecive functions), and it is checked to ensure the
     weightings_valid = False
