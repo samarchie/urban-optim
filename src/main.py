@@ -112,7 +112,7 @@ def get_parameters():
 
     max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
     #Check to make sure that upper limit actually includes all sustainable densitied defined from before.
-    while max_density_possible >= max(density_total):
+    while max_density_possible <= max(density_total):
 
         print("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities. Please try again.")
 
