@@ -6,6 +6,8 @@ Sam Archie (@samarchie) & Jamie Fleming (@Fleming171), supervised by Tom Logan (
 
 #### This website is a holder to store information and data on for the aforementioned report. The associated blog post should be read, as it contains up-to-date information regarding the project.
 
+<link rel="stylesheet" type="text/css" href="/_includes/big_button.css" />
+
 {% include big_button.html button_name="Blog" url="https://urutau.co.nz/research/spatial-optimization/" %}
 
 ## Background
