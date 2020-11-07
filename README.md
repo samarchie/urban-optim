@@ -1,6 +1,6 @@
 <br />
 <p align="center">
-  <a href="https://github.com/samarchie/urban-optim">
+  <a href="https://urutau.co.nz/research/spatial-optimization/">
     <img src="docs/urutau-logo.svg" alt="Logo" width="250" height="80">
   </a>
 
@@ -12,7 +12,7 @@
     <a href="http://urutau.co.nz/research/spatial_optimization"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://samarchie.github.io/urban-optim">View Demo</a>
+    <a href="https://urutau.co.nz/research/spatial-optimization/">View Demo</a>
     ·
     <a href="https://github.com/samarchie/urban-optim/issues">Report Bug</a>
     ·
@@ -112,7 +112,7 @@ Project Supervisor: [Tom Logan (via email)](mailto:tom.logan@canterbury.ac.nz)
 
 Project Link: [https://github.com/samarchie/urban-optim](https://github.com/samarchie/urban-optim)
 
-Project Documentation: [https://samarchie.github.io/urban-optim](https://samarchie.github.io/urban-optim)
+Project Documentation: [https://samarchie.github.io/urban-optim](https://urutau.co.nz/research/spatial-optimization/)
 
 
 ## Acknowledgements
