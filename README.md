@@ -80,7 +80,7 @@ python src/main.py
 
 ## Usage and Workflow
 
-_For examples on how the framework can be used and is implemented, please refer to the case-study  [Documentation of Ōtautahi Christchurch, New Zealand](https://samarchie.github.io/urban-optim)_
+_For examples on how the framework can be used and is implemented, please refer to the case-study  [Documentation of Ōtautahi Christchurch, New Zealand](https://urutau.co.nz/research/spatial-optimization/)_
 
 The workflow of the code is simply visualised in the flowchart below.
 
