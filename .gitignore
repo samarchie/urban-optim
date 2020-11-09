@@ -7,15 +7,4 @@ report
 .DS_Store
 test
 logging.log
-src/caparros-midwood
-src/tom.py
-src/bee.py
-src/shrek.py
-data/boundary
-data/clipped
-data/final
-data/processed
-data/raw
-data/ss
-src/ididnothither.py
-src/doit.py
+data
