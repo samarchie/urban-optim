@@ -11,7 +11,7 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 
 <br>
 
-![Image](./figs/existing-densities-donut-w-legend.png)
+![Image](./figs/pareto fronts.png)
 
 **Figure 2.** Pareto fronts. Each set of axis compares one of the objective functions to the other five. (Parents = 1000, Generations = 200, Balanced weightings, High dwelling projection)
 

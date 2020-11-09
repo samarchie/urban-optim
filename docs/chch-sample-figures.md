@@ -4,7 +4,7 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 
 <br>
 
-![Image](./figs/existing-densities-donut.png)
+![Image](./figs/existing-densities-donut-w-legend.png)
 
 **Figure 1.** Proportions of existing urban densities of Christchurch in 2018, by statistical area, indicating where different transport methods can be supported as outlined by Chakrabarti (2013). *Note: A 3D interactive spatial plot of existing densities can be found [here](https://samarchie.github.io/urban-optim/chch-existing-density.html)*
 
