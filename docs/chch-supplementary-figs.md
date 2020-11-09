@@ -11,7 +11,7 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 
 <br>
 
-![Image](./figs/pareto fronts.png)
+![Image](./figs/existing-densities-donut-w-legend.png)
 
 **Figure 2.** Pareto fronts. Each set of axis compares one of the objective functions to the other five. (Parents = 1000, Generations = 200, Balanced weightings, High dwelling projection)
 
@@ -32,6 +32,11 @@ Sam Archie & Jamie Fleming, supervised by Tom Logan; (2020)
 ![Image](./figs/mopo radial.png)
 
 **Figure 5.** Performance of Pareto-optimal spatial plans that dominate in one objective across all objectives, visualised in a radar chart. (Parents = 1000, Generations = 200, Balanced weightings, High dwelling projection)
+
+![Image](./figs/top1percent.png)
+
+**Figure 6.** The statistical areas that most commonly appeared in the top 1% (of overall combined objective score) of  spatial development plans for the Ōtautahi Christchurch case study (Parents = 1000, Generations = 200, Balanced weightings, High dwelling projection)
+
 
 <br>
 <br>
