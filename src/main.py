@@ -110,26 +110,35 @@ def get_parameters():
         density_total = [83, 92, 111, 133] # Default numbers
         print("Default density numbers of 83, 92, 111, 133 dwellings per hecatre used")
 
-    max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
+    min_density_possible = int(input("Minimum possible density, in units of dwellings per hectare? : min_density_possible = ")) # To make sure developed SAs reach a sustainable urban density
+    #Check to make sure that upper limit actually includes all sustainable densitied defined from before.
+    while min_density_possible >= min(density_total):
+
+        print("The minimum permissible sustainable urban density must be smaller than all of the allowable sustainbale urban densities. Please try again.")
+
+        min_density_possible = int(input("Minimum possible density, in units of dwellings per hectare? : min_density_possible = ")) # To make sure developed SAs reach a sustainable urban density
+
+    max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) # To limit how many dwellings can be added to any one SA
     #Check to make sure that upper limit actually includes all sustainable densitied defined from before.
     while max_density_possible <= max(density_total):
 
         print("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities. Please try again.")
 
-        max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) #To limit how many dwellings can be added to any one SA
+        max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) # To limit how many dwellings can be added to any one SA
 
     step_size = input("How often (in generations) shall the spatial plans be plotted? : step_size = ")
     when_to_plot = range(0, NO_generations + 1, int(step_size)) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
 
-    return NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, max_density_possible, when_to_plot
+    return NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, min_density_possible, max_density_possible, when_to_plot
 
 
 def main():
     """Now this is where the magic happens!"""
-    ####### PHASE 1 - INTIALISATION
+    ####### PHASE 1 - INTIALISATION #######
 
     #Get the algorithm parameters that can be changed by the user
-    NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, max_density_possible, when_to_plot = get_parameters()
+    NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, min_density_possible, max_density_possible, when_to_plot = get_parameters()
+
     logger.info('Parameters for the algortihm are defined')
 
     #Get geospatial data (shapefiles) from the user
@@ -196,7 +205,7 @@ def main():
     for ind in pop:
         #Populate two of its attributes
         ind.densities = get_densities(ind, census)
-        ind.valid = child_is_good(ind, max_density_possible, census)
+        ind.valid = child_is_good(ind, min_density_possible, max_density_possible, census)
 
     # Add the fitness values to the individuals by mappaing each individual with it fitness score
     fitnesses = list(map(toolbox.evaluate, pop))
@@ -226,9 +235,10 @@ def main():
 
     parents = pop
 
-    ###ITERATION PROCEDURE:
-    for gen_number in range(1, NO_generations + 1):
 
+    ####### PHASE 2 - ITERATION PROCEDURE #######
+    for gen_number in range(1, NO_generations + 1):
+        i=0
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
         while len(children) < NO_parents:
@@ -241,6 +251,7 @@ def main():
                 parent1, parent2 = list(map(toolbox.clone, toolbox.select(individuals=parents, k=2)))
                 #Perform a love-making ritual that binds the two parents till death do them part <3
                 child = toolbox.mate(parent1, parent2)[0]
+                logger.info('cross-over done')
 
             #Apply mutation to one parent
             elif op_choice < prob_crossover + prob_mutation:
@@ -255,23 +266,34 @@ def main():
                 #Sometimes the returned child is a list of the DEAP class so lets extract it if thats the case
                 while type(child) != creator.Individual:
                     child = child[0]
+                logger.info('mutation done')
 
             #Apply cloning/reproduction (random parent unchanged)
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
+                logger.info('cloning done')
 
             #Update the child attributes with the correct ones if they are a new child (eg mut or crossover modules delete fitness values)
             if not child.fitness.valid:
                 child.densities = get_densities(child, census)
-                child.valid = child_is_good(child, max_density_possible, census)
+                logger.info('updated densities')
+                child.valid = child_is_good(child, min_density_possible, max_density_possible, census)
+                logger.info('checked validity')
 
                 # Add the fitness values to the individuals
                 child.fitness.values = toolbox.evaluate(child)
+                logger.info('added fitnesses')
 
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, is forced into an arranged marraige in its teens.
             if child.valid:
                 children.append(child)
+                logger.info('child kept')
+            else:
+                logger.info('child killed')
+            i += 1
+            if i > 1000:
+                break
 
 
         #Now we have all the children all ready! lets mix them with the parents and select the fittest ones for the next generation!
@@ -294,7 +316,7 @@ def main():
 
 
 
-    ########### PHASE 3 - PLOTTING AND OUTPUTS
+    ####### PHASE 3 - PLOTTING AND OUTPUTS #######
 
     logger.info('Started plotting pareto results from the genetic algorithm')
 
@@ -333,6 +355,7 @@ def main():
     print("User defined weighting scheme: {}".format(scheme))
     print("Amount of dwellings needed: {} dwellings".format(required_dwellings))
     print("Recommended sustainable density used: {} dwellings/hectare".format(density_total))
+    print("Minimum sustainable density used: {} dwellings/hectare".format(min_density_possible))
     print("Maximum sustainable density used: {} dwellings/hectare".format(max_density_possible))
 
     print("Probability of applying a crossover to two D's: {}%".format(prob_crossover*100))

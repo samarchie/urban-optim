@@ -27,8 +27,6 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
         User specified parameter for how many parents are in a generation.
     prob_mut_indiv : Floating Point Number
         A number between 0 and 1 that represents the probability of mutating an element (d) wihtin an individual (D).
-    density_total : List of Floating Point Number
-        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
 
     Returns
     -------
@@ -46,7 +44,7 @@ def initialise_deap(required_dwellings, density_total, census, NO_parents, prob_
     #Create the toolbox where all the population is saved
     toolbox = base.Toolbox()
 
-    #Initialise how to create an individual via the create_initial_development_plan module, and also deytail how to make a population (repeat making individuals till there are NO_parents)
+    #Initialise how to create an individual via the create_initial_development_plan module, and also detail how to make a population (repeat making individuals till there are NO_parents)
     #Basically, an individual will be a list of len(census) long that has intergers that indicate how many buildings are to be built in that statiscal area.
     toolbox.register("individual", create_initial_development_plan, creator.Individual, required_dwellings=required_dwellings, density_total=density_total, census=census)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
@@ -88,7 +86,7 @@ def create_initial_development_plan(ind_class, required_dwellings, density_total
     development_plan_of_densities = [0] * len(census)
     assoc_addition_of_dwellings = [0] * len(census)
 
-    #Use a while loop to keep on adding dwellings (densifying) untill the required amount is met!
+    #Use a while loop to keep on adding dwellings (densifying) until the required amount is met!
     dwellings_added = 0
     while dwellings_added < required_dwellings:
         #Pick a random statistical area to develop on
@@ -168,7 +166,7 @@ def get_densities(ind, census):
     return densities
 
 
-def child_is_good(child, max_density_possible, census):
+def child_is_good(child, min_density_possible, max_density_possible, census):
     """This module evaluate whether a child satisfies the constraint of a specified density limit.
 
     Parameters
@@ -186,19 +184,25 @@ def child_is_good(child, max_density_possible, census):
         Returns True if the all statiscal areas have a density less than the threshold. Otherwise, it returns False.
 
     """
-    #The child is assumed to be good untill it is shown to be bad!
+    #The child is assumed to be good until it is shown to be bad!
     is_good_child = True
 
-    #Check each statistical area to make sure it is under the threshold amount
+    #Check each statistical area to make sure it is within the defined sustainable density thresholds
     for prop_index in range(len(child.densities)):
         #Extract the current density from the GeoDataFrame
         existing_density = float(census.loc[prop_index, "Density"])
         density_to_add = float(child.densities[prop_index])
 
-        if density_to_add + existing_density > max_density_possible:
-            #Then unfortunately the addedd dwellings causes the density to exceed the sustainable urban development limit set by the user
-            is_good_child = False
-            break
+        if density_to_add > 0: # Check validity of changed SAs. Unchanged SAs will most likely not meet sustainability thresholds
+            if density_to_add + existing_density > max_density_possible:
+                #Then unfortunately the added dwellings causes the density to exceed the upper sustainable urban development limit set by the user
+                is_good_child = False
+                break
+
+            if density_to_add + existing_density < min_density_possible:
+                #Then unfortunately the new total dwellings does not reach the lower sustainable urban development limit set by the user
+                is_good_child = False
+                break
 
     return is_good_child
 
