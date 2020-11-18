@@ -95,8 +95,7 @@ def get_parameters():
                         'densities': [83, 92, 111, 133],
                         'min density': 25,
                         'max density': 140,
-                        'step size': 10,
-                        'theme': sg.theme()}
+                        'step size': 10}
     parametersKeys_to_elementKeys = {'parents': '-PARENTS-',
                                 'generations': '-GENERATIONS-',
                                 'crossover probability': '-CX_PROB-',
@@ -108,8 +107,7 @@ def get_parameters():
                                 'densities': '-DENSITIES-',
                                 'min density': '-MIN_DENS-',
                                 'max density': '-MAX_DENS-',
-                                'step size': '-STEP_SIZE-',
-                                'theme': '-THEME-'}
+                                'step size': '-STEP_SIZE-'}
 
     city_info_file = 'src/city_info.cfg'
     default_city_info = {}
@@ -210,6 +208,25 @@ def get_parameters():
         return settings
 
     def save_settings(settings_file, settings, values):
+
+        margins = []
+        for bit in settings['margins'].split(','):
+            if '(' or '[' in bit:
+                bit = bit[1:]
+            if ' ' in bit:
+                bit = bit[1:]
+            if ')' or '[' in bit:
+                bit = bit[:-1]
+            margins.append(float(bit))
+        settings['margins'] = margins
+
+        a = settings['margins'].split(',')
+        bit = a[0]
+        if '(' or '[' in bit:
+            bit = bit[1:]
+        margins.append(float(bit))
+
+
         if values:      # if there are stuff specified by another window, fill in those values
             for key in settingsKeys_to_elementKeys:  # update window with the values read from settings file
                 try:
@@ -243,7 +260,7 @@ def get_parameters():
                     [TextLabel('Spatial Plan Plotting Step Size'), sg.In(key='-STEP_SIZE-')],
                     [sg.Button('Save'), sg.Button('Exit')]  ]
 
-        window = sg.Window('Parameters', layout, margins=(50, 50), keep_on_top=True, finalize=True)
+        window = sg.Window('Parameters', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
 
         for key in parametersKeys_to_elementKeys:   # update window with the values read from parameters file
             try:
@@ -273,16 +290,16 @@ def get_parameters():
     #
     #     return window
 
-    settings = load(settings_file, default_settings)
+    # settings = load_settings(settings_file, default_settings)
     def create_settings_window(settings):
         sg.theme(settings['theme'])
 
-        def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
+        def TextLabel(text): return sg.Text(text+':', justification='r', size=(40,1))
 
         layout = [  [sg.Text('Settings', font='Any 15')],
                     [TextLabel('Theme'), sg.Combo(sg.theme_list(), size=(20, 20), key='-THEME-')],
-                    [TextLabel('Margins'), sg.In(key='-MARGINS-')],
-                    [sg.Button('Save'), sg.Button('Exit')]  ]
+                    [TextLabel('Margins (separated by a space e.g. "50 50")'), sg.In(key='-MARGINS-')],
+                    [sg.B('Save'), sg.B('Exit')]  ]
 
         window = sg.Window('Settings', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
 
@@ -296,16 +313,17 @@ def get_parameters():
 
 
     ##################### Main Program Window #####################
-    def create_main_window(parameters):
-        sg.theme(parameters['theme'])
+    def create_main_window(parameters, settings):
+        sg.theme(settings['theme'])
 
         layout = [[sg.T('This is my main application')],
                   [sg.B('Change Parameters')],
                   [sg.B('Change City Data')],
                   [sg.B('Change Objectives')],
+                  [sg.B('Change Settings')],
                   [sg.B('Ok')]]
 
-        return sg.Window('Main Application', layout)
+        return sg.Window('Main Application', layout, margins=settings['margins'])
 
     ##################### Clean Up #####################
     def tidy(parameters):
@@ -325,12 +343,12 @@ def get_parameters():
     ##################### Event Loop #####################
     def run():
         window = None
-        parameters = load(parameters_file, default_parameters)
-        settings = load(settings_file, default_settings)
+        parameters = load_parameters(parameters_file, default_parameters)
+        settings = load_settings(settings_file, default_settings)
 
         while True:             # Event Loop
             if window is None:
-                window = create_main_window(parameters)
+                window = create_main_window(parameters, settings)
 
             event, values = window.read()
             if event in (sg.WIN_CLOSED, 'Ok'):
@@ -341,6 +359,13 @@ def get_parameters():
                     window.close()
                     window = None
                     save_parameters(parameters_file, parameters, values)
+
+            if event == 'Change Settings':
+                event, values = create_settings_window(settings).read(close=True)
+                if event == 'Save':
+                    window.close()
+                    window = None
+                    save_settings(settings_file, settings, values)
         window.close()
 
         parameters = tidy(parameters)
