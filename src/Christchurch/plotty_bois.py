@@ -633,11 +633,11 @@ def plot_MOPO_plots(MOPO_List, census, scheme, NO_parents, NO_generations):
     fig.tight_layout()
     fig.savefig("fig/{}/mopo_tradeoffs_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations), transparent=False, dpi=600)
 
-    #Set the axis and titles for the radar chart
-    title_settings = {'text': "Performance of the best Pareto-optimal spatial plans"}
-    fig_radial.update_layout(polar=dict(radialaxis=dict(visible=True,range=[0, max_score_seen])), showlegend=True, title=title_settings)
-    #Save the radar chart
-    fig_radial.write_image("fig/{}/mopo_tradeoffs_radial_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations))
+    # #Set the axis and titles for the radar chart
+    # title_settings = {'text': "Performance of the best Pareto-optimal spatial plans"}
+    # fig_radial.update_layout(polar=dict(radialaxis=dict(visible=True,range=[0, max_score_seen])), showlegend=True, title=title_settings)
+    # #Save the radar chart
+    # fig_radial.write_image("fig/{}/mopo_tradeoffs_radial_par={}_gens={}.pdf".format(scheme, NO_parents, NO_generations))
 
     #And for the best MOPO sites plot, just tidy it up a bit and save it!
     fig2.tight_layout()
