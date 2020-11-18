@@ -32,104 +32,6 @@ from logger_config import *
 logger = logging.getLogger(__name__)
 
 
-def get_parameters():
-    """This modules contains (or asks the user if not already defined) the pararmeters for the spatial optimisation framework.
-
-    Returns
-    -------
-    NO_parents : Integer
-        User specified parameter for how many parents are in a generation.
-    NO_generations : Integer
-        User specified parameter for hor many generations occur as part of the gentic algorithm.
-    prob_crossover : Floating Point Number
-        A number between 0 and 1 that represents the probability of two indiviuduals (D) within the population, swapping certian attributes (d) using a 2-point crossover technique.
-    prob_mutation : Floating Point Number
-        A number between 0 and 1 that represents the probability of an indiviudual (D) within the population, mutating its attributes (d) through an shuffling of attributes.
-    prob_mut_indiv : Floating Point Number
-        A number between 0 and 1 that represents the probability of mutating an element (d) wihtin an individual (D).
-    weightings : List
-        List of normalised weightings for each objective function in order.
-    required_dwellings : Integer
-        Number of projected dwellings required to house future residents in the urban area.
-    scheme : String
-        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
-    density_total : List of Floating Point Number
-        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
-    density_total : List of Floating Point Number
-        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urabn development.
-    when_to_plot : Generator/Range/List
-        List of intergers, that represent when to halt the genetic algorithm and plot the spatial development of the current parents.
-    """
-
-    NO_parents = int(input("How many parents? : NO_parents = ")) #number of parents/development plans in each iteration to make
-    NO_generations = int(input("How many generations? : NO_generations = ")) #how many generations/iterations to complete
-
-    #Get the parameter thrresholds for the mu-plus-lambda evolutionary strategy, and make sure they are valid! It has been set up for lines 71-73 to be changed to user-inputs, but are currently still set on values recommedend by literature.
-    probs_valid = False
-    while not probs_valid:
-
-        prob_crossover = 0.7 #probability of having 2 development plans cross over
-        prob_mutation = 0.2 #probability of an element in a development plan mutating
-        prob_mut_indiv = 0.05 #probability of mutating an element d_i within D_i
-
-        if (prob_crossover + prob_mutation) <= 1.0:
-            probs_valid = True
-        else:
-            print("The sum of the crossover and mutation probabilities must be smaller or equal to 1.0. Please try again.")
-
-    #Now, we require the weightings that the user feels about each of the objective functions. This is coded so that the user inputs 6 numbers (as there are 6 objecive functions), and it is checked to ensure the
-    weightings_valid = False
-    weightings = []
-    while not weightings_valid:
-
-        input_split = input("Please give weightings for (1) Tsunami hazard, (2) Coastal Flooding hazard, (3) River Flooding hazard, (4) Liquefaction hazard, (5) Minimising urban Sprawl and (6) Prioritising Council zoning. The six values should be separated by commas: ").split(",")
-        for item in input_split:
-            weightings.append(float(item))
-
-        if len(weightings) == 6:
-            weightings_valid = True
-        else:
-            print("Please try again. Six numbers in the format 'a, b, c, d, e, f' are needed.")
-
-    weighting_scheme = input("Give a name to your weighting scheme: weighting_scheme = ") # So we can name the plots for each scheme
-
-    required_dwellings = int(input("How many dwellings are projected for future growth? : required_dwellings = ")) #amount of required dwellings over entire region
-
-    dwelling_scheme = input("Give a name to your dwelling scheme: dwelling_scheme = ") # So we can name the plots for each scheme
-
-    #Create a string detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name". This is used to create the correct folder in to store results
-    scheme = weighting_scheme + ', ' + dwelling_scheme
-
-    #Get the densities (in dwellings per hectare) that each region can be developed up to.
-    density_total = []
-    input_split = input("Enter up to 8 acceptable densities, seperated with a comma, in units of dwellings per hectare. Leave empty to use default numbers. ").split(',')
-    try:
-        for item in input_split:
-            density_total.append(float(item))
-    except:
-        density_total = [83, 92, 111, 133] # Default numbers
-        print("Default density numbers of 83, 92, 111, 133 dwellings per hecatre used")
-
-    min_density_possible = int(input("Minimum possible density, in units of dwellings per hectare? : min_density_possible = ")) # To make sure developed SAs reach a sustainable urban density
-    #Check to make sure that upper limit actually includes all sustainable densitied defined from before.
-    while min_density_possible >= min(density_total):
-
-        print("The minimum permissible sustainable urban density must be smaller than all of the allowable sustainbale urban densities. Please try again.")
-
-        min_density_possible = int(input("Minimum possible density, in units of dwellings per hectare? : min_density_possible = ")) # To make sure developed SAs reach a sustainable urban density
-
-    max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) # To limit how many dwellings can be added to any one SA
-    #Check to make sure that upper limit actually includes all sustainable densitied defined from before.
-    while max_density_possible <= max(density_total):
-
-        print("The maximum permissible sustainable urban density must be larger than all of the allowable sustainbale urban densities. Please try again.")
-
-        max_density_possible = int(input("Maximum possible density, in units of dwellings per hectare? : max_density_possible = ")) # To limit how many dwellings can be added to any one SA
-
-    step_size = input("How often (in generations) shall the spatial plans be plotted? : step_size = ")
-    when_to_plot = range(0, NO_generations + 1, int(step_size)) #specify [start, end, spacing] when we should plot out what generations to show the spatial variations of the parents (eg best locations)
-
-    return NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, min_density_possible, max_density_possible, when_to_plot
 
 
 def main():
@@ -342,7 +244,7 @@ def main():
     save_ranked_F_score_sites(parents, census, scheme, NO_parents, NO_generations)
 
 
-    ######### PHASE 4 - ENDING
+    ####### PHASE 4 - ENDING #######
 
     logger.info("Kachow, all plots are done! thanks for running our code :)")
 
