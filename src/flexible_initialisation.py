@@ -110,12 +110,27 @@ def get_parameters():
                                 'step size': '-STEP_SIZE-'}
 
     city_info_file = 'src/city_info.cfg'
-    default_city_info = {}
-    cityinfoKeys_to_elementKeys = {}
+    default_city_info = {'boundary': 'P:/urban-optim/data/boundary/urban_extent.shp',
+                        'census': 'P:/urban-optim/data/raw/socioeconomic/census-dwellings.shp',
+                        'constraints': 'P:/urban-optim/data/raw/infrastructure/parks.shp'}
+    cityinfoKeys_to_elementKeys = {'boundary': '-BOUNDARY-',
+                                    'census': '-CENSUS-',
+                                    'constraints': '-CONSTRAINTS-'}
 
     objectives_file = 'scr/objectives.cfg'
-    default_objectives = {}
-    objectiveKeys_to_elementKeys = {}
+    default_objectives = {'tsunami': 'Yes',
+                        'coastal flooding': 'Yes',
+                        'river flooding': 'Yes',
+                        'liquefaction susceptibility': 'Yes',
+                        'development zones': 'Yes',
+                        'key activity areas': 'Yes'}
+
+    objectiveKeys_to_elementKeys = {'tsunami': '-TSU-',
+                                    'coastal flooding': '-CFLOOD-',
+                                    'river flooding': '-RFLOOD-',
+                                    'liquefaction susceptibility': '-LIQ-',
+                                    'development zones': '-DEV-',
+                                    'key activity areas': '-MALL-'}
 
     settings_file = 'src/settings.cfg'
     default_settings = {'theme': sg.theme(),
@@ -179,7 +194,7 @@ def get_parameters():
         except Exception as e:
             sg.popup_quick_message(f'exception {e}', 'No objectives file found... will create one for you', keep_on_top=True, background_color='red', text_color='white')
             objectives = default_objectives
-            save_parameters(objectives_file, objectives, None)
+            save_objectives(objectives_file, objectives, None)
         return objectives
 
     def save_objectives(objectives_file, objectives, values):
@@ -195,7 +210,6 @@ def get_parameters():
 
         sg.popup('Objectives saved')
 
-
     ########## Load/Save Settings File ##########
     def load_settings(settings_file, default_settings):
         try:
@@ -209,25 +223,40 @@ def get_parameters():
 
     def save_settings(settings_file, settings, values):
 
-        margins = []
-        for bit in settings['margins'].split(','):
-            if '(' or '[' in bit:
-                bit = bit[1:]
-            if ' ' in bit:
-                bit = bit[1:]
-            if ')' or '[' in bit:
-                bit = bit[:-1]
-            margins.append(float(bit))
-        settings['margins'] = margins
-
-        a = settings['margins'].split(',')
-        bit = a[0]
-        if '(' or '[' in bit:
-            bit = bit[1:]
-        margins.append(float(bit))
-
+        if type(settings['margins']) == str:
+            margins = []
+            for bit in settings['margins'].split(','):
+                if '(' in bit or '[' in bit:
+                    bit = bit[1:]
+                if ' ' in bit:
+                    bit = bit[1:]
+                if ')' in bit or ']' in bit:
+                    bit = bit[:-1]
+                margins.append(float(bit))
+            settings['margins'] = margins
 
         if values:      # if there are stuff specified by another window, fill in those values
+            if type(values['-MARGINS-']) == str:
+                margins = []
+                if ',' in values['-MARGINS-']:
+                    for bit in values['-MARGINS-'].split(','):
+                        if '(' in bit or '[' in bit:
+                            bit = bit[1:]
+                        if ' ' in bit:
+                            bit = bit[1:]
+                        if ')' in bit or ']' in bit:
+                            bit = bit[:-1]
+                        margins.append(float(bit))
+                else:
+                    for bit in values['-MARGINS-'].split(' '):
+                        if '(' in bit or '[' in bit:
+                            bit = bit[1:]
+                        if ')' in bit or ']' in bit:
+                            bit = bit[:-1]
+                        margins.append(float(bit))
+                values['-MARGINS-'] = margins
+
+
             for key in settingsKeys_to_elementKeys:  # update window with the values read from settings file
                 try:
                     settings[key] = values[settingsKeys_to_elementKeys[key]]
@@ -270,35 +299,64 @@ def get_parameters():
 
         return window
 
+    def create_city_info_window(city_info, settings):
+        sg.theme(settings['theme'])
 
-    # def create_city_info_window(city_info, settings):
-    #     sg.theme(settings['theme'])
-    #
-    #     def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
-    #
-    #     layout = [  [sg.Text('City Information', font='Any 15')],
-    #                 [TextLabel('Parents'), sg.In(key='-PARENTS-')],
-    #                 [sg.Button('Save'), sg.Button('Exit')]  ]
-    #
-    #     window = sg.Window('City Information', layout, margins=(50, 50), keep_on_top=True, finalize=True)
-    #
-    #     for key in parametersKeys_to_elementKeys:   # update window with the values read from parameters file
-    #         try:
-    #             window[parametersKeys_to_elementKeys[key]].update(value=parameters[key])
-    #         except Exception as e:
-    #             print(f'Problem updating PySimpleGUI window from parameters. Key = {key}')
-    #
-    #     return window
+        def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
 
-    # settings = load_settings(settings_file, default_settings)
+        layout = [  [sg.T('City Information', font='Any 15')],
+                    [sg.T('Please enter the filepath to each shapefile', font='Any 10')],
+                    [TextLabel('Boundary'), sg.In(key='-BOUNDARY-'), sg.FileBrowse(key='-BOUNDARY-')],
+                    [TextLabel('Census'), sg.In(key='-CENSUS-'), sg.FileBrowse(key='-CENSUS-')],
+                    [TextLabel('Constraints'), sg.In(key='-CONSTRAINTS-'), sg.FileBrowse(key='-CONSTRAINTS-')],
+                    [sg.B('Save'), sg.B('Exit')]  ]
+
+        window = sg.Window('City Information', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
+
+        for key in cityinfoKeys_to_elementKeys:   # update window with the values read from city_info file
+            try:
+                window[cityinfoKeys_to_elementKeys[key]].update(value=city_info[key])
+            except Exception as e:
+                print(f'Problem updating PySimpleGUI window from city_info. Key = {key}')
+
+        return window
+
+    def create_objectives_window(objectives, settings):
+        sg.theme(settings['theme'])
+
+        def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
+
+        layout = [  [sg.T('Objectives', font='Any 15')],
+                    [sg.T('Hazards', font='Any 10')],
+                    [TextLabel('Tsunami'), sg.In(key='-TSU-'), sg.FileBrowse(key='-TSU-')],
+                    [TextLabel('Coastal Flooding'), sg.In(key='-CFLOOD-'), sg.FileBrowse(key='-CFLOOD-')],
+                    [TextLabel('River Flooding'), sg.In(key='-RFLOOD-'), sg.FileBrowse(key='-RFLOOD-')],
+                    [TextLabel('Liquefaction Susceptibility'), sg.In(key='-LIQ-'), sg.FileBrowse(key='-LIQ-')],
+                    [sg.T('Urban Planning', font='Any 10')],
+                    [TextLabel('Development Zones'), sg.In(key='-DEV-'), sg.FileBrowse(key='-DEV-')],
+                    [sg.T('Amenities', font='Any 10')],
+                    [TextLabel('Key Activity Areas (Malls)'), sg.In(key='-MALL-'), sg.FileBrowse(key='-MALL-')],
+
+                    [sg.B('Save'), sg.B('Exit')]  ]
+
+        window = sg.Window('Objectives', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
+
+        for key in objectivesKeys_to_elementKeys:   # update window with the values read from objectives file
+            try:
+                window[objectivesKeys_to_elementKeys[key]].update(value=objectives[key])
+            except Exception as e:
+                print(f'Problem updating PySimpleGUI window from objectives. Key = {key}')
+
+        return window
+
     def create_settings_window(settings):
         sg.theme(settings['theme'])
 
-        def TextLabel(text): return sg.Text(text+':', justification='r', size=(40,1))
+        def TextLabel(text): return sg.Text(text+':', justification='r', size=(10,1))
 
         layout = [  [sg.Text('Settings', font='Any 15')],
                     [TextLabel('Theme'), sg.Combo(sg.theme_list(), size=(20, 20), key='-THEME-')],
-                    [TextLabel('Margins (separated by a space e.g. "50 50")'), sg.In(key='-MARGINS-')],
+                    [TextLabel('Margins'), sg.In(key='-MARGINS-')],
                     [sg.B('Save'), sg.B('Exit')]  ]
 
         window = sg.Window('Settings', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
@@ -307,10 +365,9 @@ def get_parameters():
             try:
                 window[settingsKeys_to_elementKeys[key]].update(value=settings[key])
             except Exception as e:
-                print(f'Problem updating PySimpleGUI window from parameters. Key = {key}')
+                print(f'Problem updating PySimpleGUI window from settings. Key = {key}')
 
         return window
-
 
     ##################### Main Program Window #####################
     def create_main_window(parameters, settings):
@@ -327,16 +384,17 @@ def get_parameters():
 
     ##################### Clean Up #####################
     def tidy(parameters):
-        densities = []
-        for bit in parameters['densities'].split(','):
-            if '(' or '[' in bit:
-                bit = bit[1:]
-            if ' ' in bit:
-                bit = bit[1:]
-            if ')' or '[' in bit:
-                bit = bit[:-1]
-            densities.append(float(bit))
-        parameters['densities'] = densities
+        if type(parameters) == str:
+            densities = []
+            for bit in parameters['densities'].split(','):
+                if '(' in bit or '[' in bit:
+                    bit = bit[1:]
+                if ' ' in bit:
+                    bit = bit[1:]
+                if ')' in bit or ']' in bit:
+                    bit = bit[:-1]
+                densities.append(float(bit))
+            parameters['densities'] = densities
 
         return parameters
 
@@ -344,6 +402,8 @@ def get_parameters():
     def run():
         window = None
         parameters = load_parameters(parameters_file, default_parameters)
+        city_info = load_city_info(city_info_file, default_city_info)
+        objectives = load_objectives(objectives_file, default_objectives)
         settings = load_settings(settings_file, default_settings)
 
         while True:             # Event Loop
@@ -353,12 +413,27 @@ def get_parameters():
             event, values = window.read()
             if event in (sg.WIN_CLOSED, 'Ok'):
                 break
+
             if event == 'Change Parameters':
                 event, values = create_parameters_window(parameters, weighting_options, settings).read(close=True)
                 if event == 'Save':
                     window.close()
                     window = None
                     save_parameters(parameters_file, parameters, values)
+
+            if event == 'Change City Data':
+                event, values = create_city_info_window(city_info, settings).read(close=True)
+                if event == 'Save':
+                    window.close()
+                    window = None
+                    save_city_info(city_info_file, city_info, values)
+
+            if event == 'Change Objectives':
+                event, values = create_objectives_window(objectives, settings).read(close=True)
+                if event == 'Save':
+                    window.close()
+                    window = None
+                    save_city_info(objectives_file, objectives, values)
 
             if event == 'Change Settings':
                 event, values = create_settings_window(settings).read(close=True)
@@ -376,6 +451,6 @@ def get_parameters():
 
     scheme = parameters['weightings'] + ', ' + parameters['dwelling scheme']
 
-    return int(parameters['parents']), int(parameters['generations']), float(parameters['crossover probability']), float(parameters['mutation probability']), float(parameters['individual mutation probability']), parameters['weightings'], int(parameters['required dwellings']), scheme, parameters['densities'], float(parameters['min density']), float(parameters['max density']), int(parameters['step size']), parameters['theme']
+    return int(parameters['parents']), int(parameters['generations']), float(parameters['crossover probability']), float(parameters['mutation probability']), float(parameters['individual mutation probability']), parameters['weightings'], int(parameters['required dwellings']), scheme, parameters['densities'], float(parameters['min density']), float(parameters['max density']), int(parameters['step size'])
 
-NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, min_density_possible, max_density_possible, when_to_plot, theme = get_parameters()
+NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, min_density_possible, max_density_possible, when_to_plot = get_parameters()

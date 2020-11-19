@@ -53,7 +53,7 @@ def get_parameters():
                         [sg.In(key='-PARENTS-')],
                         [sg.T("How many Iterations should the Genetic Algorithm run for?")],
                         [sg.In(key='-GENERATIONS-')],
-                        [sg.Submit(), sg.Cancel()]]).read(close=True)
+                        [sg.Submit()]]).read(close=True)
     NO_parents = int(values['-PARENTS-'])
     NO_generations = int(values['-GENERATIONS-'])
 
