@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from deap import tools, base, creator
 
-#This all us to run the code from the urban-optim directory (for ease of opening and saving data) whilst looking for further code/modules in the src folder by adding the filepath to the system path
-sys.path.insert(0, str(sys.path[0]) + '/src/Christchurch')
+#This allows us to run the code from the urban-optim directory (for ease of opening and saving data) whilst looking for further code/modules in the src/fyp_code folder by adding the filepath to the system path
+sys.path.insert(0, str(sys.path[0]) + '/src/fyp_code')
 
 #Ignore any UserWarnings arising from mix-matched indexs when evaluating two different GeoDataFrames. Simply comment out this line if you wish death upon yourself, with ~9500 errors being printed.
 warnings.simplefilter("ignore")

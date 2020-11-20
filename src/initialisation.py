@@ -1,6 +1,6 @@
 """
-29th of July 2020
-Author: Sam Archie and Jamie Fleming
+18th of November 2020
+Author: Jamie Fleming and Sam Archie
 
 This module/script shall contain multiple definitions that will complete Phase 1 of the project. All data will be imported and pre-processed (constraint handling and f-scores) before being passed to the next phase.
 
@@ -9,44 +9,10 @@ This module/script shall contain multiple definitions that will complete Phase 1
 #Import external modules
 import PySimpleGUI as sg
 from json import (load as jsonload, dump as jsondump)
-from os import path
-
-# def get_data():
-#     """This module gets the files from the user, and returns them opened.
-#
-#     Returns
-#     -------
-#     boundaries : List of GeoDataFrames
-#         A list of boundaries for the urban extent and the District Plan Planning Zones.
-#     constraints : List of GeoDataFrames
-#         A list of constraints imposed by the user, which are the boundaries of the red zone and of public recreational parks
-#     census : GeoDataFrame
-#         A GeoDataFrame of the dwelling/housing 2018 census for dwellings in the Christchurch City Council region
-#     hazards : List of GeoDataFrames
-#         A list of hazards imposed upon the region, such as tsunami inundation, liquefaction vulnerability and river flooding
-#     coastal_flood: List of GeoDataFrames
-#         A list of GeoDataFrames where each new index in the list is a 10cm increase in sea level rise. The GeoDataFrame indicates area inundated by the sea level rise and coastal flooding.
-#     distances : DataFrame
-#         A DataFrame of each distances (in kilometres) from each statistical area to a select amount of key activity areas.
-#     """
-#
-#     # Read boundary and census files
-#     event, values = sg.Window('City information data files',
-#                         [[sg.T('Enter the filepath to the city boundary shapefile:')],
-#                         [sg.In(key='-BOUNDARY-'), sg.FileBrowse()],
-#                         [sg.T('Enter the filepath to the latest census shapefile:')],
-#                         [sg.In(key='-CENSUS-'), sg.FileBrowse()],
-#                         [sg.Submit()]]).read(close=True)
-#     boundary = gpd.read_file(values['-BOUNDARY-'])
-#     census = gpd.read_file(values['-CENSUS-'])
-#
-#     # Ask which built in objectives should be used, and ask for a csv file containing point coordinates
-#     BI_objs = ('Distance to Shopping Centres', 'Distance to ')
+import geopandas as gpd
 
 
-
-###### DOCSTRING NEEDED ######
-def get_parameters():
+def get():
     """
     Creats a GUI where the input parameters for the spatial optimisation framework can be adjusted
 
@@ -80,16 +46,12 @@ def get_parameters():
         Theme for the GUI windows
     """
 
-
-    weighting_options = ['Balanced', 'Hazard Denier', 'EQ Survivor', 'CC Enthusiast', 'Compact City']
-
-    parameters_file = 'src/parameters.cfg'
+    parameters_file = 'config/parameters.cfg'
     default_parameters = {'parents': 10,
                         'generations': 10,
                         'crossover probability': 0.7,
                         'mutation probability': 0.2,
                         'individual mutation probability': 0.05,
-                        'weightings': 'Balanced',
                         'required dwellings': 50000,
                         'dwelling scheme': 'high',
                         'densities': [83, 92, 111, 133],
@@ -101,7 +63,6 @@ def get_parameters():
                                 'crossover probability': '-CX_PROB-',
                                 'mutation probability': '-MUT_PROB-',
                                 'individual mutation probability':'-IND_MUT_PROB-',
-                                'weightings': '-WEIGHTINGS-',
                                 'required dwellings': '-DWELLINGS-',
                                 'dwelling scheme': '-D_SCHEME-',
                                 'densities': '-DENSITIES-',
@@ -109,7 +70,7 @@ def get_parameters():
                                 'max density': '-MAX_DENS-',
                                 'step size': '-STEP_SIZE-'}
 
-    city_info_file = 'src/city_info.cfg'
+    city_info_file = 'config/city_info.cfg'
     default_city_info = {'boundary': 'P:/urban-optim/data/boundary/urban_extent.shp',
                         'census': 'P:/urban-optim/data/raw/socioeconomic/census-dwellings.shp',
                         'constraints': 'P:/urban-optim/data/raw/infrastructure/parks.shp'}
@@ -117,14 +78,13 @@ def get_parameters():
                                     'census': '-CENSUS-',
                                     'constraints': '-CONSTRAINTS-'}
 
-    objectives_file = 'scr/objectives.cfg'
-    default_objectives = {'tsunami': 'Yes',
-                        'coastal flooding': 'Yes',
-                        'river flooding': 'Yes',
-                        'liquefaction susceptibility': 'Yes',
-                        'development zones': 'Yes',
-                        'key activity areas': 'Yes'}
-
+    objectives_file = 'config/objectives.cfg'
+    default_objectives = {'tsunami': False,
+                        'coastal flooding': False,
+                        'river flooding': False,
+                        'liquefaction susceptibility': False,
+                        'development zones': False,
+                        'key activity areas': False}
     objectiveKeys_to_elementKeys = {'tsunami': '-TSU-',
                                     'coastal flooding': '-CFLOOD-',
                                     'river flooding': '-RFLOOD-',
@@ -132,7 +92,7 @@ def get_parameters():
                                     'development zones': '-DEV-',
                                     'key activity areas': '-MALL-'}
 
-    settings_file = 'src/settings.cfg'
+    settings_file = 'config/settings.cfg'
     default_settings = {'theme': sg.theme(),
                         'margins': [50, 50]}
     settingsKeys_to_elementKeys = {'theme': '-THEME-',
@@ -170,7 +130,7 @@ def get_parameters():
         except Exception as e:
             sg.popup_quick_message(f'exception {e}', 'No city_info file found... will create one for you', keep_on_top=True, background_color='red', text_color='white')
             city_info = default_city_info
-            save_parameters(city_info_file, city_info, None)
+            save_city_info(city_info_file, city_info, None)
         return city_info
 
     def save_city_info(city_info_file, city_info, values):
@@ -199,9 +159,9 @@ def get_parameters():
 
     def save_objectives(objectives_file, objectives, values):
         if values:      # if there are stuff specified by another window, fill in those values
-            for key in objectivesKeys_to_elementKeys:  # update window with the values read from objectives file
+            for key in objectiveKeys_to_elementKeys:  # update window with the values read from objectives file
                 try:
-                    objectives[key] = values[objectivesKeys_to_elementKeys[key]]
+                    objectives[key] = values[objectiveKeys_to_elementKeys[key]]
                 except Exception as e:
                     print(f'Problem updating objectives from window values. Key = {key}')
 
@@ -269,7 +229,7 @@ def get_parameters():
         sg.popup('Settings saved')
 
     ##################### Make sub windows #####################
-    def create_parameters_window(parameters, weighting_options, settings):
+    def create_parameters_window(parameters, settings):
         sg.theme(settings['theme'])
 
         def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
@@ -280,7 +240,6 @@ def get_parameters():
                     [TextLabel('Crossover Probability'), sg.In(key='-CX_PROB-')],
                     [TextLabel('Mutation Probability'), sg.In(key='-MUT_PROB-')],
                     [TextLabel('Individual Mutation Probability'), sg.In(key='-IND_MUT_PROB-')],
-                    [TextLabel('Weightings'), sg.Combo(weighting_options, key='-WEIGHTINGS-')    ],
                     [TextLabel('Required Dwellings'), sg.In(key='-DWELLINGS-')],
                     [TextLabel('Dwelling Scheme'), sg.In(key='-D_SCHEME-')],
                     [TextLabel('Densities'), sg.In(key='-DENSITIES-')],
@@ -328,9 +287,9 @@ def get_parameters():
 
         layout = [  [sg.T('Objectives', font='Any 15')],
                     [sg.T('Hazards', font='Any 10')],
-                    [TextLabel('Tsunami'), sg.In(key='-TSU-'), sg.FileBrowse(key='-TSU-')],
-                    [TextLabel('Coastal Flooding'), sg.In(key='-CFLOOD-'), sg.FileBrowse(key='-CFLOOD-')],
-                    [TextLabel('River Flooding'), sg.In(key='-RFLOOD-'), sg.FileBrowse(key='-RFLOOD-')],
+                    [TextLabel('Tsunami'), sg.Check('Tsunami', key='-TSU-'), sg.FileBrowse(key='-TSU-')],
+                    [TextLabel('Coastal Flooding'), sg.Check('Coastal Flooding', key='-CFLOOD-'), sg.FileBrowse(key='-CFLOOD-')],
+                    [TextLabel('River Flooding'), sg.Check('River Flooding', key='-RFLOOD-'), sg.FileBrowse(key='-RFLOOD-')],
                     [TextLabel('Liquefaction Susceptibility'), sg.In(key='-LIQ-'), sg.FileBrowse(key='-LIQ-')],
                     [sg.T('Urban Planning', font='Any 10')],
                     [TextLabel('Development Zones'), sg.In(key='-DEV-'), sg.FileBrowse(key='-DEV-')],
@@ -341,9 +300,9 @@ def get_parameters():
 
         window = sg.Window('Objectives', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
 
-        for key in objectivesKeys_to_elementKeys:   # update window with the values read from objectives file
+        for key in objectiveKeys_to_elementKeys:   # update window with the values read from objectives file
             try:
-                window[objectivesKeys_to_elementKeys[key]].update(value=objectives[key])
+                window[objectiveKeys_to_elementKeys[key]].update(value=objectives[key])
             except Exception as e:
                 print(f'Problem updating PySimpleGUI window from objectives. Key = {key}')
 
@@ -415,7 +374,7 @@ def get_parameters():
                 break
 
             if event == 'Change Parameters':
-                event, values = create_parameters_window(parameters, weighting_options, settings).read(close=True)
+                event, values = create_parameters_window(parameters, settings).read(close=True)
                 if event == 'Save':
                     window.close()
                     window = None
@@ -433,7 +392,7 @@ def get_parameters():
                 if event == 'Save':
                     window.close()
                     window = None
-                    save_city_info(objectives_file, objectives, values)
+                    save_objectives(objectives_file, objectives, values)
 
             if event == 'Change Settings':
                 event, values = create_settings_window(settings).read(close=True)
@@ -445,12 +404,10 @@ def get_parameters():
 
         parameters = tidy(parameters)
 
-        return parameters
+        return parameters, city_info, objectives, settings
 
-    parameters = run()
+    parameters, city_info, objectives, settings = run()
 
-    scheme = parameters['weightings'] + ', ' + parameters['dwelling scheme']
+    return parameters, city_info, objectives, settings
 
-    return int(parameters['parents']), int(parameters['generations']), float(parameters['crossover probability']), float(parameters['mutation probability']), float(parameters['individual mutation probability']), parameters['weightings'], int(parameters['required dwellings']), scheme, parameters['densities'], float(parameters['min density']), float(parameters['max density']), int(parameters['step size'])
-
-NO_parents, NO_generations, prob_crossover, prob_mutation, prob_mut_indiv, weightings, required_dwellings, scheme, density_total, min_density_possible, max_density_possible, when_to_plot = get_parameters()
+get()
