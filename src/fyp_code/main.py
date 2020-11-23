@@ -28,7 +28,7 @@ from genetic_algorithm import *
 from plotty_bois import *
 from logger_config import *
 
-#Set up the logging software so we can track efficieny of the genetic algortihm and see where code breaks
+#Set up the logging software to monitor progress
 logger = logging.getLogger(__name__)
 
 
@@ -48,8 +48,8 @@ def main():
     logger.info('Data files for the algortihm are defined')
 
     #Clip the data files to the extend of the boundary, if it has not alreadyy taken place before
-    if not os.path.exists("data/clipped"):
-        os.mkdir("data/clipped")
+    if not os.path.exists("data/christchurch/clipped"):
+        os.mkdir("data/christchurch/clipped")
 
         clipped_census, clipped_hazards, clipped_coastal = clip_to_boundary(boundaries[0], census_raw, hazards, coastal_flood)
 
@@ -58,8 +58,8 @@ def main():
     logger.info('Clipping complete')
 
     #Process data
-    if not os.path.exists("data/processed"):
-        os.mkdir("data/processed")
+    if not os.path.exists("data/christchurch/processed"):
+        os.mkdir("data/christchurch/processed")
 
         #Add the District Plan Zones that cant be built on to the constraints list
         constraints = update_constraints(constraints, boundaries[1])
@@ -83,7 +83,7 @@ def main():
         census = apply_weightings(cleaned_census, weightings)
 
     else:
-        census = gpd.read_file("data/processed/census_final.shp")
+        census = gpd.read_file("data/christchurch/processed/census_final.shp")
 
     logger.info('Processing/initialisation complete')
 
@@ -140,7 +140,6 @@ def main():
 
     ####### PHASE 2 - ITERATION PROCEDURE #######
     for gen_number in range(1, NO_generations + 1):
-        i=0
         #In each generation, we need to create NO_parents amount of children! hence, create one at a time.
         children = []
         while len(children) < NO_parents:
@@ -153,7 +152,6 @@ def main():
                 parent1, parent2 = list(map(toolbox.clone, toolbox.select(individuals=parents, k=2)))
                 #Perform a love-making ritual that binds the two parents till death do them part <3
                 child = toolbox.mate(parent1, parent2)[0]
-                logger.info('cross-over done')
 
             #Apply mutation to one parent
             elif op_choice < prob_crossover + prob_mutation:
@@ -168,13 +166,11 @@ def main():
                 #Sometimes the returned child is a list of the DEAP class so lets extract it if thats the case
                 while type(child) != creator.Individual:
                     child = child[0]
-                logger.info('mutation done')
 
             #Apply cloning/reproduction (random parent unchanged)
             else:
                 #Select 1 parent via Roulette Selection to create a child. Basically, a random parent is a pedophile and acts to be a kid again.
                 child = toolbox.select(individuals=parents, k=1)[0]
-                logger.info('cloning done')
 
             #Update the child attributes with the correct ones if they are a new child (eg mut or crossover modules delete fitness values)
             if not child.fitness.valid:
@@ -190,13 +186,6 @@ def main():
             #Check to see if it is a bad child, and if it is bad then it is tossed into a volcano as a virgin sacrifice. The good child, however, is forced into an arranged marraige in its teens.
             if child.valid:
                 children.append(child)
-                logger.info('child kept')
-            else:
-                logger.info('child killed')
-            i += 1
-            if i > 1000:
-                break
-
 
         #Now we have all the children all ready! lets mix them with the parents and select the fittest ones for the next generation!
         parents[:] = toolbox.select_best(parents + children)

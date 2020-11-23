@@ -725,10 +725,10 @@ def save_ranked_F_score_sites(parents, census, scheme, NO_parents, NO_generation
     census.plot(column='F score %', cmap="Blues", legend=False, ax=ax)
     census.boundary.plot(ax=ax, color='black', linewidth=1, alpha=0.20)
 
-    if not os.path.exists("data/final"):
-        os.mkdir("data/final")
+    if not os.path.exists("data/christchurch/final"):
+        os.mkdir("data/christchurch/final")
 
-    census.to_file("data/final/{}, {} parents and {} generations".format(scheme, NO_parents, NO_generations))
+    census.to_file("data/christchurch/final/{}, {} parents and {} generations".format(scheme, NO_parents, NO_generations))
 
     #Tidy up the figure and save it
     ax.set_title('Averaged Top {}% of Development Sites after {} generations'.format(threshold*100, NO_generations))

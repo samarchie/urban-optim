@@ -337,12 +337,12 @@ def f_dist(distance_data, census_dens):
         areas are in
 
     """
-    # import pandas as pd
-    # import geopandas as gpd
-    # import numpy as np
-    # distances = pd.read_csv('data/raw/socioeconomic/distances_from_SA1.csv', header=0)
-    # census_dens = gpd.read_file("data/processed/census_with_density.shp")
-    # census_dens["geometry"] = census_dens.geometry.buffer(0)
+    import pandas as pd
+    import geopandas as gpd
+    import numpy as np
+    distances_data = pd.read_csv('data/christchurch/raw/distances_from_SA1.csv', header=0)
+    census_dens = gpd.read_file("data/christchurch/processed/census_with_density.shp")
+    census_dens["geometry"] = census_dens.geometry.buffer(0)
 
     #Collect distance to all key activity area, and store them in a dictionary
     distances_dict = {}

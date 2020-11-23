@@ -21,12 +21,13 @@ sys.path.insert(0, str(sys.path[0]) + '/src')
 warnings.simplefilter("ignore")
 
 #Import our home-made modules
+from Christchurch_preprocessing import *
 from initialisation import *
 # from genetic_algorithm import *
 # from plotty_bois import *
 from logger_config import *
 
-#Set up the logging software so we can track efficieny of the genetic algortihm and see where code breaks
+#Set up the logging software to monitor progress
 logger = logging.getLogger(__name__)
 
 
@@ -43,3 +44,6 @@ def main():
     "I'm faster than fast, Quicker than quick. I am Lightning!"
 
     """
+
+    get()
+    logger.info('Parameters for the algortihm are defined')

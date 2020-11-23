@@ -9,41 +9,27 @@ This module/script shall contain multiple definitions that will complete Phase 1
 #Import external modules
 import PySimpleGUI as sg
 from json import (load as jsonload, dump as jsondump)
+import pandas as pd
 import geopandas as gpd
-
 
 def get():
     """
-    Creats a GUI where the input parameters for the spatial optimisation framework can be adjusted
+    Creats a GUI where:
+     - The input parameters for the spatial optimisation framework can be adjusted
+     - File paths to the relevant data can be defined
+     - Settings for PySimpleGUI windows can be adjusted
 
     Returns
     -------
-    NO_parents : Integer
-        User specified parameter for how many parents are in a generation.
-    NO_generations : Integer
-        User specified parameter for hor many generations occur as part of the gentic algorithm.
-    prob_crossover : Floating Point Number
-        A number between 0 and 1 that represents the probability of two indiviuduals (D) within the population, swapping certian attributes (d) using a 2-point crossover technique.
-    prob_mutation : Floating Point Number
-        A number between 0 and 1 that represents the probability of an indiviudual (D) within the population, mutating its attributes (d) through an shuffling of attributes.
-    prob_mut_indiv : Floating Point Number
-        A number between 0 and 1 that represents the probability of mutating an element (d) wihtin an individual (D).
-    weightings : List
-        List of normalised weightings for each objective function in order.
-    required_dwellings : Integer
-        Number of projected dwellings required to house future residents in the urban area.
-    scheme : String
-        A sentence detailing the user-defined weightings and dwellings projection, in the form "weightings_name, dwellings_name"
-    density_total : List of Floating Point Number
-        The acceptable densities for new areas (in dwelling/hecatres) for sustainable urban development.
-    min_density_Possible : Floating Point Number
-        The minimum density (dwelling/hecatres) for sustainable urban development.
-    max_density_Possible : Floating Point Number
-        The maximum density (dwelling/hecatres) for sustainable urban development.
-    when_to_plot : Generator/Range/List
-        List of intergers, that represent when to halt the genetic algorithm and plot the spatial development of the current parents.
-    theme : String
-        Theme for the GUI windows
+    parameters : Dictionary
+        Defines running conditions for the genetic algorithm.
+        eg number of generations.
+    city_info : Dictionary
+        Contains file paths to data about the city.
+    objectives : Dictionary
+        Contains file paths to data about the planning objectives.
+    settings : Dictionary
+        Defines PySimpleGUI window settings.
     """
 
     parameters_file = 'config/parameters.cfg'
@@ -71,26 +57,34 @@ def get():
                                 'step size': '-STEP_SIZE-'}
 
     city_info_file = 'config/city_info.cfg'
-    default_city_info = {'boundary': 'P:/urban-optim/data/boundary/urban_extent.shp',
-                        'census': 'P:/urban-optim/data/raw/socioeconomic/census-dwellings.shp',
-                        'constraints': 'P:/urban-optim/data/raw/infrastructure/parks.shp'}
+    default_city_info = {'boundary': 'P:/urban-optim/data/christchurch/raw/urban_extent.shp',
+                        'census': 'P:/urban-optim/data/christchurch/raw/census-dwellings.shp',
+                        'constraints': 'P:/urban-optim/data/christchurch/pre_processed/constraints.shp'}
     cityinfoKeys_to_elementKeys = {'boundary': '-BOUNDARY-',
                                     'census': '-CENSUS-',
                                     'constraints': '-CONSTRAINTS-'}
 
     objectives_file = 'config/objectives.cfg'
-    default_objectives = {'tsunami': False,
-                        'coastal flooding': False,
-                        'river flooding': False,
-                        'liquefaction susceptibility': False,
-                        'development zones': False,
-                        'key activity areas': False}
-    objectiveKeys_to_elementKeys = {'tsunami': '-TSU-',
-                                    'coastal flooding': '-CFLOOD-',
-                                    'river flooding': '-RFLOOD-',
-                                    'liquefaction susceptibility': '-LIQ-',
-                                    'development zones': '-DEV-',
-                                    'key activity areas': '-MALL-'}
+    default_objectives = {'schools?': False,
+                        'parks?': False,
+                        'medical clinics?': False,
+                        'supermarkets?': False,
+                        'shopping centres?': False,
+                        'schools': None,
+                        'parks': None,
+                        'medical clinics': None,
+                        'supermarkets': None,
+                        'shopping centres': None}
+    objectiveKeys_to_elementKeys = {'schools?': '-SCHOOL?-',
+                                    'parks?': '-PARK?-',
+                                    'medical clinics?': '-MEDICAL?-',
+                                    'supermarkets?': '-SUPER?-',
+                                    'shopping centres?': '-MALL?-',
+                                    'schools': '-SCHOOL-',
+                                    'parks': '-PARK-',
+                                    'medical clinics': '-MEDICAL-',
+                                    'supermarkets': '-SUPER-',
+                                    'shopping centres': '-MALL-'}
 
     settings_file = 'config/settings.cfg'
     default_settings = {'theme': sg.theme(),
@@ -110,7 +104,31 @@ def get():
         return parameters
 
     def save_parameters(parameters_file, parameters, values):
+        if type(parameters['densities']) == str:
+            densities = []
+            for bit in parameters['densities'].split(','):
+                if '(' in bit or '[' in bit:
+                    bit = bit[1:]
+                if ' ' in bit:
+                    bit = bit[1:]
+                if ')' in bit or ']' in bit:
+                    bit = bit[:-1]
+                densities.append(float(bit))
+            parameters['densities'] = densities
+
         if values:      # if there are stuff specified by another window, fill in those values
+            if type(values['-DENSITIES-']) == str:
+                densities = []
+                for bit in values['-DENSITIES-'].split(','):
+                    if '(' in bit or '[' in bit:
+                        bit = bit[1:]
+                    if ' ' in bit:
+                        bit = bit[1:]
+                    if ')' in bit or ']' in bit:
+                        bit = bit[:-1]
+                    densities.append(float(bit))
+                values['-DENSITIES-'] = densities
+
             for key in parametersKeys_to_elementKeys:  # update window with the values read from parameters file
                 try:
                     parameters[key] = values[parametersKeys_to_elementKeys[key]]
@@ -283,18 +301,13 @@ def get():
     def create_objectives_window(objectives, settings):
         sg.theme(settings['theme'])
 
-        def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
-
         layout = [  [sg.T('Objectives', font='Any 15')],
-                    [sg.T('Hazards', font='Any 10')],
-                    [TextLabel('Tsunami'), sg.Check('Tsunami', key='-TSU-'), sg.FileBrowse(key='-TSU-')],
-                    [TextLabel('Coastal Flooding'), sg.Check('Coastal Flooding', key='-CFLOOD-'), sg.FileBrowse(key='-CFLOOD-')],
-                    [TextLabel('River Flooding'), sg.Check('River Flooding', key='-RFLOOD-'), sg.FileBrowse(key='-RFLOOD-')],
-                    [TextLabel('Liquefaction Susceptibility'), sg.In(key='-LIQ-'), sg.FileBrowse(key='-LIQ-')],
-                    [sg.T('Urban Planning', font='Any 10')],
-                    [TextLabel('Development Zones'), sg.In(key='-DEV-'), sg.FileBrowse(key='-DEV-')],
-                    [sg.T('Amenities', font='Any 10')],
-                    [TextLabel('Key Activity Areas (Malls)'), sg.In(key='-MALL-'), sg.FileBrowse(key='-MALL-')],
+                    [sg.T('Use built in objectives? If yes, please provide file path to the shapefile of locations', font='Any 10')],
+                    [sg.Check('Schools', key='-SCHOOL?-', size=(15,1)), sg.In(key='-SCHOOL-'), sg.FileBrowse(key='-SCHOOL-')],
+                    [sg.Check('Parks', key='-PARK?-', size=(15,1)), sg.In(key='-PARK-'), sg.FileBrowse(key='-PARK-')],
+                    [sg.Check('Medical Clinics', key='-MEDICAL?-', size=(15,1)), sg.In(key='-MEDICAL-'), sg.FileBrowse(key='-MEDICAL-')],
+                    [sg.Check('Supermarkets', key='-SUPER?-', size=(15,1)), sg.In(key='-SUPER-'), sg.FileBrowse(key='-SUPER-')],
+                    [sg.Check('Shopping Centres', key='-MALL?-', size=(15,1)), sg.In(key='-MALL-'), sg.FileBrowse(key='-MALL-')],
 
                     [sg.B('Save'), sg.B('Exit')]  ]
 
@@ -333,29 +346,13 @@ def get():
         sg.theme(settings['theme'])
 
         layout = [[sg.T('This is my main application')],
-                  [sg.B('Change Parameters')],
-                  [sg.B('Change City Data')],
-                  [sg.B('Change Objectives')],
-                  [sg.B('Change Settings')],
+                  [sg.B('Change Parameters', size=(20,1))],
+                  [sg.B('Change City Data', size=(20,1))],
+                  [sg.B('Change Objectives', size=(20,1))],
+                  [sg.B('Change Settings', size=(20,1))],
                   [sg.B('Ok')]]
 
         return sg.Window('Main Application', layout, margins=settings['margins'])
-
-    ##################### Clean Up #####################
-    def tidy(parameters):
-        if type(parameters) == str:
-            densities = []
-            for bit in parameters['densities'].split(','):
-                if '(' in bit or '[' in bit:
-                    bit = bit[1:]
-                if ' ' in bit:
-                    bit = bit[1:]
-                if ')' in bit or ']' in bit:
-                    bit = bit[:-1]
-                densities.append(float(bit))
-            parameters['densities'] = densities
-
-        return parameters
 
     ##################### Event Loop #####################
     def run():
@@ -402,12 +399,63 @@ def get():
                     save_settings(settings_file, settings, values)
         window.close()
 
-        parameters = tidy(parameters)
-
         return parameters, city_info, objectives, settings
 
     parameters, city_info, objectives, settings = run()
 
     return parameters, city_info, objectives, settings
 
-get()
+parameters, city_info, objectives, settings = get()
+
+def open(parameters, city_info, objectives, settings):
+    """ This module opens the data into the GeoDataFrames and tifs.
+
+    Parameters
+    ----------
+    parameters : Dictionary
+        Defines running conditions for the genetic algorithm.
+        eg number of generations.
+    city_info : Dictionary
+        Contains file paths to data about the city.
+    objectives : Dictionary
+        Contains file paths to data about the planning objectives.
+    settings : Dictionary
+        Defines PySimpleGUI window settings.
+
+    Returns
+    -------
+    census : GeoDataFrame
+        Dwelling/housing 2018 census for dwellings in the Christchurch City Council region NOT clipped to the urban extent boundary, BUT rather if it any part of the statistical area is within the boundary then it is returned.
+    """
+
+    # City Information
+    census = gpd.read_file(city_info['census'])
+    census = census[['SA12018_V1', "C18_OccP_4", 'AREA_SQ_KM', 'geometry']]
+
+    boundary = gpd.read_file(city_info['boundary'])
+
+    constraints = gpd.read_file(city_info['constraints'])
+
+    # Objectives
+    obj_data = gpd.GeoDataFrame({'What':[], 'geometry':[]}, crs='epsg:2193')
+    if objectives['schools?']:
+        schools = gpd.read_file(objectives['schools'])
+        schools['What'] = ['School']*len(schools)
+        obj_data = obj_data.append(schools)
+    if objectives['parks?']:
+        parks = gpd.read_file(objectives['parks'])
+        parks['What'] = ['Park']*len(parks)
+        obj_data = obj_data.append(parks)
+    if objectives['medical clinics?']:
+        medical = gpd.read_file(objectives['medical clinics'])
+        medical['What'] = ['Medical Clinic']*len(medical)
+        obj_data = obj_data.append(medical)
+    if objectives['supermarkets?']:
+        supermarkets = gpd.read_file(objectives['supermarkets'])
+        supermarkets['What'] = ['Supermarket']*len(supermarkets)
+        obj_data = obj_data.append(supermarkets)
+    if objectives['shopping centres?']:
+        malls = gpd.read_file(objectives['shopping centres'])
+        malls['What'] = ['Mall']*len(malls)
+        malls = malls[['What', 'geometry']]
+        obj_data = obj_data.append(malls)

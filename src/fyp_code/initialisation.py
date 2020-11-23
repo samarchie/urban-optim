@@ -127,7 +127,7 @@ def get_parameters():
 
 
 def get_data():
-    """This module gets the files from the user, and returns them opened.
+    """ This module gets the files from the user, and returns them opened.
 
     Returns
     -------
@@ -145,32 +145,32 @@ def get_data():
         A DataFrame of each distances (in kilometres) from each statistical area to a select amount of key activity areas.
     """
     #Read the boundary files, and then add them to a seperate list
-    boundary = gpd.read_file("data/boundary/urban_extent.shp")
-    planning_zones = gpd.read_file("data/boundary/planning_zones.shp")
+    boundary = gpd.read_file("data/christchurch/raw/urban_extent.shp")
+    planning_zones = gpd.read_file("data/christchurch/raw/planning_zones.shp")
     boundaries = [boundary, planning_zones]
 
     #Read the imposed constriant files, and then add them to a seperate list
-    tech_cats = gpd.read_file("data/raw/hazards/lique_red.shp")
+    tech_cats = gpd.read_file("data/christchurch/raw/lique_red.shp")
     #Extract only the red zone polygons as these are the constraints
     red_zone_boundary = tech_cats.loc[tech_cats["DBH_TC"] == 'Red Zone']
 
-    parks = gpd.read_file("data/raw/infrastructure/parks.shp")
+    parks = gpd.read_file("data/christchurch/raw/parks.shp")
     parks["geometry"] = parks.geometry.buffer(0) #Used to simplify the geometry as some errors occur (ring intersection)
     constraints = [red_zone_boundary, parks]
 
     #Read the dwelling count files
-    census = gpd.read_file("data/raw/socioeconomic/census-dwellings.shp")
+    census = gpd.read_file("data/christchurch/raw/census-dwellings.shp")
 
     #Through use of Dai Kiddle and Mitchell Anderson's project, the distances from each region to each key activity area is collated into a csv file, which is read below.
-    distances = pd.read_csv('data/raw/socioeconomic/distances_from_SA1.csv', header=0)
+    distances = pd.read_csv('data/christchurch/raw/distances_from_SA1.csv', header=0)
 
     #Read each datafile on coastal flooding with each increment of sea level rise, and add it to its own list as it has 30 increments!
     coastal_flood = []
     for slr in range(0, 310, 10):
-        coastal_flood.append(gpd.read_file('data/raw/hazards/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
+        coastal_flood.append(gpd.read_file('data/christchurch/raw/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
 
     #Enter hazards here that are not SLR coastal flood projections. If the data file is a shapefile, enter in the read file (eg: gpd.read_file("data/...") BUT if it is a raster (grid-like) data set, then just enter the filepath instead.)
-    hazards = ['data/raw/hazards/tsunami.tif', gpd.read_file("data/raw/hazards/liquefaction_vulnerability.shp"), gpd.read_file('data/raw/hazards/flood_1_in_500.shp')]
+    hazards = ['data/christchurch/raw/tsunami.tif', gpd.read_file("data/christchurch/raw/liquefaction_vulnerability.shp"), gpd.read_file('data/christchurch/raw/flood_1_in_500.shp')]
 
     return boundaries, constraints, census, hazards, coastal_flood, distances
 
@@ -277,22 +277,22 @@ def save_clipped_to_file(clipped_census, clipped_hazards, clipped_coastal):
         No objects are returned, as this module only saves files.
     """
 
-    if not os.path.exists('data/clipped'):
-        os.mkdir("data/clipped")
+    if not os.path.exists('data/christchurch/clipped'):
+        os.mkdir("data/christchurch/clipped")
 
-    clipped_census.to_file("data/clipped/census.shp")
+    clipped_census.to_file("data/christchurch/clipped/census.shp")
 
     ### ASSUME HAZARDS ARE ALREADY CLIPPED TO THE BOUNDARY. IF THEY ARE TOO LARGE THEN THE FOLLOWING CODE NEEDS TO BE UPDATED IN THE TIF SECTION AND UNCOMMENTED
     for hazard in clipped_hazards:
         if str(type(hazard)) == "<class 'geopandas.geodataframe.GeoDataFrame'>":
             #Its a shapefile we're dealing with so geopandas is allgood.
-            hazard.to_file("data/clipped/liq.shp")
+            hazard.to_file("data/christchurch/clipped/liq.shp")
         #elif str(type(hazard)) == "<class 'rasterio.io.DatasetReader'>":
             ### NEED TO CODE THIS PART IN ORDER TO SAVE A TIF FILE
 
     counter = 0
     for hazard in clipped_coastal:
-        hazard.to_file("data/clipped/{}cm SLR.shp".format(counter))
+        hazard.to_file("data/christchurch/clipped/{}cm SLR.shp".format(counter))
         counter += 10
 
 
@@ -315,11 +315,11 @@ def open_clipped_data(hazards):
 
     """
 
-    clipped_census = gpd.read_file("data/clipped/census.shp")
+    clipped_census = gpd.read_file("data/christchurch/clipped/census.shp")
 
     clipped_coastal = []
     for slr in range(0, 310, 10):
-        clipped_coastal.append(gpd.read_file("data/clipped/{}cm SLR.shp".format(slr)))
+        clipped_coastal.append(gpd.read_file("data/christchurch/clipped/{}cm SLR.shp".format(slr)))
 
     clipped_hazards = []
     for hazard in hazards:
@@ -407,14 +407,14 @@ def apply_constraints(clipped_census, constraints, boundary):
 
 
     #Save the file for computational time and to check valitidy of the module
-    constrained_census.to_file("data/processed/constrained_census.shp")
-    constrained_census = gpd.read_file("data/processed/constrained_census.shp")
+    constrained_census.to_file("data/christchurch/processed/constrained_census.shp")
+    constrained_census = gpd.read_file("data/christchurch/processed/constrained_census.shp")
 
     return constrained_census
 
 
 def clip_bad_parcels(constrained_census, boundary):
-    """This module gets rid of user specified polygons from the census, whihc occur due to the clipping procedure as the Council defined constraints aren't perfect...
+    """This module gets rid of user specified polygons from the census, which occur due to the clipping procedure as the Council defined constraints aren't perfect...
 
     Parameters
     ----------
@@ -451,7 +451,7 @@ def clip_bad_parcels(constrained_census, boundary):
     #Get rid of lines and small parcels that crop up!
     exploded_cons_census = constrained_census.explode()
     exploded_cons_census["area_exp"] = exploded_cons_census.area
-    exploded_cons_census.to_file("data/processed/exploaded.shp")
+    exploded_cons_census.to_file("data/christchurch/processed/exploded.shp")
 
     #Check each line in the split/exploded geometries and see if it is really small (eg 10% of total size of property) or if it has been manually selected for deletion
     for index, row in exploded_cons_census.iterrows():
@@ -470,8 +470,8 @@ def clip_bad_parcels(constrained_census, boundary):
 
     #Regroup the GeoDataFrame by the statistical area index and do some touchups
     constrained_census = exploded_cons_census.dissolve(by='index')
-    constrained_census.to_file("data/processed/dissolved.shp")
-    constrained_census = gpd.read_file("data/processed/dissolved.shp")
+    constrained_census.to_file("data/christchurch/processed/dissolved.shp")
+    constrained_census = gpd.read_file("data/christchurch/processed/dissolved.shp")
     constrained_census = constrained_census.rename(columns={'C18_OccP_4': 'Dwellings'})
     constrained_census = constrained_census[["index", "Dwellings", "geometry"]]
 
@@ -585,8 +585,8 @@ def add_planning_zones(constrained_census, planning_zones):
     zoned_census = zoned_census.set_crs("EPSG:2193")
 
     #Save the census file to the file structure so we can validify the module works as expected
-    zoned_census.to_file("data/processed/census_with_zones.shp")
-    zoned_census = gpd.read_file("data/processed/census_with_zones.shp")
+    zoned_census.to_file("data/christchurch/processed/census_with_zones.shp")
+    zoned_census = gpd.read_file("data/christchurch/processed/census_with_zones.shp")
     zoned_census.rename(columns={'index': 'SA12018_V1'})
 
     return zoned_census
@@ -616,8 +616,8 @@ def add_density(zoned_census):
     zoned_census["Density"] = zoned_census["Dwellings"] / zoned_census["AREA_HECTARES"]
 
     #Save the census file to the file structure so we can validify the module works as expected
-    zoned_census.to_file("data/processed/census_with_density.shp")
-    census_dens = gpd.read_file("data/processed/census_with_density.shp")
+    zoned_census.to_file("data/christchurch/processed/census_with_density.shp")
+    census_dens = gpd.read_file("data/christchurch/processed/census_with_density.shp")
 
     return census_dens
 
@@ -770,7 +770,7 @@ def apply_weightings(cleaned_census, weightings):
         census_final.loc[index, "F_score"] = F_score
 
     # Save the census file to the file structure so we can validify the module works as expected
-    census_final.to_file("data/processed/census_final.shp")
+    census_final.to_file("data/christchurch/processed/census_final.shp")
 
     return census_final
 
