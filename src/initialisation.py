@@ -151,6 +151,15 @@ def get():
 
         sg.popup('Parameters saved')
 
+    def save_param_yaml(parameters_file, yaml_file):
+        with open('config/presets/{}'.format(yaml_file)) as file:
+            # The FullLoader parameter handles the conversion from YAML
+            # scalar values to Python the dictionary format
+            yaml_dict = yaml.load(file)
+
+        with open(parameters_file, 'w') as f:
+            jsondump(yaml_dict, f)
+
     ########## Load/Save City Information File ##########
     def load_city_info(city_info_file, default_city_info):
         try:
@@ -263,7 +272,7 @@ def get():
 
         def TextLabel(text): return sg.Text(text+':', justification='r', size=(25,1))
 
-        layout = [  [sg.Text('Parameters', font='Any 15')],
+        layout = [  [sg.T('Parameters', font='Any 15')],
                     [TextLabel('Parents'), sg.In(key='-PARENTS-')],
                     [TextLabel('Generations'), sg.In(key='-GENERATIONS-')],
                     [TextLabel('Crossover Probability'), sg.In(key='-CX_PROB-')],
@@ -275,7 +284,8 @@ def get():
                     [TextLabel('Minimum Allowable Density'), sg.In(key='-MIN_DENS-')],
                     [TextLabel('Maximum Allowable Density'), sg.In(key='-MAX_DENS-')],
                     [TextLabel('Spatial Plan Plotting Step Size'), sg.In(key='-STEP_SIZE-')],
-                    [sg.Button('Save'), sg.Button('Exit')]  ]
+                    [sg.B('Define Weightings')],
+                    [sg.B('Save'), sg.B('Exit')]  ]
 
         window = sg.Window('Parameters', layout, margins=settings['margins'], keep_on_top=True, finalize=True)
 
@@ -356,11 +366,12 @@ def get():
     def create_main_window(parameters, settings):
         sg.theme(settings['theme'])
 
-        layout = [[sg.T('This is my main application')],
-                  [sg.B('Change Parameters', size=(20,1))],
-                  [sg.B('Change City Data', size=(20,1))],
-                  [sg.B('Change Objectives', size=(20,1))],
-                  [sg.B('Change Settings', size=(20,1))],
+        layout = [[sg.T('Load from a yaml file or define run parameters here')],
+                  [],
+                  [sg.B('Load from Yaml File', size=(15,1)), sg.B('Change Parameters', size=(15,1))],
+                  [sg.B('Change City Data', size=(32,1))],
+                  [sg.B('Change Objectives', size=(32,1))],
+                  [sg.B('Change Settings', size=(32,1))],
                   [sg.B('Ok')]]
 
         return sg.Window('Main Application', layout, margins=settings['margins'])
@@ -381,8 +392,18 @@ def get():
             if event in (sg.WIN_CLOSED, 'Ok'):
                 break
 
+            if event == 'Load from Yaml File':
+                yaml_file = input('Insert Config Filename (filename.yml): ')
+                if 'yml' not in yaml_file:
+                    yaml_file += '.yml'
+                window.close()
+                window = None
+                save_param_yaml(parameters_file, yaml_file)
+
             if event == 'Change Parameters':
                 event, values = create_parameters_window(parameters, settings).read(close=True)
+                if event == 'Define Weightings':
+                    event, values = create_weightings_window                
                 if event == 'Save':
                     window.close()
                     window = None
