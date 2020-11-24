@@ -45,5 +45,20 @@ def main():
 
     """
 
-    get()
+    parameters, city_info, objectives, settings = get()
     logger.info('Parameters for the algortihm are defined')
+
+    city_data, obj_data = open_data(parameters, city_info, objectives, settings)
+    user_data = open_user_data()
+    logger.info('Data files for the algortihm are opened')
+
+
+    if not os.path.exists('data/christchurch/clipped'):
+        os.mkdir("data/christchurch/clipped")
+
+        city_data = clip_to_boundary(city_data)
+        clip_user_data(user_data, city_data)
+
+    city_data, obj_data = open_clipped_data()
+    
+    logger.info('Clipping complete')

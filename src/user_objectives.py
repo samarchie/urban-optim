@@ -9,24 +9,69 @@ functions:
 2. f_cflood
 3. f_rflood
 4. f_liq
-5. f_dist
-6. f_dev
+5. f_dev
 
 """
 
-### Needed modules so far ###
+### Import necessary packages ###
 import numpy as np
 import rasterio as rio
-import geopandas as gpd
-import pandas as pd
-from shapely.geometry import Point, Polygon
 from rasterstats import zonal_stats
+import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Point, Polygon
 
-# census = gpd.read_file('data/clipped/census.shp')
-# census = gpd.read_file('data/processed/census_with_density.shp')
-# tsunami_fp = "data/raw/hazards/tsunami.tif"
-# f_tsu(tsunami_fp, census)
+### DATA PROCESSING ###
+def open_user_data():
 
+    # Tsunami
+    tsu_fp = 'data/christchurch/raw/tsunami.tif'
+
+    #Read each datafile on coastal flooding with each increment of sea level rise, and add it to its own list as it has 30 increments!
+    coastal_flood = []
+    for slr in range(0, 310, 10):
+        coastal_flood.append(gpd.read_file('data/christchurch/raw/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
+
+    # River flooding
+    rflood = gpd.read_file('data/christchurch/raw/flood_1_in_500.shp')
+
+    # Liquefaction susceptibility
+    liq = gpd.read_file("data/christchurch/raw/liquefaction_vulnerability.shp")
+
+    user_data = {'tsunami' : tsu_fp,
+            'cflood' : coastal_flood,
+            'rflood' : rflood,
+            'liquefaction' : liq}
+
+    return user_data
+
+
+def clip_user_data(user_data, city_data):
+
+    # Clip hazards to fit within the clipped census
+    census = city_data['census']
+
+    cflood = user_data['cflood']
+    rflood = user_data['rflood']
+    liq = user_data['liquefaction']
+
+    #Clip the given coastal flooding data to the extend of the clipped_census.
+    clipped_cflood = []
+    for flood in cflood:
+        clipped_cflood.append(gpd.clip(flood, census))
+
+    # Clip the river flood shapefile
+    clipped_rflood = gpd.clip(rflood, census)
+
+    # Clip the liquefaction shapefile
+    clipped_liq = gpd.clip(liq, census)
+
+    user_data.update({'cflood' : clipped_cflood,
+                    'rflood' : clipped_rflood,
+                    'liquefaction' : clipped_liq})
+
+
+### FUNCTIONS ###
 def f_tsu(tsunami_fp, census):
     """
     Calculates the tsunami inundation each census parcel is prone to for a
@@ -67,14 +112,6 @@ def f_tsu(tsunami_fp, census):
     #things break if coordinates are outside the tif, so we can use this to make sure coordinates are in the tsu_data before retrieving their values
     tif_boundary = Polygon([(172.5405, -43.3568), (172.8683, -43.3568), (172.8683, -43.6863), (172.5405, -43.6863), (172.5405, -43.3568)])
 
-    # nzgd2000 = gpd.GeoDataFrame(columns=['index'])
-    # for index, row in census.iterrows():
-    #     if tif_boundary.contains(row['geometry']):
-    #         nzgd2000 = nzgd2000.append(row)
-    #
-    # nzgd2000.to_file("data/clipped/nzgd2000.shp")
-    # nzgd2000 = gpd.read_file("data/clipped/nzgd2000.shp")
-
     #Find the (minimum, maximum, mean, median, centroid) inundation for each parcel
     inundation = []
     for index, row in census.iterrows():
@@ -89,18 +126,6 @@ def f_tsu(tsunami_fp, census):
             inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
         else:
             inundation.append(0.0)
-
-
-    # inundation = []
-    # for i in range(len(nzgd2000)):
-    #     stats = zonal_stats(nzgd2000['geometry'][i], tsunami_fp, stats="min max mean median")
-    #     row, col = tsu_data.index(xs[i], ys[i])
-    #     if row < 2792 and col < 2778:
-    #         stats[0]['centroid'] = band1[row, col]
-    #     else:
-    #         stats.append(0.0)
-    #
-    #     inundation.append(stats[0]['max']) #Currently using maximum inundations from each parcel
 
     #normalise the inundations by dividing by the maximum parcel inundation
     norm_inundation = inundation/np.max(inundation)
@@ -314,61 +339,6 @@ def f_liq(liq_data, census_data):
         if fi == 0:
             f[index] = 0.08 # If parcel is not assigned, look at raw liqufaction hazard data and assign to what is sensible. In this case all cp that are outside the liquefaction hazard data are beside damage unlikely and are on the port hills
         index += 1
-
-    return f
-
-
-def f_dist(distance_data, census_dens):
-    """calculates the normalised distance between statistical areas and the
-    nearest key activity area.
-
-    Parameters
-    ----------
-    distance_data : Pandas DataFrame
-        A DataFrame containing the distance to each key activity area for all statistical areas
-    census_dens : GeoPandas GeoDataFrame
-        Contains all the potential statistical areas (ds) to be evaluated as
-        shapely polygons.
-
-    Returns
-    -------
-    numpy array
-        An array containing all f values in the same order as the statistical
-        areas are in
-
-    """
-    import pandas as pd
-    import geopandas as gpd
-    import numpy as np
-    distances_data = pd.read_csv('data/christchurch/pre_processed/distances_from_malls.csv', header=0)
-    census_dens = gpd.read_file("data/christchurch/processed/census_with_density.shp")
-    census_dens["geometry"] = census_dens.geometry.buffer(0)
-
-    #Collect distance to all key activity area, and store them in a dictionary
-    distances_dict = {}
-    for row in range(0, len(distance_data)):
-        prop_number = str(distance_data['id_orig'][row])
-        prev_distances_added = distances_dict.get(prop_number, [])
-        updated_values = prev_distances_added + [distance_data['distance'][row]]
-        distances_dict.update({prop_number : updated_values})
-
-    #For each "good" statistical area (passed into function as census_dens), find the min and max distances to the key activity areas
-    min_distances = {}
-    max_distances = []
-    for prop_number in list(census_dens['index'].unique()):
-        #Get all 8 distances found previously
-        all_distances = distances_dict.get(prop_number)
-
-        #Add accordingly to the right data structure
-        min_distances.update({prop_number : min(all_distances)})
-        max_distances.append(max(all_distances))
-
-    #Convert from a dictionary to to a numpy array of distances
-    min_distances = np.array(list(min_distances.values()))
-
-    #Calculate the largest distance from one statistcial area to a key activity area and noralise by it!
-    max_distance_observed = max(max_distances)
-    f = min_distances/max_distance_observed
 
     return f
 

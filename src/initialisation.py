@@ -12,6 +12,17 @@ from json import (load as jsonload, dump as jsondump)
 import pandas as pd
 import geopandas as gpd
 
+### DELETE ONCE FINISHED
+import sys
+#This allows us to run the code from the urban-optim directory (for ease of opening and saving data) whilst looking for further code/modules in the src/fyp_code folder by adding the filepath to the system path
+sys.path.insert(0, str(sys.path[0]) + '/src')
+###
+
+#Import home-made modules
+from built_in_objectives import *
+from user_objectives import *
+
+
 def get():
     """
     Creats a GUI where:
@@ -302,7 +313,7 @@ def get():
         sg.theme(settings['theme'])
 
         layout = [  [sg.T('Objectives', font='Any 15')],
-                    [sg.T('Use built in objectives? If yes, please provide file path to the shapefile of locations', font='Any 10')],
+                    [sg.T('Use built in objectives? If yes, please provide file path to the shapefile of points', font='Any 10')],
                     [sg.Check('Schools', key='-SCHOOL?-', size=(15,1)), sg.In(key='-SCHOOL-'), sg.FileBrowse(key='-SCHOOL-')],
                     [sg.Check('Parks', key='-PARK?-', size=(15,1)), sg.In(key='-PARK-'), sg.FileBrowse(key='-PARK-')],
                     [sg.Check('Medical Clinics', key='-MEDICAL?-', size=(15,1)), sg.In(key='-MEDICAL-'), sg.FileBrowse(key='-MEDICAL-')],
@@ -407,8 +418,8 @@ def get():
 
 parameters, city_info, objectives, settings = get()
 
-def open(parameters, city_info, objectives, settings):
-    """ This module opens the data into the GeoDataFrames and tifs.
+def open_data(parameters, city_info, objectives, settings):
+    """ This module opens the data into the GeoDataFrames and evaluates the .
 
     Parameters
     ----------
@@ -429,33 +440,92 @@ def open(parameters, city_info, objectives, settings):
     """
 
     # City Information
+    boundary = gpd.read_file(city_info['boundary'])
+
     census = gpd.read_file(city_info['census'])
     census = census[['SA12018_V1', "C18_OccP_4", 'AREA_SQ_KM', 'geometry']]
 
-    boundary = gpd.read_file(city_info['boundary'])
-
     constraints = gpd.read_file(city_info['constraints'])
 
+    city_data = {'boundary': boundary,
+                'census': census,
+                'constraints': constraints}
+
     # Objectives
-    obj_data = gpd.GeoDataFrame({'What':[], 'geometry':[]}, crs='epsg:2193')
+    obj_data = {}
     if objectives['schools?']:
         schools = gpd.read_file(objectives['schools'])
+        schools['geometry'] = [schools['geometry'][i].centroid for i in range(len(schools))]
         schools['What'] = ['School']*len(schools)
-        obj_data = obj_data.append(schools)
+        schools = schools[['What', 'geometry']]
+        obj_data.update({'schools' : schools})
     if objectives['parks?']:
         parks = gpd.read_file(objectives['parks'])
+        parks['geometry'] = [parks['geometry'][i].centroid for i in range(len(parks))]
         parks['What'] = ['Park']*len(parks)
-        obj_data = obj_data.append(parks)
+        parks = parks[['What', 'geometry']]
+        obj_data.update({'parks' : parks})
     if objectives['medical clinics?']:
         medical = gpd.read_file(objectives['medical clinics'])
+        medical['geometry'] = [medical['geometry'][i].centroid for i in range(len(medical))]
         medical['What'] = ['Medical Clinic']*len(medical)
-        obj_data = obj_data.append(medical)
+        medical = medical[['What', 'geometry']]
+        obj_data.update({'medical clinics' : medical})
     if objectives['supermarkets?']:
         supermarkets = gpd.read_file(objectives['supermarkets'])
+        supermarkets['geometry'] = [supermarkets['geometry'][i].centroid for i in range(len(supermarkets))]
         supermarkets['What'] = ['Supermarket']*len(supermarkets)
-        obj_data = obj_data.append(supermarkets)
+        supermarkets = supermarkets[['What', 'geometry']]
+        obj_data.update({'supermarkets' : supermarkets})
     if objectives['shopping centres?']:
         malls = gpd.read_file(objectives['shopping centres'])
+        malls['geometry'] = [malls['geometry'][i].centroid for i in range(len(malls))]
         malls['What'] = ['Mall']*len(malls)
         malls = malls[['What', 'geometry']]
-        obj_data = obj_data.append(malls)
+        obj_data.update({'malls' : malls})
+
+    return city_data, obj_data
+
+
+def clip_to_boundary(city_data):
+
+    boundary = city_data['boundary']
+    census = city_data['census']
+
+    props_in = gpd.clip(census, boundary)
+
+    #Take properties that are larger than 0.2 hectares
+    props_in["area"] = props_in.area
+    good_props_in = props_in.loc[props_in["area"] > 2000]
+
+    # Create a list of property indexes
+    props_array = good_props_in["SA12018_V1"].to_numpy()
+    props_list = props_array.tolist()
+
+    #Convert the census DataSet to a dictionary, where the key is the statistical area number (SA12018_V1)
+    census_array = census.to_numpy()
+    census_list = np.ndarray.tolist(census_array)
+    census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
+
+    #For each property number in props_list, copy the census geometry data row to a new list
+    new_list = []
+    for number in props_list:
+        values = census_dict.get(number)
+        new = [number] + values
+        new_list.append(new)
+
+    #Convert that new list of the whole parcels to to a dictionary
+    new_census_dict = { new_list[i][0] : new_list[i][1:] for i in range(0, len(new_list)) }
+
+    #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
+    df = pd.DataFrame.from_dict(new_census_dict, orient='index', dtype=object)
+    clipped_census = gpd.GeoDataFrame(df)
+    clipped_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry'])
+    clipped_census.set_geometry("geometry")
+    clipped_census = clipped_census.set_crs("EPSG:2193")
+
+    clipped_census.to_file('data/christchurch/clipped/clipped_census.shp')
+
+    city_data.update({'census' : clipped_census})
+
+    return city_data

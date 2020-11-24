@@ -162,7 +162,7 @@ def get_data():
     census = gpd.read_file("data/christchurch/raw/census-dwellings.shp")
 
     #Through use of Dai Kiddle and Mitchell Anderson's project, the distances from each region to each key activity area is collated into a csv file, which is read below.
-    distances = pd.read_csv('data/christchurch/raw/distances_from_SA1.csv', header=0)
+    distances = pd.read_csv('data/christchurch/pre_processed/distances_from_malls.csv', header=0)
 
     #Read each datafile on coastal flooding with each increment of sea level rise, and add it to its own list as it has 30 increments!
     coastal_flood = []
@@ -260,7 +260,7 @@ def clip_to_boundary(boundary, census, hazards, coastal_flood):
 
 
 def save_clipped_to_file(clipped_census, clipped_hazards, clipped_coastal):
-    """This module saves the clipped files to the file structre, under the "urban-optim/data/clipped" folder.
+    """This module saves the clipped files to the file structre, under the "urban-optim/data/christchurch/clipped" folder.
 
     Parameters
     ----------
