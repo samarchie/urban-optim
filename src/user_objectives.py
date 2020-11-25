@@ -14,15 +14,18 @@ functions:
 """
 
 ### Import necessary packages ###
+import os
 import numpy as np
 import rasterio as rio
 from rasterstats import zonal_stats
-import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Polygon
 
 ### DATA PROCESSING ###
 def open_user_data():
+    """
+
+    """
 
     # Tsunami
     tsu_fp = 'data/christchurch/raw/tsunami.tif'
@@ -46,29 +49,39 @@ def open_user_data():
     return user_data
 
 
-def clip_user_data(user_data, city_data):
+def clip_user_data(user_data, census):
+    """
 
-    # Clip hazards to fit within the clipped census
-    census = city_data['census']
+    """
 
     cflood = user_data['cflood']
     rflood = user_data['rflood']
     liq = user_data['liquefaction']
 
     #Clip the given coastal flooding data to the extend of the clipped_census.
-    clipped_cflood = []
+    slr=0
     for flood in cflood:
-        clipped_cflood.append(gpd.clip(flood, census))
+        clipped_flood = gpd.clip(flood, census)
+        if not os.path.exists('data/christchurch/clipped/cflood'):
+            os.mkdir("data/christchurch/clipped/cflood")
+        clipped_flood.to_file(r'data/christchurch/clipped/cflood/{}cm_SLR.shp'.format(slr))
+        slr += 10
 
     # Clip the river flood shapefile
     clipped_rflood = gpd.clip(rflood, census)
+    clipped_rflood.to_file(r'data/christchurch/clipped/rflood.shp')
 
     # Clip the liquefaction shapefile
     clipped_liq = gpd.clip(liq, census)
+    clipped_liq.to_file(r'data/christchurch/clipped/liq.shp')
 
-    user_data.update({'cflood' : clipped_cflood,
-                    'rflood' : clipped_rflood,
-                    'liquefaction' : clipped_liq})
+
+def open_clipped_user_data():
+    """
+
+    """
+
+    
 
 
 ### FUNCTIONS ###

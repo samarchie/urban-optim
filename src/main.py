@@ -30,7 +30,8 @@ from logger_config import *
 #Set up the logging software to monitor progress
 logger = logging.getLogger(__name__)
 
-
+pre_process_constraints()
+pre_process_objective_data()
 
 def main():
     """
@@ -45,10 +46,10 @@ def main():
 
     """
 
-    parameters, city_info, objectives, settings = get()
+    parents, generations, p_cross, p_mut, p_indiv_mut, weightings, req_dwellings, scheme, densities, min_density, max_density, step_size, census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp = get()
     logger.info('Parameters for the algortihm are defined')
 
-    city_data, obj_data = open_data(parameters, city_info, objectives, settings)
+    census, boundary, constraints, obj_data = open_data(census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp)
     user_data = open_user_data()
     logger.info('Data files for the algortihm are opened')
 
@@ -56,9 +57,10 @@ def main():
     if not os.path.exists('data/christchurch/clipped'):
         os.mkdir("data/christchurch/clipped")
 
-        city_data = clip_to_boundary(city_data)
-        clip_user_data(user_data, city_data)
+        clipped_census = clip_to_boundary(census, boundary)
+        clip_user_data(user_data, clipped_census)
 
-    city_data, obj_data = open_clipped_data()
-    
+    clipped_census, clipped_constraints, obj_data = open_clipped_data()
+    user_data = open_clipped_user_data()
+
     logger.info('Clipping complete')

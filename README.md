@@ -9,7 +9,7 @@
   <p align="center">
     Building a stronger future for all
     <br />
-    <a href="http://urutau.co.nz/research/spatial_optimization"><strong>Explore the docs »</strong></a>
+    <a href="http://urutau.co.nz/research/spatial-optimization"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://urutau.co.nz/research/spatial-optimization/">View Demo</a>
@@ -39,7 +39,7 @@
 
 > Archie, S. W,. Fleming, J. N., & Logan, T. M. (2020).  Multi-Criterion Spatial Optimisation of Christchurch's Urban Development. *Proceedings of the University of Canterbury Civil and Natural Resources Engineering Research Conference 2020*
 
-This package aims to find an optimal, or a series of optimal, scenarios of urban development plans that are better for a range of attributes (known as objective functions).
+This package aims to find an optimal, or a series of optimal, scenarios of urban development plans that are better for a range of planning objectives.
 
 ### Built With
 **Python 3.8 with the following modules:**
@@ -67,7 +67,7 @@ git clone https://github.com/samarchie/urban-optim.git
 3. Create a virtual environment and install required modules listed above. Instructions are available from [the Python Packaging docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
 
 4. Collate geo-spatial datasets (if applicable)
-  1. Download relevant geo-spatial datasets in the form of shapefiles of TIFF images.
+  1. Download relevant geo-spatial datasets in the form of shapefiles or TIFF images.
   2. Place them in the `/data` folder, or in various sub-folders (up to user)
   2. Amend the `get_data()` module in `src/initilisation.py` to point to the right filepaths of newly located datasets
 
