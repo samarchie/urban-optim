@@ -114,6 +114,7 @@ def clip_to_boundary(census, boundary, constraints ,obj_data):
     """
 
     ### Constraints
+    constraints['geometry'] = constraints.buffer(0)
     clipped_constraints = gpd.clip(constraints, boundary)
     clipped_constraints.to_file(r'data/christchurch/clipped/constraints.shp')
 
@@ -133,9 +134,9 @@ def clip_to_boundary(census, boundary, constraints ,obj_data):
     # Create a list of property indexes
     props_array = good_props_in["SA12018_V1"].to_numpy()
     props_list = props_array.tolist()
-
+    # len(clipped_census)
     #Convert the census DataSet to a dictionary, where the key is the statistical area number (SA12018_V1)
-    census_array = census.to_numpy()
+    census_array = good_props_in.to_numpy()
     census_list = np.ndarray.tolist(census_array)
     census_dict = { census_list[i][0] : census_list[i][1:] for i in range(0, len(census_list)) }
 
@@ -151,6 +152,7 @@ def clip_to_boundary(census, boundary, constraints ,obj_data):
 
     #Convert the dictionry to a GeoDataFrame, via a Pandas DataFrame
     df = pd.DataFrame.from_dict(new_census_dict, orient='index', dtype=object)
+    df = df[[0, 1, 2]]
     clipped_census = gpd.GeoDataFrame(df)
     clipped_census.columns = pd.Index(["Dwellings", 'AREA_SQ_KM', 'geometry'])
     clipped_census.set_geometry("geometry")
@@ -199,3 +201,27 @@ def open_clipped_data():
         clipped_malls = None
 
     return clipped_census, clipped_constraints, obj_data
+
+parents, generations, p_cross, p_mut, p_indiv_mut, weightings, req_dwellings, scheme, densities, min_density, max_density, step_size, census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp = get()
+census, boundary, constraints, obj_data = open_data(census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp)
+clipped_census = clip_to_boundary(census, boundary, constraints ,obj_data)
+clipped_census, clipped_constraints, obj_data = open_clipped_data()
+
+clipped_census = clip_bad_SAs(clipped_census)
+
+census = clipped_census
+constraints = clipped_constraints
+
+def apply_constraints(census, constraints):
+    """
+
+    """
+
+    #Make sure the  data is in the right projection before doing the clipping
+
+    from shapely.geos import TopologicalError
+    #Chop the parts of the statistical areas out that are touching the constraints
+    try:
+        census = gpd.overlay(census, constraints, how='difference', keep_geom_type=True)
+    except TopologicalError:
+        print(TopologicalError)

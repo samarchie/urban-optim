@@ -57,10 +57,13 @@ def main():
     if not os.path.exists('data/christchurch/clipped'):
         os.mkdir("data/christchurch/clipped")
 
-        clipped_census = clip_to_boundary(census, boundary)
+        clipped_census = clip_to_boundary(census, boundary, constraints ,obj_data)
         clip_user_data(user_data, clipped_census)
 
     clipped_census, clipped_constraints, obj_data = open_clipped_data()
-    user_data = open_clipped_user_data()
+    user_data = open_clipped_user_data(user_data)
 
     logger.info('Clipping complete')
+
+    clipped_census = clip_bad_SAs(clipped_census):
+    apply_constraints(clipped_census, clipped_constraints)

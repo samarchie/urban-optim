@@ -33,13 +33,15 @@ def open_user_data():
     #Read each datafile on coastal flooding with each increment of sea level rise, and add it to its own list as it has 30 increments!
     coastal_flood = []
     for slr in range(0, 310, 10):
-        coastal_flood.append(gpd.read_file('data/christchurch/raw/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr)))
+        coastal_flood.append(gpd.read_file('data/christchurch/raw/extreme_sea_level/esl_aep1_slr{}.shp'.format(slr))['geometry'])
 
     # River flooding
     rflood = gpd.read_file('data/christchurch/raw/flood_1_in_500.shp')
+    rflood = rflood[['geometry']]
 
     # Liquefaction susceptibility
     liq = gpd.read_file("data/christchurch/raw/liquefaction_vulnerability.shp")
+    liq = liq[['Liq_Cat', 'geometry']]
 
     user_data = {'tsunami' : tsu_fp,
             'cflood' : coastal_flood,
@@ -48,7 +50,7 @@ def open_user_data():
 
     return user_data
 
-
+census = gpd.read_file('data/christchurch/clipped/census.shp')
 def clip_user_data(user_data, census):
     """
 
@@ -59,11 +61,11 @@ def clip_user_data(user_data, census):
     liq = user_data['liquefaction']
 
     #Clip the given coastal flooding data to the extend of the clipped_census.
+    if not os.path.exists('data/christchurch/clipped/cflood'):
+        os.mkdir("data/christchurch/clipped/cflood")
     slr=0
     for flood in cflood:
         clipped_flood = gpd.clip(flood, census)
-        if not os.path.exists('data/christchurch/clipped/cflood'):
-            os.mkdir("data/christchurch/clipped/cflood")
         clipped_flood.to_file(r'data/christchurch/clipped/cflood/{}cm_SLR.shp'.format(slr))
         slr += 10
 
@@ -76,12 +78,45 @@ def clip_user_data(user_data, census):
     clipped_liq.to_file(r'data/christchurch/clipped/liq.shp')
 
 
-def open_clipped_user_data():
+def open_clipped_user_data(user_data):
     """
 
     """
 
-    
+    clipped_cflood = []
+    for slr in range(0, 310, 10):
+        clipped_cflood.append(gpd.read_file("data/christchurch/clipped/cflood/{}cm_SLR.shp".format(slr)))
+
+    clipped_rflood = gpd.read_file(r'data/christchurch/clipped/rflood.shp')
+
+    clipped_liq = gpd.read_file(r'data/christchurch/clipped/liq.shp')
+
+    user_data.update(  {'cflood' : clipped_cflood,
+                        'rflood' : clipped_rflood,
+                        'liquefaction' : clipped_liq})
+
+    return
+
+
+
+def clip_bad_SAs(census):
+    """
+
+    """
+
+    miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291", "7024284", "7024280", "7024283", "7024483", "7024484", "7024494", "7024496", "7024652", "7024703", "7026385", "7026446", "7024279", "7024347", "7024298", "7024300", "7024305", "7024348"]
+
+    #Check each parcel to check if it is a bad one
+    good_props = []
+    for row in constrained_census["index"].items():
+        if str(row[1]) in miscellaneous:
+            good_props.append(False)
+        else:
+            good_props.append(True)
+
+    constrained_census = constrained_census[good_props]
+
+    return constrained_census
 
 
 ### FUNCTIONS ###
