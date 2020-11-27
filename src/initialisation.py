@@ -114,9 +114,10 @@ def clip_to_boundary(census, boundary, constraints ,obj_data):
     """
 
     ### Constraints
-    constraints['geometry'] = constraints.buffer(0)
-    clipped_constraints = gpd.clip(constraints, boundary)
-    clipped_constraints.to_file(r'data/christchurch/clipped/constraints.shp')
+    cilpped_constraints = []
+    for constraint in constraints:
+        constrains['geometry'] = constraint.buffer(0)
+        clipped_constraints.append(gpd.clip(constraint, boundary))
 
     ### Objectives
     for key in obj_data:
@@ -160,18 +161,13 @@ def clip_to_boundary(census, boundary, constraints ,obj_data):
 
     clipped_census.to_file('data/christchurch/clipped/census.shp')
 
-    return clipped_census
+    return clipped_census, clipped_constraints
 
 
-def open_clipped_data():
+def open_clipped_objs():
     """
 
     """
-
-    clipped_census = gpd.read_file('data/christchurch/clipped/census.shp')
-
-    clipped_constraints = gpd.read_file(r'data/christchurch/clipped/constraints.shp')
-
 
     obj_data = {}
     try:
@@ -202,15 +198,13 @@ def open_clipped_data():
 
     return clipped_census, clipped_constraints, obj_data
 
-parents, generations, p_cross, p_mut, p_indiv_mut, weightings, req_dwellings, scheme, densities, min_density, max_density, step_size, census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp = get()
-census, boundary, constraints, obj_data = open_data(census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp)
-clipped_census = clip_to_boundary(census, boundary, constraints ,obj_data)
-clipped_census, clipped_constraints, obj_data = open_clipped_data()
-
-clipped_census = clip_bad_SAs(clipped_census)
-
-census = clipped_census
-constraints = clipped_constraints
+# parents, generations, p_cross, p_mut, p_indiv_mut, weightings, req_dwellings, scheme, densities, min_density, max_density, step_size, census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp = get()
+# census, boundary, constraints, obj_data = open_data(census_fp, boundary_fp, constraints_fp, schools_fp, parks_fp, clinics_fp, supermarkets_fp, malls_fp)
+# clipped_census = clip_to_boundary(census, boundary, constraints ,obj_data)
+# clipped_census, clipped_constraints, obj_data = open_clipped_data()
+#
+# census = clipped_census
+# constraints = clipped_constraints
 
 def apply_constraints(census, constraints):
     """

@@ -50,7 +50,43 @@ def open_user_data():
 
     return user_data
 
-census = gpd.read_file('data/christchurch/clipped/census.shp')
+
+def define_constraints():
+    """
+    Creates a list of geodataframes, where each gdf is a constraint.
+    Goes in user data because all the individual constraints are user defined, however will be processed from now on in initialisation.py as there is just one list and does not require special treatment.
+    """
+
+    ### Read data file containing red-zone polygons
+    tech_cats = gpd.read_file("data/christchurch/raw/lique_red.shp")
+    # Extract only the red zone polygons as these are the constraint
+    red_zone_boundary = tech_cats.loc[tech_cats["DBH_TC"] == 'Red Zone']
+    red_zone_boundary['What'] = 'Red Zone'
+    red_zone_boundary = red_zone_boundary[['What', 'geometry']]
+
+    constraints = [red_zone_boundary]
+
+    ### Read the city planning zones
+    planning_zones = gpd.read_file('data/christchurch/raw/planning_zones.shp')
+    planning_zones = planning_zones.rename(index=str, columns={'ZoneGroup':'What'})
+    planning_zones = planning_zones[['What', 'geometry']]
+    # This is a list of strings of all planning zones that we believe you cannot build on in the Christchurch City District
+    non_building_zones_labels = ['Specific Purpose', 'Transport', 'Open Space']
+
+    for zone in non_building_zones_labels:
+        constraints.append(planning_zones.loc[planning_zones["What"] == zone])
+
+    ### Read the parks data
+    parks = gpd.read_file("data/christchurch/raw/parks.shp")
+    parks["geometry"] = parks.geometry.buffer(0) #Used to simplify the geometry as some errors occur (ring intersection)
+    what = ['Park'] * len(parks)
+    parks['What'] = what
+    constraints.append(parks[['What', 'geometry']])
+
+    return constraints
+
+
+# census = gpd.read_file('data/christchurch/clipped/census.shp')
 def clip_user_data(user_data, census):
     """
 
@@ -97,26 +133,6 @@ def open_clipped_user_data(user_data):
 
     return
 
-
-
-def clip_bad_SAs(census):
-    """
-
-    """
-
-    miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291", "7024284", "7024280", "7024283", "7024483", "7024484", "7024494", "7024496", "7024652", "7024703", "7026385", "7026446", "7024279", "7024347", "7024298", "7024300", "7024305", "7024348"]
-
-    #Check each parcel to check if it is a bad one
-    good_props = []
-    for row in constrained_census["index"].items():
-        if str(row[1]) in miscellaneous:
-            good_props.append(False)
-        else:
-            good_props.append(True)
-
-    constrained_census = constrained_census[good_props]
-
-    return constrained_census
 
 
 ### FUNCTIONS ###

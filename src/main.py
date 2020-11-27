@@ -22,6 +22,9 @@ warnings.simplefilter("ignore")
 
 #Import our home-made modules
 from Christchurch_preprocessing import *
+pre_process_constraints()
+pre_process_objective_data()
+
 from initialisation import *
 # from genetic_algorithm import *
 # from plotty_bois import *
@@ -30,8 +33,6 @@ from logger_config import *
 #Set up the logging software to monitor progress
 logger = logging.getLogger(__name__)
 
-pre_process_constraints()
-pre_process_objective_data()
 
 def main():
     """
@@ -57,13 +58,12 @@ def main():
     if not os.path.exists('data/christchurch/clipped'):
         os.mkdir("data/christchurch/clipped")
 
-        clipped_census = clip_to_boundary(census, boundary, constraints ,obj_data)
         clip_user_data(user_data, clipped_census)
 
-    clipped_census, clipped_constraints, obj_data = open_clipped_data()
+    census, constraints = clip_to_boundary(census, boundary, constraints ,obj_data)
+    obj_data = open_clipped_data()
     user_data = open_clipped_user_data(user_data)
 
     logger.info('Clipping complete')
 
-    clipped_census = clip_bad_SAs(clipped_census):
     apply_constraints(clipped_census, clipped_constraints)

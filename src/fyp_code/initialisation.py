@@ -352,7 +352,6 @@ def update_constraints(constraints, planning_zones):
     non_building_zones_labels = ['Specific Purpose', 'Transport', 'Open Space']
 
     #Extract only the bad planning zones, and add/apend them to the constraints list
-    non_building_zones = []
     for zone in non_building_zones_labels:
         constraints.append(planning_zones.loc[planning_zones["ZoneGroup"] == zone])
 

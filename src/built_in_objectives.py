@@ -16,8 +16,8 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 
-distance_data = pd.read_csv('data/christchurch/pre_processed/distances_from_malls.csv', header=0)
-census = gpd.read_file('data/christchurch/raw/census-dwellings.shp')
+# distance_data = pd.read_csv('data/christchurch/pre_processed/distances_from_malls.csv', header=0)
+# census = gpd.read_file('data/christchurch/raw/census-dwellings.shp')
 
 def f_dist(distance_data, census):
     """calculates the normalised distance between statistical areas and the

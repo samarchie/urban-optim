@@ -9,42 +9,19 @@ This module/script shall pre-process the christchurch raw data so it fits the fo
 import geopandas as gpd
 import os
 
-
-
-def pre_process_constraints():
-    """
-    Merge constraints into one file
-    """
-
-    ### Read data file containing red-zone polygons
-    tech_cats = gpd.read_file("data/christchurch/raw/lique_red.shp")
-    # Extract only the red zone polygons as these are the constraint
-    red_zone_boundary = tech_cats.loc[tech_cats["DBH_TC"] == 'Red Zone']
-    red_zone_boundary['What'] = 'Red Zone'
-    red_zone_boundary = red_zone_boundary[['What', 'geometry']]
-    constraints = red_zone_boundary
-
-    ### Read the city planning zones
-    planning_zones = gpd.read_file('data/christchurch/raw/planning_zones.shp')
-    planning_zones['What'] = ['Bad Zone'] * len(planning_zones)
-    planning_zones = planning_zones[['What', 'ZoneGroup', 'geometry']]
-    # This is a list of strings of all planning zones that we believe you cannot build on in the Christchurch City District
-    non_building_zones_labels = ['Specific Purpose', 'Transport', 'Open Space']
-
-    for index, row in planning_zones.iterrows():
-        if row['ZoneGroup'] in non_building_zones_labels:
-            constraints = constraints.append(row[['What', 'geometry']])
-
-    ### Read the parks data
-    parks = gpd.read_file("data/christchurch/raw/parks.shp")
-    parks["geometry"] = parks.geometry.buffer(0) #Used to simplify the geometry as some errors occur (ring intersection)
-    what = ['Park'] * len(parks)
-    parks['What'] = what
-    constraints = constraints.append(parks[['What', 'geometry']])
-
-    if not os.path.exists('data/christchurch/pre_processed'):
-        os.mkdir("data/christchurch/pre_processed")
-    constraints.to_file('data/christchurch/pre_processed/constraints.shp')
+    # miscellaneous = ["7024292", "7024296", "7026302", "7024295", "7024291", "7024284", "7024280", "7024283", "7024483", "7024484", "7024494", "7024496", "7024652", "7024703", "7026385", "7026446", "7024279", "7024347", "7024298", "7024300", "7024305", "7024348"]
+    #
+    # #Check each parcel to check if it is a bad one
+    # good_props = []
+    # for row in census["index"].items():
+    #     if str(row[1]) in miscellaneous:
+    #         good_props.append(False)
+    #     else:
+    #         good_props.append(True)
+    #
+    # constrained_census = census[good_props]
+    #
+    # census = gpd.overlay(census, constraints, how='difference', keep_geom_type=True)
 
 
 def pre_process_objective_data():
