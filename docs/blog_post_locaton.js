@@ -1,0 +1,1 @@
+const blog_post_url = "https://urbanintelligence.co.nz/research/spatial-optimization/"
